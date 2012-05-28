@@ -1,10 +1,13 @@
 package com.es.pieces;
 
+import com.es.Board;
+
 public abstract class AbstractPiece implements Piece {
 
     private Color color;
+    private Board board;
 
-    public AbstractPiece(Piece.Color color) {
+    public AbstractPiece(Piece.Color color, Board board) {
         this.color = color;
     }
 
@@ -12,7 +15,7 @@ public abstract class AbstractPiece implements Piece {
         return color;
     }
 
-    public void setColor(Color color) {
-        this.color = color;
+    public Board getBoard() {
+        return board;
     }
 }
