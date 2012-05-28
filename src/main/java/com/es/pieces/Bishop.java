@@ -18,7 +18,7 @@ public class Bishop extends AbstractPiece {
         }
     }
 
-    public int[] getAllMoves() {
+    public int[] generateAllMoves() {
         final int pos = getCurPos();
         int[] ret = new int[13]; // can only ever move in 13 positions
         int curPos = 0;
@@ -28,7 +28,7 @@ public class Bishop extends AbstractPiece {
         for(int i = pos; addPos(ret, curPos++, i); i += 7); // move to upper-left
         for(int i = pos; addPos(ret, curPos++, i); i -= 7); // move to lower-right
 
-        Arrays.fill(ret, Board.MAX_SQUARE, curPos, ret.length);   // fill the rest with -1
+        Arrays.fill(ret, curPos, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
         Arrays.sort(ret);   // sort the array
 
         return ret;

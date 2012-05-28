@@ -18,7 +18,7 @@ public class Queen extends AbstractPiece {
         }
     }
 
-    public int[] getAllMoves() {
+    public int[] generateAllMoves() {
         final int pos = getCurPos();
         int[] ret = new int[27]; // can only move in 27 places
         int curPos = 0;
@@ -33,7 +33,7 @@ public class Queen extends AbstractPiece {
         for(int i = pos; addPos(ret, curPos++, i); i += 1); // move right
         for(int i = pos; addPos(ret, curPos++, i); i -= 1); // move left
 
-        Arrays.fill(ret, -1, curPos, ret.length);   // fill the rest with -1
+        Arrays.fill(ret, curPos, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
         Arrays.sort(ret);   // sort the array
 
         return ret;

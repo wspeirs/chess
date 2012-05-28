@@ -20,5 +20,5 @@ public interface Piece {
      * 
      * @return a sorted array of possible squares the piece could move into.
      */
-    public int[] getAllMoves();
+    public int[] generateAllMoves();
 }

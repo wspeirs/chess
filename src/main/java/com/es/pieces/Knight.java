@@ -18,7 +18,7 @@ public class Knight extends AbstractPiece {
         }
     }
 
-    public int[] getAllMoves() {
+    public int[] generateAllMoves() {
         final int pos = getCurPos();
         int[] ret = new int[8]; // can only ever move in 8 positions
         int curPos = 0;
@@ -33,7 +33,7 @@ public class Knight extends AbstractPiece {
         addPos(ret, curPos++, pos-10); // check down 1 left 2
         addPos(ret, curPos++, pos-6); // check down 1 right 2
 
-        Arrays.fill(ret, Board.MAX_SQUARE, curPos, ret.length);   // fill the rest with -1
+        Arrays.fill(ret, curPos, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
         Arrays.sort(ret);   // sort the array
 
         return ret;

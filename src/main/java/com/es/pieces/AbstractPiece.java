@@ -10,6 +10,7 @@ public abstract class AbstractPiece implements Piece {
 
     public AbstractPiece(Piece.Color color, Board board, int currentPosition) {
         this.color = color;
+        this.board = board;
         this.curPos = currentPosition;
     }
 
@@ -49,13 +50,10 @@ public abstract class AbstractPiece implements Piece {
             } else if(! p.getColor().equals(getColor())) {
                 positions[curIndex] = position;  // add to possible positions for capture
                 return false;
-            } else {
-                positions[curIndex] = Board.MAX_SQUARE;   // fill in with our sentinel value
-                return false;
             }
         }
 
+        positions[curIndex] = Board.MAX_SQUARE;   // fill in with our sentinel value
         return false;
     }
-
 }

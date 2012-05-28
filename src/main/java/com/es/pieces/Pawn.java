@@ -19,7 +19,7 @@ public class Pawn extends AbstractPiece {
         }
     }
 
-    public int[] getAllMoves() {
+    public int[] generateAllMoves() {
         final int pos = getCurPos();
         int[] ret = new int[4]; // can only move in 4 positions
         int curPos = 0;
@@ -32,17 +32,25 @@ public class Pawn extends AbstractPiece {
                 ret[curPos++] = pos - 16;
             }
 
-            if(pos - 8 < 0 && getBoard().getPiece(pos - 8) == null) {
+            if(pos - 8 >= 0 && getBoard().getPiece(pos - 8) == null) {
                 ret[curPos++] = pos - 8;
             }
 
             // captures
-            if(pos - 7 < 0 && getBoard().getPiece(pos - 7).getColor().equals(Color.WHITE)) {
-                ret[curPos++] = pos - 7;
+            if(pos - 7 >= 0) {
+                final Piece p = getBoard().getPiece(pos - 7);
+
+                if(p != null && p.getColor().equals(Color.WHITE)) {
+                    ret[curPos++] = pos - 7;
+                }
             }
 
-            if(pos - 9 < 0 && getBoard().getPiece(pos - 9).getColor().equals(Color.WHITE)) {
-                ret[curPos++] = pos - 9;
+            if(pos - 9 >= 0) {
+                final Piece p = getBoard().getPiece(pos - 9);
+
+                if(p != null && p.getColor().equals(Color.WHITE)) {
+                    ret[curPos++] = pos - 9;
+                }
             }
         } else {
             // straight forward moves
@@ -52,21 +60,29 @@ public class Pawn extends AbstractPiece {
                 ret[curPos++] = pos + 16;
             }
 
-            if(pos + 8 < 0 && getBoard().getPiece(pos + 8) == null) {
+            if(pos + 8 < Board.MAX_SQUARE && getBoard().getPiece(pos + 8) == null) {
                 ret[curPos++] = pos + 8;
             }
 
             // captures
-            if(pos + 7 < 0 && getBoard().getPiece(pos + 7).getColor().equals(Color.BLACK)) {
-                ret[curPos++] = pos + 7;
+            if(pos + 7 < Board.MAX_SQUARE) {
+                final Piece p = getBoard().getPiece(pos - 9);
+
+                if(p != null && p.getColor().equals(Color.BLACK)) {
+                    ret[curPos++] = pos + 7;
+                }
             }
 
-            if(pos + 9 < 0 && getBoard().getPiece(pos + 9).getColor().equals(Color.BLACK)) {
-                ret[curPos++] = pos + 9;
+            if(pos + 9 < Board.MAX_SQUARE) {
+                final Piece p = getBoard().getPiece(pos - 9);
+
+                if(p != null && p.getColor().equals(Color.BLACK)) {
+                    ret[curPos++] = pos + 9;
+                }
             }
         }
 
-        Arrays.fill(ret, -1, curPos, ret.length);   // fill the rest with -1
+        Arrays.fill(ret, curPos, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
         Arrays.sort(ret);   // sort the array
 
         return ret;

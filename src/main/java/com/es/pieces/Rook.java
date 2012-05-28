@@ -18,7 +18,7 @@ public class Rook extends AbstractPiece {
         }
     }
 
-    public int[] getAllMoves() {
+    public int[] generateAllMoves() {
         final int pos = getCurPos();
         int[] ret = new int[14]; // can only move in 14 places
         int curPos = 0;
