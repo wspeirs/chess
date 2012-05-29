@@ -38,5 +38,5 @@ public class King extends AbstractPiece {
 
         return ret;
     }
-
+    
 }

@@ -28,7 +28,7 @@ public class Rook extends AbstractPiece {
         for(int i = pos; addPos(ret, curPos++, i); i += 1); // move right
         for(int i = pos; addPos(ret, curPos++, i); i -= 1); // move left
 
-        Arrays.fill(ret, -1, curPos, ret.length);   // fill the rest with -1
+        Arrays.fill(ret, curPos, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
         Arrays.sort(ret);   // sort the array
 
         return ret;

@@ -56,6 +56,9 @@ public class Board {
 
     private Set<Piece> whitePieces = new HashSet<Piece>();
     private Set<Piece> whiteCapturedPieces = new HashSet<Piece>();
+    
+    private King blackKing;
+    private King whiteKing;
 
     public Board() {
         // fill in black's pieces
@@ -77,6 +80,8 @@ public class Board {
             blackPieces.add(board[7][i]);
             blackPieces.add(board[6][i]);
         }
+        
+        blackKing = (King) board[7][4];
 
         // fill in white's pieces
         for(int i=0; i < MAX_COL; ++i) {
@@ -97,6 +102,8 @@ public class Board {
             whitePieces.add(board[0][i]);
             whitePieces.add(board[1][i]);
         }
+        
+        whiteKing = (King) board[0][4];
     }
 
     public static int squareToRow(int square) {
@@ -132,43 +139,108 @@ public class Board {
         System.out.println();
     }
 
-    public boolean makeMove(int fromRow, int fromCol, int toRow, int toCol) {
+    public void makeMove(int fromRow, int fromCol, int toRow, int toCol) throws IllegalMoveException {
         Piece fromPiece = board[fromRow][fromCol];
 
         if(fromPiece == null) {
-            return false;
+            throw new IllegalMoveException("There is no piece on square: " + fromRow + " " + fromCol);
         }
 
         // check to see if the move is legal or not
-        int[] legalMoves = fromPiece.generateAllMoves();
-        int toSquare = rowColToSquare(toRow, toCol);
-
-        if(Arrays.binarySearch(legalMoves, toSquare) < 0) {
-            return false;
+        if(Arrays.binarySearch(fromPiece.generateAllMoves(), rowColToSquare(toRow, toCol)) < 0) {
+            throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
         }
 
         Piece toPiece = board[toRow][toCol];
 
         if(toPiece != null) {
-            Color c = toPiece.getColor();
-
-            // remove it from the pieces on the board and add it to the captured pieces
-            if(c.equals(Color.BLACK)) {
-                blackPieces.remove(toPiece);
-                blackCapturedPieces.add(toPiece);
-            } else {
-                whitePieces.remove(toPiece);
-                whiteCapturedPieces.add(toPiece);
-            }
+            capturePiece(toPiece);
         }
 
+        // set the piece on the board
         board[toRow][toCol] = fromPiece;
         board[fromRow][fromCol] = null;
+        
+        // update the piece's position
+        fromPiece.setCurPos(rowColToSquare(toRow, toCol));
+        
+        // make sure that this color's king is not in check
+        boolean inCheck = fromPiece.getColor().equals(Color.WHITE) ? isInCheck(whiteKing) : isInCheck(blackKing);
 
-        return true;
+        // need to undo the move
+        if(inCheck) {
+            board[fromRow][fromCol] = fromPiece;
+            board[toRow][toCol] = toPiece;
+            
+            if(toPiece != null) {
+                addPiece(toPiece, rowColToSquare(toRow, toCol));
+            }
+            throw new IllegalMoveException("That move would put the king into check");
+        }
     }
 
-    public boolean makeMove(int fromSquare, int toSquare) {
-        return makeMove(squareToRow(fromSquare), squareToCol(fromSquare), squareToRow(toSquare), squareToCol(toSquare));
+    public void makeMove(int fromSquare, int toSquare) throws IllegalMoveException {
+        makeMove(squareToRow(fromSquare), squareToCol(fromSquare), squareToRow(toSquare), squareToCol(toSquare));
+    }
+    
+    /**
+     * Given a king, checks to see if it is in check.
+     * @param king The king to check.
+     * @return True if the king is in check, false otherwise.
+     */
+    private boolean isInCheck(King king) {
+        final int kingPos = king.getCurPos();
+        final Set<Piece> pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
+        
+        for(Piece p:pieces) {
+            if(Arrays.binarySearch(p.generateAllMoves(), kingPos) >= 0) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Removes a piece from the board, adding it to the captured pieces set.
+     * @param piece The piece to remove from the board.
+     */
+    private void capturePiece(Piece piece) {
+        Color c = piece.getColor();
+
+        // remove it from the pieces on the board and add it to the captured pieces
+        if(c.equals(Color.BLACK)) {
+            blackPieces.remove(piece);
+            blackCapturedPieces.add(piece);
+        } else {
+            whitePieces.remove(piece);
+            whiteCapturedPieces.add(piece);
+        }
+        
+        // remove the piece from the board
+        board[squareToRow(piece.getCurPos())][squareToCol(piece.getCurPos())] = null;
+        piece.setCurPos(MAX_SQUARE);
+    }
+    
+    /**
+     * Adds a piece to the board removing it from the captured pieces if captured.
+     * @param piece The piece to add to the board.
+     * @param square The square to add the piece to.
+     */
+    private void addPiece(Piece piece, int square) {
+        Color c = piece.getColor();
+
+        // remove it from the pieces on the board and add it to the captured pieces
+        if(c.equals(Color.BLACK)) {
+            blackPieces.add(piece);
+            blackCapturedPieces.remove(piece);
+        } else {
+            whitePieces.add(piece);
+            whiteCapturedPieces.remove(piece);
+        }
+        
+        // remove the piece from the board
+        board[squareToRow(square)][squareToCol(square)] = piece;
+        piece.setCurPos(square);
     }
 }

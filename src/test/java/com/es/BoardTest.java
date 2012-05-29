@@ -22,10 +22,8 @@ public class BoardTest {
     }
 
     @Test
-    public void testMove() {
-        boolean ret = board.makeMove(1, 18);
-
-        assertTrue(ret);
+    public void testMove() throws Exception {
+        board.makeMove(1, 18);
 
         board.printBoard();
     }
