@@ -1,2 +1,4 @@
 chess
 =====
+
+Simple chess program
