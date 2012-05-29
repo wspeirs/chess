@@ -20,7 +20,7 @@ public class PgnUtils {
         this.board = board;
     }
     
-    public int[] parseMove(Color color, String move) throws IllegalMoveException {
+    public int[] parseSingleMove(Color color, String move) throws IllegalMoveException {
         int[] ret = new int[2];
         int curChar = 0;
         int pieceType = move.charAt(curChar);
@@ -63,7 +63,7 @@ public class PgnUtils {
             curChar++;
         }
         
-        ret[1] = Board.rowColToSquare(move.charAt(curChar+1) - 48, move.charAt(curChar) - 35);
+        ret[1] = Board.rowColToSquare(move.charAt(curChar+1) - 49, move.charAt(curChar) - 97);
         boolean found = false;
         
         // go through the list and see if there is ONLY one possible piece move
