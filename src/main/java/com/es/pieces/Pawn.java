@@ -66,7 +66,7 @@ public class Pawn extends AbstractPiece {
 
             // captures
             if(pos + 7 < Board.MAX_SQUARE) {
-                final Piece p = getBoard().getPiece(pos - 9);
+                final Piece p = getBoard().getPiece(pos + 7);
 
                 if(p != null && p.getColor().equals(Color.BLACK)) {
                     ret[curPos++] = pos + 7;
@@ -74,7 +74,7 @@ public class Pawn extends AbstractPiece {
             }
 
             if(pos + 9 < Board.MAX_SQUARE) {
-                final Piece p = getBoard().getPiece(pos - 9);
+                final Piece p = getBoard().getPiece(pos + 9);
 
                 if(p != null && p.getColor().equals(Color.BLACK)) {
                     ret[curPos++] = pos + 9;
