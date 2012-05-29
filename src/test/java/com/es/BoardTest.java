@@ -1,6 +1,8 @@
 package com.es;
 
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 
 public class BoardTest {
@@ -16,6 +18,15 @@ public class BoardTest {
 
     @Test
     public void testPrintBoard() {
+        board.printBoard();
+    }
+
+    @Test
+    public void testMove() {
+        boolean ret = board.makeMove(1, 18);
+
+        assertTrue(ret);
+
         board.printBoard();
     }
 }

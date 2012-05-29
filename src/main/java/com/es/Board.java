@@ -1,5 +1,9 @@
 package com.es;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.es.pieces.Bishop;
 import com.es.pieces.King;
 import com.es.pieces.Knight;
@@ -47,6 +51,12 @@ public class Board {
 
     private Piece[][] board = new Piece[MAX_ROW][MAX_COL];
 
+    private Set<Piece> blackPieces = new HashSet<Piece>();
+    private Set<Piece> blackCapturedPieces = new HashSet<Piece>();
+
+    private Set<Piece> whitePieces = new HashSet<Piece>();
+    private Set<Piece> whiteCapturedPieces = new HashSet<Piece>();
+
     public Board() {
         // fill in black's pieces
         board[7][0] = new Rook(Color.BLACK,   this, rowColToSquare(7,0));
@@ -58,24 +68,20 @@ public class Board {
         board[7][6] = new Knight(Color.BLACK, this, rowColToSquare(7,6));
         board[7][7] = new Rook(Color.BLACK,   this, rowColToSquare(7,7));
 
-        board[6][0] = new Pawn(Color.BLACK, this, rowColToSquare(6,0));
-        board[6][1] = new Pawn(Color.BLACK, this, rowColToSquare(6,1));
-        board[6][2] = new Pawn(Color.BLACK, this, rowColToSquare(6,2));
-        board[6][3] = new Pawn(Color.BLACK, this, rowColToSquare(6,3));
-        board[6][4] = new Pawn(Color.BLACK, this, rowColToSquare(6,4));
-        board[6][5] = new Pawn(Color.BLACK, this, rowColToSquare(6,5));
-        board[6][6] = new Pawn(Color.BLACK, this, rowColToSquare(6,6));
-        board[6][7] = new Pawn(Color.BLACK, this, rowColToSquare(6,7));
+        for(int i=0; i < MAX_COL; ++i) {
+            board[6][i] = new Pawn(Color.BLACK, this, rowColToSquare(6,i));
+        }
+
+        // add black's pieces to the set
+        for(int i=0; i < MAX_COL; ++i) {
+            blackPieces.add(board[7][i]);
+            blackPieces.add(board[6][i]);
+        }
 
         // fill in white's pieces
-        board[1][0] = new Pawn(Color.WHITE, this, rowColToSquare(1,0));
-        board[1][1] = new Pawn(Color.WHITE, this, rowColToSquare(1,1));
-        board[1][2] = new Pawn(Color.WHITE, this, rowColToSquare(1,2));
-        board[1][3] = new Pawn(Color.WHITE, this, rowColToSquare(1,3));
-        board[1][4] = new Pawn(Color.WHITE, this, rowColToSquare(1,4));
-        board[1][5] = new Pawn(Color.WHITE, this, rowColToSquare(1,5));
-        board[1][6] = new Pawn(Color.WHITE, this, rowColToSquare(1,6));
-        board[1][7] = new Pawn(Color.WHITE, this, rowColToSquare(1,7));
+        for(int i=0; i < MAX_COL; ++i) {
+            board[1][i] = new Pawn(Color.WHITE, this, rowColToSquare(1,i));
+        }
 
         board[0][0] = new Rook(Color.WHITE,   this, rowColToSquare(0,0));
         board[0][1] = new Knight(Color.WHITE, this, rowColToSquare(0,1));
@@ -85,6 +91,12 @@ public class Board {
         board[0][5] = new Bishop(Color.WHITE, this, rowColToSquare(0,5));
         board[0][6] = new Knight(Color.WHITE, this, rowColToSquare(0,6));
         board[0][7] = new Rook(Color.WHITE,   this, rowColToSquare(0,7));
+
+        // add white's pieces to the set
+        for(int i=0; i < MAX_COL; ++i) {
+            whitePieces.add(board[0][i]);
+            whitePieces.add(board[1][i]);
+        }
     }
 
     public static int squareToRow(int square) {
@@ -118,5 +130,45 @@ public class Board {
             System.out.println();
         }
         System.out.println();
+    }
+
+    public boolean makeMove(int fromRow, int fromCol, int toRow, int toCol) {
+        Piece fromPiece = board[fromRow][fromCol];
+
+        if(fromPiece == null) {
+            return false;
+        }
+
+        // check to see if the move is legal or not
+        int[] legalMoves = fromPiece.generateAllMoves();
+        int toSquare = rowColToSquare(toRow, toCol);
+
+        if(Arrays.binarySearch(legalMoves, toSquare) < 0) {
+            return false;
+        }
+
+        Piece toPiece = board[toRow][toCol];
+
+        if(toPiece != null) {
+            Color c = toPiece.getColor();
+
+            // remove it from the pieces on the board and add it to the captured pieces
+            if(c.equals(Color.BLACK)) {
+                blackPieces.remove(toPiece);
+                blackCapturedPieces.add(toPiece);
+            } else {
+                whitePieces.remove(toPiece);
+                whiteCapturedPieces.add(toPiece);
+            }
+        }
+
+        board[toRow][toCol] = fromPiece;
+        board[fromRow][fromCol] = null;
+
+        return true;
+    }
+
+    public boolean makeMove(int fromSquare, int toSquare) {
+        return makeMove(squareToRow(fromSquare), squareToCol(fromSquare), squareToRow(toSquare), squareToCol(toSquare));
     }
 }
