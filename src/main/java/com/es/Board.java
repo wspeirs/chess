@@ -1,7 +1,9 @@
 package com.es;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.es.pieces.Bishop;
@@ -242,5 +244,18 @@ public class Board {
         // remove the piece from the board
         board[squareToRow(square)][squareToCol(square)] = piece;
         piece.setCurPos(square);
+    }
+    
+    public List<Piece> getPiecsOfType(Color color, Class<? extends Piece> pieceType) {
+        final Set<Piece> pieces = color.equals(Color.WHITE) ? whitePieces : blackPieces;
+        final ArrayList<Piece> ret = new ArrayList<Piece>();
+        
+        for(Piece p:pieces) {
+            if(p.getClass().equals(pieceType)) {
+                ret.add(p);
+            }
+        }
+        
+        return ret;
     }
 }
