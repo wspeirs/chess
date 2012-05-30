@@ -25,7 +25,7 @@ public class Queen extends AbstractPiece {
 
     public int[] generateAllMoves() {
         final int pos = getCurPos();
-        int[] ret = new int[27]; // can only move in 27 places
+        int[] ret = new int[35]; // can only move in 27 places
         int curPos = 0;
 
         LOG.debug("CUR POS: {}", pos);

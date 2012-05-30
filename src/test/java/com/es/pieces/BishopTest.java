@@ -1,8 +1,6 @@
 package com.es.pieces;
 
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +16,6 @@ public class BishopTest {
     @Before
     public void setup() {
         board.clearBoard();
-
     }
     
     public void verifyMoves(int[] validMoves, int[] moves) {
@@ -142,5 +139,4 @@ public class BishopTest {
         verifyMoves(validMoves, moves);
     }
     
-
 }
