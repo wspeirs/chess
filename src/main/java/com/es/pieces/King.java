@@ -2,9 +2,14 @@ package com.es.pieces;
 
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.es.Board;
 
 public class King extends AbstractPiece {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
 
     public King(Color color, Board board, int currentPosition) {
         super(color, board, currentPosition);
@@ -34,9 +39,9 @@ public class King extends AbstractPiece {
         addPos(ret, curPos++, pos-1); // move to left
 
         Arrays.fill(ret, curPos, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
-//        Arrays.sort(ret);   // sort the array
+        Arrays.sort(ret);   // sort the array
 
         return ret;
     }
-    
+
 }

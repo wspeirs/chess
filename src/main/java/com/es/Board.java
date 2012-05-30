@@ -6,6 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.es.pieces.Bishop;
 import com.es.pieces.King;
 import com.es.pieces.Knight;
@@ -47,6 +50,8 @@ import com.es.pieces.Rook;
  */
 public class Board {
 
+    public static final Logger LOG = LoggerFactory.getLogger(Board.class);
+
     public static final int MAX_ROW = 8;
     public static final int MAX_COL = 8;
     public static final int MAX_SQUARE = MAX_ROW * MAX_COL;
@@ -58,7 +63,7 @@ public class Board {
 
     private Set<Piece> whitePieces = new HashSet<Piece>();
     private Set<Piece> whiteCapturedPieces = new HashSet<Piece>();
-    
+
     private King blackKing;
     private King whiteKing;
 
@@ -82,7 +87,7 @@ public class Board {
             blackPieces.add(board[7][i]);
             blackPieces.add(board[6][i]);
         }
-        
+
         blackKing = (King) board[7][4];
 
         // fill in white's pieces
@@ -104,7 +109,7 @@ public class Board {
             whitePieces.add(board[0][i]);
             whitePieces.add(board[1][i]);
         }
-        
+
         whiteKing = (King) board[0][4];
     }
 
@@ -162,10 +167,10 @@ public class Board {
         // set the piece on the board
         board[toRow][toCol] = fromPiece;
         board[fromRow][fromCol] = null;
-        
+
         // update the piece's position
         fromPiece.setCurPos(rowColToSquare(toRow, toCol));
-        
+
         // make sure that this color's king is not in check
         boolean inCheck = fromPiece.getColor().equals(Color.WHITE) ? isInCheck(whiteKing) : isInCheck(blackKing);
 
@@ -173,18 +178,22 @@ public class Board {
         if(inCheck) {
             board[fromRow][fromCol] = fromPiece;
             board[toRow][toCol] = toPiece;
-            
+
             if(toPiece != null) {
                 addPiece(toPiece, rowColToSquare(toRow, toCol));
             }
             throw new IllegalMoveException("That move would put the king into check");
+        }
+
+        if(LOG.isDebugEnabled()) {
+            this.printBoard();
         }
     }
 
     public void makeMove(int fromSquare, int toSquare) throws IllegalMoveException {
         makeMove(squareToRow(fromSquare), squareToCol(fromSquare), squareToRow(toSquare), squareToCol(toSquare));
     }
-    
+
     /**
      * Given a king, checks to see if it is in check.
      * @param king The king to check.
@@ -193,16 +202,16 @@ public class Board {
     private boolean isInCheck(King king) {
         final int kingPos = king.getCurPos();
         final Set<Piece> pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
-        
+
         for(Piece p:pieces) {
             if(Arrays.binarySearch(p.generateAllMoves(), kingPos) >= 0) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     /**
      * Removes a piece from the board, adding it to the captured pieces set.
      * @param piece The piece to remove from the board.
@@ -218,12 +227,12 @@ public class Board {
             whitePieces.remove(piece);
             whiteCapturedPieces.add(piece);
         }
-        
+
         // remove the piece from the board
         board[squareToRow(piece.getCurPos())][squareToCol(piece.getCurPos())] = null;
         piece.setCurPos(MAX_SQUARE);
     }
-    
+
     /**
      * Adds a piece to the board removing it from the captured pieces if captured.
      * @param piece The piece to add to the board.
@@ -240,22 +249,22 @@ public class Board {
             whitePieces.add(piece);
             whiteCapturedPieces.remove(piece);
         }
-        
+
         // remove the piece from the board
         board[squareToRow(square)][squareToCol(square)] = piece;
         piece.setCurPos(square);
     }
-    
+
     public List<Piece> getPiecsOfType(Color color, Class<? extends Piece> pieceType) {
         final Set<Piece> pieces = color.equals(Color.WHITE) ? whitePieces : blackPieces;
         final ArrayList<Piece> ret = new ArrayList<Piece>();
-        
+
         for(Piece p:pieces) {
             if(p.getClass().equals(pieceType)) {
                 ret.add(p);
             }
         }
-        
+
         return ret;
     }
 }

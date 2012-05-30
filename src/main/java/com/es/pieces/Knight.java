@@ -2,9 +2,14 @@ package com.es.pieces;
 
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.es.Board;
 
 public class Knight extends AbstractPiece {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
 
     public Knight(Color color, Board board, int currentPosition) {
         super(color, board, currentPosition);
