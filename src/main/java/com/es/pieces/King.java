@@ -28,15 +28,15 @@ public class King extends AbstractPiece {
         int[] ret = new int[8]; // can only ever move 8 positions
         int curPos = 0;
 
-        addPos(ret, curPos++, pos+9); // check upper-right
-        addPos(ret, curPos++, pos-9); // check lower-left
-        addPos(ret, curPos++, pos+7); // move to upper-left
-        addPos(ret, curPos++, pos-7); // move to lower-right
+        addPos(ret, curPos++, pos + 0x11); // check upper-right
+        addPos(ret, curPos++, pos - 0x11); // check lower-left
+        addPos(ret, curPos++, pos + 0x0f); // move to upper-left
+        addPos(ret, curPos++, pos - 0x0f); // move to lower-right
 
-        addPos(ret, curPos++, pos+8); // move to forward
-        addPos(ret, curPos++, pos-8); // move to back
-        addPos(ret, curPos++, pos+1); // move to right
-        addPos(ret, curPos++, pos-1); // move to left
+        addPos(ret, curPos++, pos + 0x10); // move to forward
+        addPos(ret, curPos++, pos - 0x10); // move to back
+        addPos(ret, curPos++, pos + 0x01); // move to right
+        addPos(ret, curPos++, pos - 0x01); // move to left
 
         Arrays.fill(ret, curPos, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
         Arrays.sort(ret);   // sort the array

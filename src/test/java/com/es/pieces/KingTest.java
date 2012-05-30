@@ -11,7 +11,7 @@ public class KingTest {
 
     @Test
     public void testGenerateAllMoves() {
-        King k = (King) board.getPiece(0, 4);
+        King k = (King) board.getPiece(0x04);
 
         int[] moves = k.generateAllMoves();
 

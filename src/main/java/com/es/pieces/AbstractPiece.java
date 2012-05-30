@@ -41,7 +41,7 @@ public abstract class AbstractPiece implements Piece {
      * @return True if the spot was empty, false otherwise.
      */
     public boolean addPos(int[] positions, int curIndex, int position) {
-        if(position >= 0 && position < Board.MAX_SQUARE) {
+        if(position >= 0 && position < Board.MAX_SQUARE && (position & 0x08) == 0) {
             final Piece p = board.getPiece(position);
 
             if(p == null) {

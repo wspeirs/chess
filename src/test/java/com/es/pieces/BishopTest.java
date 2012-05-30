@@ -13,7 +13,7 @@ public class BishopTest {
 
     @Test
     public void testGenerateAllMoves() {
-        Bishop b = (Bishop) board.getPiece(0, 2);
+        Bishop b = (Bishop) board.getPiece(0x02);
 
         int[] moves = b.generateAllMoves();
 

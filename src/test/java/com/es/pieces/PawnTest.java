@@ -12,12 +12,12 @@ public class PawnTest {
 
     @Test
     public void testGenerateAllMoves() {
-        Pawn p = (Pawn) board.getPiece(1, 1);
+        Pawn p = (Pawn) board.getPiece(0x11);
 
         int[] moves = p.generateAllMoves();
 
-        assertEquals(17, moves[0]);
-        assertEquals(25, moves[1]);
+        assertEquals(0x21, moves[0]);
+        assertEquals(0x31, moves[1]);
 
         for(int i=2; i < moves.length; ++i) {
             assertEquals(Board.MAX_SQUARE, moves[i]);

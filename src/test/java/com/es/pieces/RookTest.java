@@ -12,7 +12,7 @@ public class RookTest {
 
     @Test
     public void testGenerateAllMoves() {
-        Rook r = (Rook) board.getPiece(0, 0);
+        Rook r = (Rook) board.getPiece(0x00);
 
         int[] moves = r.generateAllMoves();
 

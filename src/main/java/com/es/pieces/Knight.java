@@ -28,15 +28,15 @@ public class Knight extends AbstractPiece {
         int[] ret = new int[8]; // can only ever move in 8 positions
         int curPos = 0;
 
-        addPos(ret, curPos++, pos+17); // check up 2 right 1
-        addPos(ret, curPos++, pos+15); // check up 2 left 1
-        addPos(ret, curPos++, pos+10); // check up 1 right 2
-        addPos(ret, curPos++, pos+6); // check up 1 left 2
+        addPos(ret, curPos++, pos + 0x21); // check up 2 right 1
+        addPos(ret, curPos++, pos + 0x1f); // check up 2 left 1
+        addPos(ret, curPos++, pos + 0x12); // check up 1 right 2
+        addPos(ret, curPos++, pos + 0x0e); // check up 1 left 2
 
-        addPos(ret, curPos++, pos-17); // check down 2 left 1
-        addPos(ret, curPos++, pos-15); // check down 2 right 1
-        addPos(ret, curPos++, pos-10); // check down 1 left 2
-        addPos(ret, curPos++, pos-6); // check down 1 right 2
+        addPos(ret, curPos++, pos - 0x21); // check down 2 left 1
+        addPos(ret, curPos++, pos - 0x1f); // check down 2 right 1
+        addPos(ret, curPos++, pos - 0x12); // check down 1 left 2
+        addPos(ret, curPos++, pos - 0x0e); // check down 1 right 2
 
         Arrays.fill(ret, curPos, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
         Arrays.sort(ret);   // sort the array

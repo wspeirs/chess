@@ -12,7 +12,7 @@ public class QueenTest {
 
     @Test
     public void testGenerateAllMoves() {
-        Queen q = (Queen) board.getPiece(0, 3);
+        Queen q = (Queen) board.getPiece(0x03);
 
         int[] moves = q.generateAllMoves();
 
