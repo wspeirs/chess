@@ -133,7 +133,7 @@ public class Board {
     public void printBoard() {
         for(int r=7; r >= 0; --r) {
             for(int c = 0; c < 8; ++c) {
-                Piece p = board[r << 4 + c];
+                Piece p = board[(r << 4) + c];
 
                 System.out.print(p == null ? "-" : p.toString());
                 System.out.print(" ");
@@ -151,7 +151,7 @@ public class Board {
         }
 
         // check to see if the move is legal or not
-        if(Arrays.binarySearch(fromPiece.generateAllMoves(), fromSquare) < 0) {
+        if(Arrays.binarySearch(fromPiece.generateAllMoves(), toSquare) < 0) {
             LOG.error("Illegal move {} - > {} for {}", new String[] { Integer.toHexString(fromSquare), Integer.toHexString(toSquare), fromPiece.toString() } );
             throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
         }
