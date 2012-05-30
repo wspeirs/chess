@@ -1,8 +1,13 @@
 package com.es.pieces;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.es.Board;
 
 public abstract class AbstractPiece implements Piece {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractPiece.class);
 
     private Color color;
     private Board board;
@@ -42,6 +47,7 @@ public abstract class AbstractPiece implements Piece {
      */
     public boolean addPos(int[] positions, int curIndex, int position) {
         if(position >= 0 && position < Board.MAX_SQUARE && (position & 0x08) == 0) {
+            LOG.debug("POS: {} INDEX: {}", Integer.toHexString(position), curIndex);
             final Piece p = board.getPiece(position);
 
             if(p == null) {

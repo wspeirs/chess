@@ -25,7 +25,7 @@ public class Bishop extends AbstractPiece {
 
     public int[] generateAllMoves() {
         final int pos = getCurPos();
-        int[] ret = new int[13]; // can only ever move in 13 positions
+        int[] ret = new int[17]; // can only ever move in 13 positions
         int curPos = 0;
 
         LOG.debug("CUR POS: {}", pos);

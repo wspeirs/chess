@@ -113,7 +113,7 @@ public class Board {
 
         whiteKing = (King) board[0x04];
     }
-
+    
     public static int squareToRow(int square) {
         return square >> 4;
     }
@@ -128,6 +128,22 @@ public class Board {
 
     public Piece getPiece(int square) {
         return this.board[square];
+    }
+    
+    /**
+     * Removes all the pieces from the board.
+     * Useful for debugging.
+     */
+    public void clearBoard() {
+        whitePieces.clear();
+        whiteCapturedPieces.clear();
+        whiteKing = null;
+        
+        blackPieces.clear();
+        blackCapturedPieces.clear();
+        blackKing = null;
+        
+        Arrays.fill(board, null);
     }
 
     public void printBoard() {
@@ -210,7 +226,7 @@ public class Board {
      * Removes a piece from the board, adding it to the captured pieces set.
      * @param piece The piece to remove from the board.
      */
-    private void capturePiece(Piece piece) {
+    public void capturePiece(Piece piece) {
         Color c = piece.getColor();
 
         // remove it from the pieces on the board and add it to the captured pieces
@@ -232,10 +248,10 @@ public class Board {
      * @param piece The piece to add to the board.
      * @param square The square to add the piece to.
      */
-    private void addPiece(Piece piece, int square) {
+    public void addPiece(Piece piece, int square) {
         Color c = piece.getColor();
 
-        // remove it from the pieces on the board and add it to the captured pieces
+        // remove it from the captured pieces and add it to the pieces on the board
         if(c.equals(Color.BLACK)) {
             blackPieces.add(piece);
             blackCapturedPieces.remove(piece);
@@ -244,7 +260,7 @@ public class Board {
             whiteCapturedPieces.remove(piece);
         }
 
-        // remove the piece from the board
+        // add the piece to the board
         board[square] = piece;
         piece.setCurPos(square);
     }
