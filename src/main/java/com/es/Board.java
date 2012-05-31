@@ -130,6 +130,10 @@ public class Board {
         return this.board[square];
     }
     
+    public Piece[] getBoard() {
+        return board;
+    }
+    
     /**
      * Removes all the pieces from the board.
      * Useful for debugging.
@@ -159,6 +163,12 @@ public class Board {
         System.out.println();
     }
 
+    /**
+     * Moves the piece from one square to another.
+     * @param fromSquare The starting square.
+     * @param toSquare The ending square.
+     * @throws IllegalMoveException
+     */
     public void makeMove(int fromSquare, int toSquare) throws IllegalMoveException {
         Piece fromPiece = board[fromSquare];
 
@@ -203,7 +213,7 @@ public class Board {
             this.printBoard();
         }
     }
-
+    
     /**
      * Given a king, checks to see if it is in check.
      * @param king The king to check.
@@ -264,9 +274,13 @@ public class Board {
         board[square] = piece;
         piece.setCurPos(square);
     }
-
+    
+    public Set<Piece> getPieces(Color color) {
+        return color.equals(Color.WHITE) ? whitePieces : blackPieces;
+    }
+    
     public List<Piece> getPiecsOfType(Color color, Class<? extends Piece> pieceType) {
-        final Set<Piece> pieces = color.equals(Color.WHITE) ? whitePieces : blackPieces;
+        final Set<Piece> pieces = getPieces(color);
         final ArrayList<Piece> ret = new ArrayList<Piece>();
 
         for(Piece p:pieces) {
