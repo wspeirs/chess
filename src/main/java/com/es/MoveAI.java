@@ -24,30 +24,32 @@ public class MoveAI {
             return;
         }
         
-        Set<Piece> pieces = currentNode.getBoard().getPieces(color);
+        Board board = currentNode.getBoard();
+        int[] pieces = board.getPieces(color);
         
         // generate all the moves for each of these pieces
-        for(Piece p:pieces) {
-            int[] moves = p.generateAllMoves(currentNode.getBoard());
+        for(int p:pieces) {
+            int[] moves = board.getPiece(p).generateAllMoves(board, p);
             
             for(int m:moves) {
                 if(m == Board.MAX_SQUARE) {
-                    continue;
+                    break;  // always in sorted order, so we're done here
                 }
                 
                 Board moveBoard = new Board(currentNode.getBoard());
                 
                 try {
-                    LOG.debug("Move: {} -> {}", Integer.toHexString(p.getCurPos()), Integer.toHexString(m));
+                    LOG.debug("Move: {} -> {}", Integer.toHexString(p), Integer.toHexString(m));
                     
-                    moveBoard.makeMove(p.getCurPos(), m);
+                    moveBoard.makeMove(p, m);
                     MoveNode childNode = nodes.get(moveBoard.getBoard());
                     
                     if(childNode == null) {
                         childNode = new MoveNode(moveBoard);
                         currentNode.addChild(childNode);  // add the new node
-                        computeNextMove(childNode, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE, --depth);
+                        computeNextMove(childNode, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE, depth - 1);
                     } else {
+                        LOG.debug("GOT TRANSPOSITION");
                         currentNode.addChild(childNode);  // transposition, so no need to search
                     }
                     
