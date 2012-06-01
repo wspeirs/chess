@@ -48,7 +48,7 @@ import com.es.pieces.Rook;
  * </code>
  *
  */
-public class Board {
+public class Board implements Cloneable {
 
     public static final Logger LOG = LoggerFactory.getLogger(Board.class);
 
@@ -58,60 +58,79 @@ public class Board {
 
     private Piece[] board = new Piece[MAX_SQUARE-1];
 
-    private Set<Piece> blackPieces = new HashSet<Piece>();
+    private int[] blackPieces = new int[16];
     private Set<Piece> blackCapturedPieces = new HashSet<Piece>();
 
-    private Set<Piece> whitePieces = new HashSet<Piece>();
+    private int[] whitePieces = new int[16];
     private Set<Piece> whiteCapturedPieces = new HashSet<Piece>();
 
-    private King blackKing;
-    private King whiteKing;
+    private int blackKing;
+    private int whiteKing;
 
     public Board() {
         // fill in black's pieces
-        board[0x70] = new Rook(Color.BLACK,   this, 0x70);
-        board[0x71] = new Knight(Color.BLACK, this, 0x71);
-        board[0x72] = new Bishop(Color.BLACK, this, 0x72);
-        board[0x73] = new Queen(Color.BLACK,  this, 0x73);
-        board[0x74] = new King(Color.BLACK,   this, 0x74);
-        board[0x75] = new Bishop(Color.BLACK, this, 0x75);
-        board[0x76] = new Knight(Color.BLACK, this, 0x76);
-        board[0x77] = new Rook(Color.BLACK,   this, 0x77);
+        board[0x70] = new Rook(Color.BLACK);
+        board[0x71] = new Knight(Color.BLACK);
+        board[0x72] = new Bishop(Color.BLACK);
+        board[0x73] = new Queen(Color.BLACK);
+        board[0x74] = new King(Color.BLACK);
+        board[0x75] = new Bishop(Color.BLACK);
+        board[0x76] = new Knight(Color.BLACK);
+        board[0x77] = new Rook(Color.BLACK);
 
-        // add black's pieces to the set
-        for(int i=0x70; i < 0x78; ++i) {
-            blackPieces.add(board[i]);
-        }
-
-        // add pawns to the board and set of pieces
+        // add pawns to the board
         for(int i=0x60; i < 0x68; ++i) {
-            board[i] = new Pawn(Color.BLACK, this, i);
-            blackPieces.add(board[i]);
+            board[i] = new Pawn(Color.BLACK);
         }
 
-        blackKing = (King) board[0x74];
-
-        // fill in white's pieces
+        // fill in white's pawns
         for(int i=0x10; i < 0x18; ++i) {
-            board[i] = new Pawn(Color.WHITE, this, i);
-            whitePieces.add(board[i]);
+            board[i] = new Pawn(Color.WHITE);
         }
 
-        board[0x00] = new Rook(Color.WHITE,   this, 0x00);
-        board[0x01] = new Knight(Color.WHITE, this, 0x01);
-        board[0x02] = new Bishop(Color.WHITE, this, 0x02);
-        board[0x03] = new Queen(Color.WHITE,  this, 0x03);
-        board[0x04] = new King(Color.WHITE,   this, 0x04);
-        board[0x05] = new Bishop(Color.WHITE, this, 0x05);
-        board[0x06] = new Knight(Color.WHITE, this, 0x06);
-        board[0x07] = new Rook(Color.WHITE,   this, 0x07);
+        board[0x00] = new Rook(Color.WHITE);
+        board[0x01] = new Knight(Color.WHITE);
+        board[0x02] = new Bishop(Color.WHITE);
+        board[0x03] = new Queen(Color.WHITE);
+        board[0x04] = new King(Color.WHITE);
+        board[0x05] = new Bishop(Color.WHITE);
+        board[0x06] = new Knight(Color.WHITE);
+        board[0x07] = new Rook(Color.WHITE);
 
-        // add white's pieces to the set
-        for(int i=0x00; i < 0x08; ++i) {
-            whitePieces.add(board[i]);
+        // add pieces
+        int w = 0;
+        int b = 0;
+        for(int i=0x00; i < board.length; ++i) {
+            Piece p = board[i];
+            
+            if(p != null) {
+                if(p.getColor().equals(Color.WHITE)) {
+                    whitePieces[w++] = i;
+                } else {
+                    blackPieces[b++] = i;
+                }
+            }
         }
-
-        whiteKing = (King) board[0x04];
+        
+        Arrays.sort(whitePieces);
+        Arrays.sort(blackPieces);
+        
+        // set the kings
+        blackKing = 0x74;
+        whiteKing = 0x04;
+    }
+    
+    // copy constructor
+    public Board(Board board) {
+        this.board = Arrays.copyOf(board.board, board.board.length);
+        
+        this.whitePieces = Arrays.copyOf(board.whitePieces, board.whitePieces.length);
+        this.whiteCapturedPieces.addAll(board.whiteCapturedPieces);
+        this.whiteKing = board.whiteKing;
+        
+        this.blackPieces = Arrays.copyOf(board.blackPieces, board.blackPieces.length);
+        this.blackCapturedPieces = new HashSet<Piece>(board.blackCapturedPieces);
+        this.blackKing = board.blackKing;
     }
     
     public static int squareToRow(int square) {
@@ -139,13 +158,13 @@ public class Board {
      * Useful for debugging.
      */
     public void clearBoard() {
-        whitePieces.clear();
+        Arrays.fill(whitePieces, Board.MAX_SQUARE);
         whiteCapturedPieces.clear();
-        whiteKing = null;
+        whiteKing = Board.MAX_SQUARE;
         
-        blackPieces.clear();
+        Arrays.fill(blackPieces, Board.MAX_SQUARE);
         blackCapturedPieces.clear();
-        blackKing = null;
+        blackKing = Board.MAX_SQUARE;
         
         Arrays.fill(board, null);
     }
@@ -173,11 +192,11 @@ public class Board {
         Piece fromPiece = board[fromSquare];
 
         if(fromPiece == null) {
-            throw new IllegalMoveException("There is no piece on square: " + fromSquare);
+            throw new IllegalMoveException("There is no piece on square: 0x" + Integer.toHexString(fromSquare));
         }
 
         // check to see if the move is legal or not
-        if(Arrays.binarySearch(fromPiece.generateAllMoves(), toSquare) < 0) {
+        if(Arrays.binarySearch(fromPiece.generateAllMoves(this, fromSquare), toSquare) < 0) {
             LOG.error("Illegal move {} - > {} for {}", new String[] { Integer.toHexString(fromSquare), Integer.toHexString(toSquare), fromPiece.toString() } );
             throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
         }
@@ -185,15 +204,12 @@ public class Board {
         Piece toPiece = board[toSquare];
 
         if(toPiece != null) {
-            capturePiece(toPiece);
+            capturePiece(toSquare);
         }
 
         // set the piece on the board
         board[toSquare] = fromPiece;
         board[fromSquare] = null;
-
-        // update the piece's position
-        fromPiece.setCurPos(toSquare);
 
         // make sure that this color's king is not in check
         boolean inCheck = fromPiece.getColor().equals(Color.WHITE) ? isInCheck(whiteKing) : isInCheck(blackKing);
@@ -219,12 +235,12 @@ public class Board {
      * @param king The king to check.
      * @return True if the king is in check, false otherwise.
      */
-    private boolean isInCheck(King king) {
-        final int kingPos = king.getCurPos();
-        final Set<Piece> pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
+    private boolean isInCheck(int kingPos) {
+        final King king = (King) board[kingPos];
+        final int[] pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
 
-        for(Piece p:pieces) {
-            if(Arrays.binarySearch(p.generateAllMoves(), kingPos) >= 0) {
+        for(int p:pieces) {
+            if(Arrays.binarySearch(board[p].generateAllMoves(this, p), kingPos) >= 0) {
                 return true;
             }
         }
@@ -236,21 +252,22 @@ public class Board {
      * Removes a piece from the board, adding it to the captured pieces set.
      * @param piece The piece to remove from the board.
      */
-    public void capturePiece(Piece piece) {
-        Color c = piece.getColor();
+    public void capturePiece(int pos) {
+        Color c = board[pos].getColor();
 
         // remove it from the pieces on the board and add it to the captured pieces
         if(c.equals(Color.BLACK)) {
-            blackPieces.remove(piece);
-            blackCapturedPieces.add(piece);
+            blackPieces[Arrays.binarySearch(blackPieces, pos)] = Board.MAX_SQUARE;
+            Arrays.sort(blackPieces);
+            blackCapturedPieces.add(board[pos]);
         } else {
-            whitePieces.remove(piece);
-            whiteCapturedPieces.add(piece);
+            whitePieces[Arrays.binarySearch(whitePieces, pos)] = Board.MAX_SQUARE;
+            Arrays.sort(whitePieces);
+            whiteCapturedPieces.add(board[pos]);
         }
 
         // remove the piece from the board
-        board[piece.getCurPos()] = null;
-        piece.setCurPos(MAX_SQUARE);
+        board[pos] = null;
     }
 
     /**
@@ -263,29 +280,30 @@ public class Board {
 
         // remove it from the captured pieces and add it to the pieces on the board
         if(c.equals(Color.BLACK)) {
-            blackPieces.add(piece);
+            blackPieces[Arrays.binarySearch(blackPieces, Board.MAX_SQUARE)] = square;
+            Arrays.sort(blackPieces);
             blackCapturedPieces.remove(piece);
         } else {
-            whitePieces.add(piece);
+            whitePieces[Arrays.binarySearch(whitePieces, Board.MAX_SQUARE)] = square;
+            Arrays.sort(whitePieces);
             whiteCapturedPieces.remove(piece);
         }
 
         // add the piece to the board
         board[square] = piece;
-        piece.setCurPos(square);
     }
     
-    public Set<Piece> getPieces(Color color) {
+    public int[] getPieces(Color color) {
         return color.equals(Color.WHITE) ? whitePieces : blackPieces;
     }
     
     public List<Piece> getPiecsOfType(Color color, Class<? extends Piece> pieceType) {
-        final Set<Piece> pieces = getPieces(color);
+        final int[] pieces = getPieces(color);
         final ArrayList<Piece> ret = new ArrayList<Piece>();
 
-        for(Piece p:pieces) {
-            if(p.getClass().equals(pieceType)) {
-                ret.add(p);
+        for(int p:pieces) {
+            if(board[p].getClass().equals(pieceType)) {
+                ret.add(board[p]);
             }
         }
 

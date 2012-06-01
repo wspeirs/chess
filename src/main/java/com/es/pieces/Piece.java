@@ -1,5 +1,7 @@
 package com.es.pieces;
 
+import com.es.Board;
+
 public interface Piece {
 
     public enum Color {
@@ -20,9 +22,5 @@ public interface Piece {
      * 
      * @return a sorted array of possible squares the piece could move into.
      */
-    public int[] generateAllMoves();
-    
-    public int getCurPos();
-    
-    public void setCurPos(int position);
+    public int[] generateAllMoves(Board board, int curPos);
 }

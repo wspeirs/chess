@@ -11,8 +11,8 @@ public class Rook extends AbstractPiece {
 
     private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
 
-    public Rook(Color color, Board board, int currentPosition) {
-        super(color, board, currentPosition);
+    public Rook(Color color) {
+        super(color);
     }
 
     public String toString() {
@@ -23,17 +23,16 @@ public class Rook extends AbstractPiece {
         }
     }
 
-    public int[] generateAllMoves() {
-        final int pos = getCurPos();
+    public int[] generateAllMoves(Board board, int curPos) {
         int[] ret = new int[18]; // can only move in 14 places
-        int curPos = 0;
+        int retIndex = 0;
 
-        for(int i = pos + 0x10; addPos(ret, curPos++, i); i += 0x10); // move forward
-        for(int i = pos - 0x10; addPos(ret, curPos++, i); i -= 0x10); // move backward
-        for(int i = pos + 0x01; addPos(ret, curPos++, i); i += 0x01); // move right
-        for(int i = pos - 0x01; addPos(ret, curPos++, i); i -= 0x01); // move left
+        for(int i = curPos + 0x10; addPos(board, ret, retIndex++, i); i += 0x10); // move forward
+        for(int i = curPos - 0x10; addPos(board, ret, retIndex++, i); i -= 0x10); // move backward
+        for(int i = curPos + 0x01; addPos(board, ret, retIndex++, i); i += 0x01); // move right
+        for(int i = curPos - 0x01; addPos(board, ret, retIndex++, i); i -= 0x01); // move left
 
-        Arrays.fill(ret, curPos, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
+        Arrays.fill(ret, retIndex, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
         Arrays.sort(ret);   // sort the array
 
         return ret;

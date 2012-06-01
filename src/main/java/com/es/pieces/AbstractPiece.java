@@ -10,29 +10,13 @@ public abstract class AbstractPiece implements Piece {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractPiece.class);
 
     private Color color;
-    private Board board;
-    private int curPos;
 
-    public AbstractPiece(Piece.Color color, Board board, int currentPosition) {
+    public AbstractPiece(Piece.Color color) {
         this.color = color;
-        this.board = board;
-        this.curPos = currentPosition;
     }
 
     public Color getColor() {
         return color;
-    }
-
-    public Board getBoard() {
-        return board;
-    }
-
-    public int getCurPos() {
-        return curPos;
-    }
-
-    public void setCurPos(int curPos) {
-        this.curPos = curPos;
     }
 
     /**
@@ -45,9 +29,9 @@ public abstract class AbstractPiece implements Piece {
      * @param position The position to be checking.
      * @return True if the spot was empty, false otherwise.
      */
-    public boolean addPos(int[] positions, int curIndex, int position) {
+    public boolean addPos(Board board, int[] positions, int curIndex, int position) {
         if(position >= 0 && position < Board.MAX_SQUARE && (position & 0x08) == 0) {
-            LOG.debug("POS: {} INDEX: {}", Integer.toHexString(position), curIndex);
+//            LOG.debug("POS: {} INDEX: {}", Integer.toHexString(position), curIndex);
             final Piece p = board.getPiece(position);
 
             if(p == null) {
