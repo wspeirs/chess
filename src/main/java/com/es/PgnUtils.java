@@ -57,7 +57,7 @@ public class PgnUtils {
         int[] ret = new int[2];
         int curChar = 0;
         int pieceType = move.charAt(curChar);
-        List<Piece> pieces;
+        List<Integer> pieces;
 
         // get a list of pieces of that type
         switch(pieceType) {
@@ -118,9 +118,9 @@ public class PgnUtils {
         boolean found = false;
 
         // go through the list and see if there is ONLY one possible piece move
-        for(Piece p:pieces) {
-            int row = Board.squareToRow(p.getCurPos());
-            int col = Board.squareToCol(p.getCurPos());
+        for(Integer p:pieces) {
+            int row = Board.squareToRow(p);
+            int col = Board.squareToCol(p);
 
             if(startRow != Board.MAX_ROW && startRow != row) {
                 continue;
@@ -130,14 +130,14 @@ public class PgnUtils {
                 continue;
             }
 
-            if(Arrays.binarySearch(p.generateAllMoves(), ret[1]) >= 0) {
+            if(Arrays.binarySearch(board.getPiece(p).generateAllMoves(board, p), ret[1]) >= 0) {
                 if(found) {
                     LOG.error("Ambigious move: {}", move);
                     throw new IllegalMoveException("Ambigious move");
                 }
 
                 found = true;
-                ret[0] = p.getCurPos();
+                ret[0] = p;
             }
         }
 

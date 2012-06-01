@@ -211,6 +211,21 @@ public class Board implements Cloneable {
         board[toSquare] = fromPiece;
         board[fromSquare] = null;
 
+        // update the piece's location
+        if(fromPiece.getColor().equals(Color.WHITE)) {
+            whitePieces[Arrays.binarySearch(whitePieces, fromSquare)] = toSquare;
+            Arrays.sort(whitePieces);
+            if(fromPiece instanceof King) {
+                whiteKing = toSquare;
+            }
+        } else {
+            blackPieces[Arrays.binarySearch(blackPieces, fromSquare)] = toSquare;
+            Arrays.sort(blackPieces);
+            if(fromPiece instanceof King) {
+                blackKing = toSquare;
+            }
+        }
+
         // make sure that this color's king is not in check
         boolean inCheck = fromPiece.getColor().equals(Color.WHITE) ? isInCheck(whiteKing) : isInCheck(blackKing);
 
@@ -224,7 +239,7 @@ public class Board implements Cloneable {
             }
             throw new IllegalMoveException("That move would put the king into check");
         }
-
+        
         if(LOG.isDebugEnabled()) {
             this.printBoard();
         }
@@ -240,7 +255,7 @@ public class Board implements Cloneable {
         final int[] pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
 
         for(int p:pieces) {
-            if(Arrays.binarySearch(board[p].generateAllMoves(this, p), kingPos) >= 0) {
+            if(p != Board.MAX_SQUARE && Arrays.binarySearch(board[p].generateAllMoves(this, p), kingPos) >= 0) {
                 return true;
             }
         }
@@ -283,10 +298,18 @@ public class Board implements Cloneable {
             blackPieces[Arrays.binarySearch(blackPieces, Board.MAX_SQUARE)] = square;
             Arrays.sort(blackPieces);
             blackCapturedPieces.remove(piece);
+            
+            if(piece instanceof King) {
+                blackKing = square;
+            }
         } else {
             whitePieces[Arrays.binarySearch(whitePieces, Board.MAX_SQUARE)] = square;
             Arrays.sort(whitePieces);
             whiteCapturedPieces.remove(piece);
+            
+            if(piece instanceof King) {
+                whiteKing = square;
+            }
         }
 
         // add the piece to the board
@@ -297,13 +320,13 @@ public class Board implements Cloneable {
         return color.equals(Color.WHITE) ? whitePieces : blackPieces;
     }
     
-    public List<Piece> getPiecsOfType(Color color, Class<? extends Piece> pieceType) {
+    public List<Integer> getPiecsOfType(Color color, Class<? extends Piece> pieceType) {
         final int[] pieces = getPieces(color);
-        final ArrayList<Piece> ret = new ArrayList<Piece>();
+        final ArrayList<Integer> ret = new ArrayList<Integer>();
 
         for(int p:pieces) {
-            if(board[p].getClass().equals(pieceType)) {
-                ret.add(board[p]);
+            if(p != Board.MAX_SQUARE && board[p].getClass().equals(pieceType)) {
+                ret.add(p);
             }
         }
 
