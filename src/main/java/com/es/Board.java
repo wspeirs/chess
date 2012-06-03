@@ -231,6 +231,14 @@ public class Board implements Cloneable {
      * @throws IllegalMoveException
      */
     public void makeMove(int fromSquare, int toSquare, boolean kingCheck) throws IllegalMoveException {
+        if(fromSquare == -1) {
+            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, true);
+            return;
+        } else if(fromSquare == -2){
+            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, false);
+            return;
+        }
+
         Piece fromPiece = board[fromSquare];
 
         if(fromPiece == null) {
@@ -287,8 +295,68 @@ public class Board implements Cloneable {
             }
         }
 
+        fromPiece.pieceMoved(); // mark the piece has having moved
+
         if(LOG.isTraceEnabled()) {
             this.printBoard();
+        }
+    }
+
+    public void castel(Color color, boolean kingSide) throws IllegalMoveException {
+        int[] pieces = color.equals(Color.WHITE) ? whitePieces : blackPieces;
+        int kingPos = color.equals(Color.WHITE) ? whiteKing : blackKing;
+        int rookPos;
+
+        if(board[kingPos] != null && board[kingPos].hasMoved()) {
+            throw new IllegalMoveException("King has already moved, cannot castle");
+        }
+
+        if(kingSide) {
+            rookPos = color.equals(Color.WHITE) ? 0x07 : 0x77;
+        } else {
+            rookPos = color.equals(Color.WHITE) ? 0x00 : 0x70;
+        }
+
+        if(board[rookPos] != null && board[rookPos].hasMoved()) {
+            throw new IllegalMoveException("Rook has already moved, cannot castle");
+        }
+
+        // make sure the spaces between are clear
+        for(int i=Math.min(kingPos, rookPos) + 1; i < Math.max(kingPos, rookPos); ++i) {
+            if(board[i] != null) {
+                throw new IllegalMoveException("Pieces between king and rook, cannot castle");
+            }
+        }
+
+        board[kingPos].pieceMoved();
+        board[rookPos].pieceMoved();
+
+        if(kingSide) {
+            // move the king
+            pieces[Arrays.binarySearch(pieces, kingPos)] = kingPos + 2;
+            board[kingPos + 2] = board[kingPos];
+            board[kingPos] = null;
+            kingPos += 2;
+            Arrays.sort(pieces);
+
+            // move the rook
+            pieces[Arrays.binarySearch(pieces, rookPos)] =  kingPos - 1;
+            board[kingPos - 1] = board[rookPos];
+            board[rookPos] = null;
+            Arrays.sort(pieces);
+        } else {
+            // move the king
+            pieces[Arrays.binarySearch(pieces, kingPos)] = kingPos - 2;
+            board[kingPos - 2] = board[kingPos];
+            board[kingPos] = null;
+            kingPos -= 2;
+            Arrays.sort(pieces);
+
+            // move the rook
+            pieces[Arrays.binarySearch(pieces, rookPos)] =  kingPos + 1;
+            board[kingPos + 1] = board[rookPos];
+            board[rookPos] = null;
+            Arrays.sort(pieces);
         }
     }
 

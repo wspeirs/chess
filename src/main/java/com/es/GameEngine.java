@@ -18,6 +18,12 @@ public class GameEngine {
         MoveNode currentNode = new MoveNode(board, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
         MoveAI ai = new MoveAI(Color.BLACK);    // create the AI
 
+        board.capturePiece(0x01);   // knight
+        board.capturePiece(0x02);   // bishop
+        board.capturePiece(0x03);   // queen
+
+        board.printBoard();
+
         PgnUtils utils = new PgnUtils(board);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line;
@@ -31,6 +37,8 @@ public class GameEngine {
                 System.err.println("Illegal user move: " + e.getMessage());
                 continue;
             }
+
+            board.printBoard();
 
             currentNode = ai.findNode(board);
 

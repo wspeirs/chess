@@ -27,4 +27,7 @@ public interface Piece {
     public double getValue();
 
     public double getPositionValue(int square);
+
+    public boolean hasMoved();
+    public void pieceMoved();
 }

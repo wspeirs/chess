@@ -11,6 +11,7 @@ public abstract class AbstractPiece implements Piece {
     private final double[][] POSITION_VALUES;
 
     private Color color;
+    private boolean hasMoved = false;
 
     public AbstractPiece(Piece.Color color, double[][] positionValues) {
         this.color = color;
@@ -59,5 +60,13 @@ public abstract class AbstractPiece implements Piece {
 
         positions[curIndex] = Board.MAX_SQUARE;   // fill in with our sentinel value
         return false;
+    }
+
+    public boolean hasMoved() {
+        return hasMoved;
+    }
+
+    public void pieceMoved() {
+        hasMoved = true;
     }
 }
