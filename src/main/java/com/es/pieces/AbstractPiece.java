@@ -6,17 +6,31 @@ import org.slf4j.LoggerFactory;
 import com.es.Board;
 
 public abstract class AbstractPiece implements Piece {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(AbstractPiece.class);
+    private final double[][] POSITION_VALUES;
 
     private Color color;
 
-    public AbstractPiece(Piece.Color color) {
+    public AbstractPiece(Piece.Color color, double[][] positionValues) {
         this.color = color;
+        this.POSITION_VALUES = positionValues;
     }
 
     public Color getColor() {
         return color;
+    }
+
+    public double getPositionValue(int square) {
+        int col = Board.squareToCol(square);
+        int row = Board.squareToRow(square);
+
+        if(getColor().equals(Color.BLACK)) {
+            row = (row - 7) * -1;
+            col = (col - 7) * -1;
+        }
+
+        return POSITION_VALUES[row][col] * getValue();
     }
 
     /**

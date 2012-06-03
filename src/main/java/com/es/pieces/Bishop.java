@@ -10,9 +10,23 @@ import com.es.Board;
 public class Bishop extends AbstractPiece {
 
     private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
+    private static final double[][] POSITION_VALUES =
+    { { -20,-10,-10,-10,-10,-10,-10,-20 },
+      { -10,  1,  1,  1,  1,  1,  1,-10 },
+      { -10,  1,  5, 10, 10,  5,  1,-10 },
+      { -10,  5,  5, 10, 10,  5,  5,-10 },
+      { -10,  1, 10, 10, 10, 10,  1,-10 },
+      { -10, 10, 10, 10, 10, 10, 10,-10 },
+      { -10,  5,  1,  1,  1,  1,  5,-10 },
+      { -20,-10,-10,-10,-10,-10,-10,-20 }
+    };
 
     public Bishop(Color color) {
-        super(color);
+        super(color, POSITION_VALUES);
+    }
+
+    public double getValue() {
+        return 3.25;
     }
 
     public String toString() {

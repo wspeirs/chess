@@ -1,7 +1,8 @@
 package com.es;
 
 
-import static org.junit.Assert.assertTrue;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -22,9 +23,13 @@ public class BoardTest {
     }
 
     @Test
-    public void testMove() throws Exception {
-        board.makeMove(1, 18);
+    public void testMap() {
+        Map<Board, Integer> map = new HashMap<Board, Integer>();
 
-        board.printBoard();
+        Board board1 = new Board();
+        Board board2 = new Board(board1);
+
+        map.put(board1, 1);
+        map.put(board2, 2);
     }
 }

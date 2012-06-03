@@ -17,10 +17,14 @@ public interface Piece {
 
     /**
      * Returns a sorted array of possible moves for the piece.
-     * 
+     *
      * There are NO checks for things like putting the king into check etc.
-     * 
+     *
      * @return a sorted array of possible squares the piece could move into.
      */
     public int[] generateAllMoves(Board board, int curPos);
+
+    public double getValue();
+
+    public double getPositionValue(int square);
 }

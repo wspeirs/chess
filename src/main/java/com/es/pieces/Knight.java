@@ -10,9 +10,23 @@ import com.es.Board;
 public class Knight extends AbstractPiece {
 
     private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
+    private static final double[][] POSITION_VALUES =
+    { { -50,-40,-30,-30,-30,-30,-40,-50 },
+      { -40,-20,  1,  1,  1,  1,-20,-40 },
+      { -30,  1, 10, 15, 15, 10,  1,-30 },
+      { -30,  5, 15, 20, 20, 15,  5,-30 },
+      { -30,  1, 15, 20, 20, 15,  1,-30 },
+      { -30,  5, 10, 15, 15, 10,  5,-30 },
+      { -40,-20,  1,  5,  5,  1,-20,-40 },
+      { -50,-40,-30,-30,-30,-30,-40,-50 }
+    };
 
     public Knight(Color color) {
-        super(color);
+        super(color, POSITION_VALUES);
+    }
+
+    public double getValue() {
+        return 3.0;
     }
 
     public String toString() {

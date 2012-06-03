@@ -54,9 +54,9 @@ public class Board implements Cloneable {
 
     public static final int MAX_ROW = 8;
     public static final int MAX_COL = 8;
-    public static final int MAX_SQUARE = 0x80;
+    public static final int MAX_SQUARE = 0x78;
 
-    private Piece[] board = new Piece[MAX_SQUARE-1];
+    private Piece[] board = new Piece[MAX_SQUARE];
 
     private int[] blackPieces = new int[16];
     private Set<Piece> blackCapturedPieces = new HashSet<Piece>();
@@ -66,6 +66,8 @@ public class Board implements Cloneable {
 
     private int blackKing;
     private int whiteKing;
+
+    private final int hashCode;
 
     public Board() {
         // fill in black's pieces
@@ -102,7 +104,7 @@ public class Board implements Cloneable {
         int b = 0;
         for(int i=0x00; i < board.length; ++i) {
             Piece p = board[i];
-            
+
             if(p != null) {
                 if(p.getColor().equals(Color.WHITE)) {
                     whitePieces[w++] = i;
@@ -111,28 +113,64 @@ public class Board implements Cloneable {
                 }
             }
         }
-        
+
         Arrays.sort(whitePieces);
         Arrays.sort(blackPieces);
-        
+
         // set the kings
         blackKing = 0x74;
         whiteKing = 0x04;
+
+        // compute the hash code
+        hashCode = whitePieces.hashCode() + blackPieces.hashCode() * 3 + board.hashCode() * 7;
     }
-    
+
     // copy constructor
     public Board(Board board) {
         this.board = Arrays.copyOf(board.board, board.board.length);
-        
+
         this.whitePieces = Arrays.copyOf(board.whitePieces, board.whitePieces.length);
         this.whiteCapturedPieces.addAll(board.whiteCapturedPieces);
         this.whiteKing = board.whiteKing;
-        
+
         this.blackPieces = Arrays.copyOf(board.blackPieces, board.blackPieces.length);
         this.blackCapturedPieces = new HashSet<Piece>(board.blackCapturedPieces);
         this.blackKing = board.blackKing;
+
+        this.hashCode = board.hashCode;
     }
-    
+
+    @Override
+    public boolean equals(Object obj) {
+
+//        LOG.info("CHECKING EQUALS");
+
+        if(obj instanceof Board) {
+            Board board = (Board) obj;
+
+            for(int i=0; i < whitePieces.length; ++i) {
+                if(whitePieces[i] != board.whitePieces[i] || blackPieces[i] != board.blackPieces[i]) {
+//                    LOG.info("NOT EQUAL PIECES");
+                    return false;
+                } else if(this.board[i] != null && board.board[i] != null && (!this.board[i].equals(board.board[i]))) {
+//                    LOG.info("NOT EQUAL BOARD");
+                    return false;
+                }
+            }
+
+//            LOG.info("EQUAL");
+            return true;
+        }
+
+        return false;
+    }
+
+    public int hashCode() {
+//        int hash = whitePieces.hashCode() + blackPieces.hashCode() * 3 + board.hashCode() * 7;
+//        LOG.info("HASH: " + hashCode);
+        return hashCode;
+    }
+
     public static int squareToRow(int square) {
         return square >> 4;
     }
@@ -148,11 +186,11 @@ public class Board implements Cloneable {
     public Piece getPiece(int square) {
         return this.board[square];
     }
-    
+
     public Piece[] getBoard() {
         return board;
     }
-    
+
     /**
      * Removes all the pieces from the board.
      * Useful for debugging.
@@ -161,11 +199,11 @@ public class Board implements Cloneable {
         Arrays.fill(whitePieces, Board.MAX_SQUARE);
         whiteCapturedPieces.clear();
         whiteKing = Board.MAX_SQUARE;
-        
+
         Arrays.fill(blackPieces, Board.MAX_SQUARE);
         blackCapturedPieces.clear();
         blackKing = Board.MAX_SQUARE;
-        
+
         Arrays.fill(board, null);
     }
 
@@ -182,13 +220,17 @@ public class Board implements Cloneable {
         System.out.println();
     }
 
+    public void makeMove(int fromSquare, int toSquare) throws IllegalMoveException {
+        makeMove(fromSquare, toSquare, true);
+    }
+
     /**
      * Moves the piece from one square to another.
      * @param fromSquare The starting square.
      * @param toSquare The ending square.
      * @throws IllegalMoveException
      */
-    public void makeMove(int fromSquare, int toSquare) throws IllegalMoveException {
+    public void makeMove(int fromSquare, int toSquare, boolean kingCheck) throws IllegalMoveException {
         Piece fromPiece = board[fromSquare];
 
         if(fromPiece == null) {
@@ -226,31 +268,36 @@ public class Board implements Cloneable {
             }
         }
 
-        // make sure that this color's king is not in check
-        boolean inCheck = fromPiece.getColor().equals(Color.WHITE) ? isInCheck(whiteKing) : isInCheck(blackKing);
+        if(kingCheck) {
+            // make sure that this color's king is not in check
+            boolean inCheck = fromPiece.getColor().equals(Color.WHITE) ? isInCheck(whiteKing) : isInCheck(blackKing);
 
-        // need to undo the move
-        if(inCheck) {
-            board[fromSquare] = fromPiece;
-            board[toSquare] = toPiece;
+            // need to undo the move
+            if(inCheck) {
+                board[fromSquare] = fromPiece;
+                board[toSquare] = toPiece;
 
-            if(toPiece != null) {
-                addPiece(toPiece, toSquare);
+                if(toPiece != null) {
+                    addPiece(toPiece, toSquare);
+                }
+                final String from = Integer.toHexString(fromSquare);
+                final String to = Integer.toHexString(toSquare);
+
+                throw new IllegalMoveException("The move 0x" + from + " -> 0x" + to + " would put the king into check", true);
             }
-            throw new IllegalMoveException("That move would put the king into check");
         }
-        
-        if(LOG.isDebugEnabled()) {
+
+        if(LOG.isTraceEnabled()) {
             this.printBoard();
         }
     }
-    
+
     /**
      * Given a king, checks to see if it is in check.
      * @param king The king to check.
      * @return True if the king is in check, false otherwise.
      */
-    private boolean isInCheck(int kingPos) {
+    public boolean isInCheck(int kingPos) {
         final King king = (King) board[kingPos];
         final int[] pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
 
@@ -298,7 +345,7 @@ public class Board implements Cloneable {
             blackPieces[Arrays.binarySearch(blackPieces, Board.MAX_SQUARE)] = square;
             Arrays.sort(blackPieces);
             blackCapturedPieces.remove(piece);
-            
+
             if(piece instanceof King) {
                 blackKing = square;
             }
@@ -306,7 +353,7 @@ public class Board implements Cloneable {
             whitePieces[Arrays.binarySearch(whitePieces, Board.MAX_SQUARE)] = square;
             Arrays.sort(whitePieces);
             whiteCapturedPieces.remove(piece);
-            
+
             if(piece instanceof King) {
                 whiteKing = square;
             }
@@ -315,11 +362,11 @@ public class Board implements Cloneable {
         // add the piece to the board
         board[square] = piece;
     }
-    
+
     public int[] getPieces(Color color) {
         return color.equals(Color.WHITE) ? whitePieces : blackPieces;
     }
-    
+
     public List<Integer> getPiecsOfType(Color color, Class<? extends Piece> pieceType) {
         final int[] pieces = getPieces(color);
         final ArrayList<Integer> ret = new ArrayList<Integer>();

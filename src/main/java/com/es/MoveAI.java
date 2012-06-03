@@ -1,67 +1,244 @@
 package com.es;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.es.pieces.Piece;
+import com.es.pieces.King;
 import com.es.pieces.Piece.Color;
 
 public class MoveAI {
     private static final Logger LOG = LoggerFactory.getLogger(MoveAI.class);
 
-    private Map<Piece[], MoveNode> nodes = new HashMap<Piece[], MoveNode>();
-    
-    public void computeNextMove(MoveNode currentNode, Color color) throws CloneNotSupportedException {
-        computeNextMove(currentNode, color, 2);
+    private Map<Board, MoveNode> nodes = new HashMap<Board, MoveNode>();
+    private Color colorPlaying;
+
+    public MoveAI(Color colorPlaying) {
+        this.colorPlaying = colorPlaying;
     }
-    
-    public void computeNextMove(MoveNode currentNode, Color color, int depth) throws CloneNotSupportedException {
-        if(depth == 0) {
-            return;
+
+    public int getTotalNodes() {
+        return nodes.size();
+    }
+
+    public MoveNode findNode(Board board) {
+        return nodes.get(board);
+    }
+
+    public void removeNodes(MoveNode node) {
+        for(MoveNode mn:node.getChildren()) {
+            // remove all children nodes
+            nodes.remove(mn.getBoard());
+
+            // remove all the children's children
+            for(MoveNode cmn:mn.getChildren()) {
+                nodes.remove(cmn);
+            }
         }
-        
+
+        // remove this node
+        nodes.remove(node);
+    }
+
+    public int[] computeNextMove(MoveNode currentNode, Color color) {
+        computeNextChildMove(currentNode, color, 2);
+
+        currentNode.printChildren();
+
+        LOG.info("NODES BEFORE PRUNE: {} {}", nodes.size(), currentNode.getChildCount());
+
+        List<MoveNode> removeNodes = currentNode.keepTopChildren(20);
+/*
+        for(MoveNode node:removeNodes) {
+            this.removeNodes(node);
+        }
+*/
+        nodes.clear();
+        LOG.info("NODES AFTER PRUNE: {} {}", nodes.size(), currentNode.getChildCount());
+
+        MoveNode moveNode = computeNextChildMove(currentNode, color, 4);
+        nodes.clear();
+
+        return moveNode.getMove();
+    }
+
+    public MoveNode computeNextChildMove(MoveNode currentNode, Color color, int depth) {
+        if(depth == 0) {
+            return currentNode;
+        }
+
+        if(currentNode.getChildCount() != 0) {
+            for(MoveNode child:currentNode.getChildren()) {
+                if(child.getDepth() < depth) {
+                    computeNextChildMove(child, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE, depth-1);
+                }
+            }
+
+            MoveNode ret;
+            if(colorPlaying.equals(color)) {
+                // we made a move for ourself, so get the best
+                ret = currentNode.getBestChild();
+            } else {
+                ret = currentNode.getWorstChild();
+            }
+
+            currentNode.setScore(ret.getScore());
+            currentNode.setDepth(depth);
+
+            return ret;   // return the best child
+        } else {
+//            LOG.info("CALLING NEXT: {} {}", depth, nodes.size());
+            return computeNextMove(currentNode, color, depth);
+        }
+    }
+
+    public MoveNode computeNextMove(MoveNode currentNode, Color color, int depth) {
+        if(depth == 0) {
+            // compute the score
+            double score = computeScore(currentNode);
+
+            LOG.debug("SCORE: {}", score);
+
+            currentNode.setScore(score);
+
+            // set the depth
+            currentNode.setDepth(0);
+            return currentNode;
+        }
+
         Board board = currentNode.getBoard();
         int[] pieces = board.getPieces(color);
-        
+
         // generate all the moves for each of these pieces
         for(int p:pieces) {
+            if(p == Board.MAX_SQUARE) {
+                break;
+            }
+
+            // only check the king moves if it's in check
+            if(board.getPiece(p) instanceof King && !board.isInCheck(p)) {
+                continue;
+            }
+
             int[] moves = board.getPiece(p).generateAllMoves(board, p);
-            
+
             for(int m:moves) {
                 if(m == Board.MAX_SQUARE) {
                     break;  // always in sorted order, so we're done here
                 }
-                
+
                 Board moveBoard = new Board(currentNode.getBoard());
-                
+
                 try {
                     LOG.debug("Move: {} -> {}", Integer.toHexString(p), Integer.toHexString(m));
-                    
-                    moveBoard.makeMove(p, m);
-                    MoveNode childNode = nodes.get(moveBoard.getBoard());
-                    
+
+                    moveBoard.makeMove(p, m, false);
+                    MoveNode childNode = null; // nodes.get(moveBoard);
+
                     if(childNode == null) {
-                        childNode = new MoveNode(moveBoard);
-                        currentNode.addChild(childNode);  // add the new node
+                        childNode = new MoveNode(moveBoard, new int[] { p, m });
+                        // nodes.put(moveBoard, childNode);    // add to our set of nodes
                         computeNextMove(childNode, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE, depth - 1);
                     } else {
                         LOG.debug("GOT TRANSPOSITION");
-                        currentNode.addChild(childNode);  // transposition, so no need to search
                     }
-                    
+
+                    // by here we've recursed down
+                    currentNode.addChild(childNode);  // add the new node
+
                 } catch (IllegalMoveException e) {
-                    LOG.debug("Illegal move during compute: {}", e.getMessage());
-                    moveBoard.printBoard();
-                    System.exit(-1);
+                    LOG.warn("Illegal move");
+                    if(!e.isKingInCheck()) {
+                        LOG.error("Illegal move during compute: {}", e.getMessage());
+                        moveBoard.printBoard();
+                        System.exit(-1);
+                    }
                 }
             }
         }
+
+        // all moves put the king into check
+        if(currentNode.getChildCount() == 0) {
+            LOG.warn("NO CHILDREN");
+            currentNode.getBoard().printBoard();
+            currentNode.setScore(computeScore(currentNode));
+            currentNode.setDepth(depth);
+            return currentNode;
+        }
+
+        // we've added all the children, so get the score
+        MoveNode child;
+
+        if(colorPlaying.equals(color)) {
+            // we made a move for ourself, so get the best
+            child = currentNode.getBestChild();
+        } else {
+            child = currentNode.getWorstChild();
+        }
+
+        currentNode.setScore(child.getScore());
+        currentNode.setDepth(depth);
+
+        return child;   // return the best child
     }
 
+    public double computeScore(MoveNode node) {
+        final Board board = node.getBoard();
+        final int[] whitePieces = board.getPieces(Color.WHITE);
+        final int[] blackPieces = board.getPieces(Color.BLACK);
 
+        double whiteScore = 0.0;
+        double blackScore = 0.0;
+
+        for(int p:whitePieces) {
+            if(p == Board.MAX_SQUARE) {
+                break;
+            }
+            whiteScore += board.getPiece(p).getValue();
+        }
+
+        for(int p:blackPieces) {
+            if(p == Board.MAX_SQUARE) {
+                break;
+            }
+            blackScore += board.getPiece(p).getValue();
+        }
+
+        if(whiteScore != blackScore) {
+            if(LOG.isDebugEnabled()) {
+                LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
+                LOG.info("CAPTURE WHITE SCORE: {} BLACK SCORE: {}", whiteScore, blackScore);
+            }
+            return colorPlaying.equals(Color.WHITE) ? (whiteScore - blackScore) * 100 : (blackScore - whiteScore) * 100;
+        }
+
+        whiteScore = 0;
+        blackScore = 0;
+
+        // compute the value based upon position
+        for(int p:whitePieces) {
+            if(p == Board.MAX_SQUARE) {
+                break;
+            }
+            whiteScore += board.getPiece(p).getPositionValue(p);
+        }
+
+        for(int p:blackPieces) {
+            if(p == Board.MAX_SQUARE) {
+                break;
+            }
+            blackScore += board.getPiece(p).getPositionValue(p);
+        }
+
+        if(LOG.isDebugEnabled()) {
+            LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
+            LOG.info("POSITION WHITE SCORE: {} BLACK SCORE: {}", whiteScore, blackScore);
+        }
+
+        return colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore;
+    }
 
 }

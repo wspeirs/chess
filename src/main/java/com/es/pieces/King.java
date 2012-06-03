@@ -10,9 +10,23 @@ import com.es.Board;
 public class King extends AbstractPiece {
 
     private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
+    private static final double POSITION_VALUES[][] =
+    { { -30,-40,-40,-50,-50,-40,-40,-30 },
+      { -30,-40,-40,-50,-50,-40,-40,-30 },
+      { -30,-40,-40,-50,-50,-40,-40,-30 },
+      { -30,-40,-40,-50,-50,-40,-40,-30 },
+      { -20,-30,-30,-40,-40,-30,-30,-20 },
+      { -10,-20,-20,-20,-20,-20,-20,-10 },
+      {  20, 20,  1,  1,  1,  1, 20, 20 },
+      {  20, 30, 10,  1,  1, 10, 30, 20 }
+    };
 
     public King(Color color) {
-        super(color);
+        super(color, POSITION_VALUES);
+    }
+
+    public double getValue() {
+        return 1000.0;
     }
 
     public String toString() {

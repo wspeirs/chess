@@ -11,9 +11,23 @@ import com.es.Board;
 public class Pawn extends AbstractPiece {
 
     private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
+    private static final double[][] POSITION_VALUES =
+    { {  1,  1,  1,  1,  1,  1,  1,  1 },
+      { 50, 50, 50, 50, 50, 50, 50, 50 },
+      { 10, 10, 20, 30, 30, 20, 10, 10 },
+      {  5,  5, 10, 25, 25, 10,  5,  5 },
+      {  1,  1,  1, 20, 20,  1,  1,  1 },
+      {  5, -5,-10,  1,  1,-10, -5,  5 },
+      {  5, 10, 10,-20,-20, 10, 10,  5 },
+      {  1,  1,  1,  1,  1,  1,  1,  1 }
+    };
 
     public Pawn(Color color) {
-        super(color);
+        super(color, POSITION_VALUES);
+    }
+
+    public double getValue() {
+        return 1.0;
     }
 
     public String toString() {
@@ -46,11 +60,11 @@ public class Pawn extends AbstractPiece {
                     ret[retIndex++] = move;
                 }
             }
-            
+
             // capture lower-left
             move = curPos - 0x11;
             if(move >= 0) {
-                Piece p = board.getPiece(move); 
+                Piece p = board.getPiece(move);
                 if(p != null && p.getColor().equals(Color.WHITE)) {
                     ret[retIndex++] = move;
                 }
@@ -68,12 +82,12 @@ public class Pawn extends AbstractPiece {
             // capture upper-left
             int move = curPos + 0x0f;
             if(move < Board.MAX_SQUARE) {
-                Piece p = board.getPiece(move); 
+                Piece p = board.getPiece(move);
                 if(p != null && p.getColor().equals(Color.BLACK)) {
                     ret[retIndex++] = move;
                 }
             }
-            
+
             // capture upper-right
             move = curPos + 0x11;
             if(move < Board.MAX_SQUARE) {
