@@ -15,14 +15,8 @@ public class GameEngine {
         Logger.getRootLogger().setLevel(Level.INFO);
 
         Board board = new Board();  // setup the board
-        MoveNode currentNode = new MoveNode(board, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        MoveNode currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
         MoveAI ai = new MoveAI(Color.BLACK);    // create the AI
-
-        board.capturePiece(0x01);   // knight
-        board.capturePiece(0x02);   // bishop
-        board.capturePiece(0x03);   // queen
-
-        board.printBoard();
 
         PgnUtils utils = new PgnUtils(board);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -43,7 +37,7 @@ public class GameEngine {
             currentNode = ai.findNode(board);
 
             if(currentNode == null) {
-                currentNode = new MoveNode(board, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+                currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
             } else {
                 System.out.println("NODE FOUND");
             }
@@ -65,6 +59,11 @@ public class GameEngine {
             System.out.println("TIME: " + time);
             System.out.println("NODES: " + nodeCount);
             System.out.println("NPS: " + nps);
+
+            // print out the PGN move
+            final String pgnMove = utils.computePgnMove(aiMove[0], aiMove[1]);
+
+            System.out.println("MOVE: " + pgnMove);
 
             try {
                 board.makeMove(aiMove[0], aiMove[1]);

@@ -21,7 +21,7 @@ public class MoveAITest {
 
         board.printBoard();
 
-        MoveNode node = new MoveNode(board, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        MoveNode node = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
         MoveAI ai = new MoveAI(Color.BLACK);
 
         int[] move = ai.computeNextMove(node, Color.BLACK);

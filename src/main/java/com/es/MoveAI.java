@@ -139,7 +139,7 @@ public class MoveAI {
                     MoveNode childNode = null; // nodes.get(moveBoard);
 
                     if(childNode == null) {
-                        childNode = new MoveNode(moveBoard, new int[] { p, m });
+                        childNode = new MoveNode(moveBoard, currentNode, new int[] { p, m });
                         // nodes.put(moveBoard, childNode);    // add to our set of nodes
                         computeNextMove(childNode, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE, depth - 1);
                     } else {
@@ -187,27 +187,37 @@ public class MoveAI {
 
     public double computeScore(MoveNode node) {
         final Board board = node.getBoard();
+        final Board parentBoard = node.getParent().getBoard();
         final int[] whitePieces = board.getPieces(Color.WHITE);
         final int[] blackPieces = board.getPieces(Color.BLACK);
+        final int[] whiteParentPieces = parentBoard.getPieces(Color.WHITE);
+        final int[] blackParentPieces = parentBoard.getPieces(Color.BLACK);
 
         double whiteScore = 0.0;
+        double whiteParentScore = 0.0;
         double blackScore = 0.0;
+        double blackParentScore = 0.0;
 
-        for(int p:whitePieces) {
-            if(p == Board.MAX_SQUARE) {
-                break;
+        for(int i=0; i < whitePieces.length; ++i) {
+            if(whitePieces[i] != Board.MAX_SQUARE) {
+                whiteScore += board.getPiece(whitePieces[i]).getValue();
             }
-            whiteScore += board.getPiece(p).getValue();
+
+            if(whiteParentPieces[i] != Board.MAX_SQUARE) {
+                whiteParentScore += parentBoard.getPiece(whiteParentPieces[i]).getValue();
+            }
+
+            if(blackPieces[i] != Board.MAX_SQUARE) {
+                blackScore += board.getPiece(blackPieces[i]).getValue();
+            }
+
+            if(blackParentPieces[i] != Board.MAX_SQUARE) {
+                blackParentScore += parentBoard.getPiece(blackParentPieces[i]).getValue();
+            }
         }
 
-        for(int p:blackPieces) {
-            if(p == Board.MAX_SQUARE) {
-                break;
-            }
-            blackScore += board.getPiece(p).getValue();
-        }
-
-        if(whiteScore != blackScore) {
+        // check to see if we've lost a pieces between the parent move and this move
+        if(whiteScore != whiteParentScore || blackScore != blackParentScore) {
             if(LOG.isDebugEnabled()) {
                 LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
                 LOG.info("CAPTURE WHITE SCORE: {} BLACK SCORE: {}", whiteScore, blackScore);

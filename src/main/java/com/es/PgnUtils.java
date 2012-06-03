@@ -154,4 +154,20 @@ public class PgnUtils {
         return ret;
     }
 
+    public String computePgnMove(int fromSquare, int toSquare) {
+        String ret = board.getPiece(fromSquare).toString().toUpperCase();
+
+        ret += (char) ((fromSquare & 0x0f) + 97);
+        ret += (fromSquare >> 4) + 1;
+
+        if(board.getPiece(toSquare) != null) {
+            ret += 'x';
+        }
+
+        ret += (char) ((toSquare & 0x0f) + 97);
+        ret += (toSquare >> 4) + 1;
+
+        return ret;
+    }
+
 }

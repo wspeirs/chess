@@ -12,13 +12,19 @@ public class MoveNode {
     private double score;
     private int depth;
     private int[] move;
+    private MoveNode parent;
     private List<MoveNode> children = new ArrayList<MoveNode>();
     private int nodeCount = 0;
     private boolean isSorted = false;
 
-    public MoveNode(Board board, int[] move) {
+    public MoveNode(Board board, MoveNode parent, int[] move) {
         this.board = board;
         this.move = move;
+        this.parent = parent;
+    }
+
+    public MoveNode getParent() {
+        return parent;
     }
 
     public Board getBoard() {
