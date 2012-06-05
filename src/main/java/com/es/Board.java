@@ -2,9 +2,7 @@ package com.es;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,13 +54,13 @@ public class Board implements Cloneable {
     public static final int MAX_COL = 8;
     public static final int MAX_SQUARE = 0x78;
 
-    private Piece[] board = new Piece[MAX_SQUARE];
+    private Piece[] board;
 
-    private int[] blackPieces = new int[16];
-    private Set<Piece> blackCapturedPieces = new HashSet<Piece>();
+    private int[] blackPieces;
+    private int[] blackCapturedPieces;
 
-    private int[] whitePieces = new int[16];
-    private Set<Piece> whiteCapturedPieces = new HashSet<Piece>();
+    private int[] whitePieces;
+    private int[] whiteCapturedPieces;
 
     private int blackKing;
     private int whiteKing;
@@ -70,6 +68,14 @@ public class Board implements Cloneable {
     private final int hashCode;
 
     public Board() {
+        board = new Piece[MAX_SQUARE];
+
+        blackPieces = new int[16];
+        blackCapturedPieces = new int[16];
+
+        whitePieces = new int[16];
+        whiteCapturedPieces = new int[16];
+
         // fill in black's pieces
         board[0x70] = new Rook(Color.BLACK);
         board[0x71] = new Knight(Color.BLACK);
@@ -114,6 +120,8 @@ public class Board implements Cloneable {
             }
         }
 
+        Arrays.fill(whiteCapturedPieces, Board.MAX_SQUARE);
+        Arrays.fill(blackCapturedPieces, Board.MAX_SQUARE);
         Arrays.sort(whitePieces);
         Arrays.sort(blackPieces);
 
@@ -130,11 +138,11 @@ public class Board implements Cloneable {
         this.board = Arrays.copyOf(board.board, board.board.length);
 
         this.whitePieces = Arrays.copyOf(board.whitePieces, board.whitePieces.length);
-        this.whiteCapturedPieces.addAll(board.whiteCapturedPieces);
+        this.whiteCapturedPieces = Arrays.copyOf(board.whiteCapturedPieces, board.whiteCapturedPieces.length);
         this.whiteKing = board.whiteKing;
 
         this.blackPieces = Arrays.copyOf(board.blackPieces, board.blackPieces.length);
-        this.blackCapturedPieces = new HashSet<Piece>(board.blackCapturedPieces);
+        this.blackCapturedPieces = Arrays.copyOf(board.blackCapturedPieces, board.blackCapturedPieces.length);
         this.blackKing = board.blackKing;
 
         this.hashCode = board.hashCode;
@@ -197,11 +205,11 @@ public class Board implements Cloneable {
      */
     public void clearBoard() {
         Arrays.fill(whitePieces, Board.MAX_SQUARE);
-        whiteCapturedPieces.clear();
+        Arrays.fill(whiteCapturedPieces, Board.MAX_SQUARE);
         whiteKing = Board.MAX_SQUARE;
 
         Arrays.fill(blackPieces, Board.MAX_SQUARE);
-        blackCapturedPieces.clear();
+        Arrays.fill(blackCapturedPieces, Board.MAX_SQUARE);
         blackKing = Board.MAX_SQUARE;
 
         Arrays.fill(board, null);
@@ -389,11 +397,13 @@ public class Board implements Cloneable {
         if(c.equals(Color.BLACK)) {
             blackPieces[Arrays.binarySearch(blackPieces, pos)] = Board.MAX_SQUARE;
             Arrays.sort(blackPieces);
-            blackCapturedPieces.add(board[pos]);
+            blackCapturedPieces[Arrays.binarySearch(blackCapturedPieces, Board.MAX_SQUARE)] = pos;
+            Arrays.sort(blackCapturedPieces);
         } else {
             whitePieces[Arrays.binarySearch(whitePieces, pos)] = Board.MAX_SQUARE;
             Arrays.sort(whitePieces);
-            whiteCapturedPieces.add(board[pos]);
+            whiteCapturedPieces[Arrays.binarySearch(whiteCapturedPieces, Board.MAX_SQUARE)] = pos;
+            Arrays.sort(whiteCapturedPieces);
         }
 
         // remove the piece from the board
@@ -412,7 +422,8 @@ public class Board implements Cloneable {
         if(c.equals(Color.BLACK)) {
             blackPieces[Arrays.binarySearch(blackPieces, Board.MAX_SQUARE)] = square;
             Arrays.sort(blackPieces);
-            blackCapturedPieces.remove(piece);
+            blackCapturedPieces[Arrays.binarySearch(blackCapturedPieces, square)] = Board.MAX_SQUARE;
+            Arrays.sort(blackCapturedPieces);
 
             if(piece instanceof King) {
                 blackKing = square;
@@ -420,7 +431,8 @@ public class Board implements Cloneable {
         } else {
             whitePieces[Arrays.binarySearch(whitePieces, Board.MAX_SQUARE)] = square;
             Arrays.sort(whitePieces);
-            whiteCapturedPieces.remove(piece);
+            whiteCapturedPieces[Arrays.binarySearch(whiteCapturedPieces, square)] = Board.MAX_SQUARE;
+            Arrays.sort(whiteCapturedPieces);
 
             if(piece instanceof King) {
                 whiteKing = square;

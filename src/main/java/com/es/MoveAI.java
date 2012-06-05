@@ -44,36 +44,42 @@ public class MoveAI {
     }
 
     public int[] computeNextMove(MoveNode currentNode, Color color) {
-        computeNextChildMove(currentNode, color, 2);
+        computeNextChildMove(currentNode, color, 2, -1);
 
-        currentNode.printChildren();
+//        currentNode.printChildren();
 
-        LOG.info("NODES BEFORE PRUNE: {} {}", nodes.size(), currentNode.getChildCount());
+//        LOG.info("NODES: {} {}", currentNode.getChildCount(), currentNode.getNodeCount());
 
-        List<MoveNode> removeNodes = currentNode.keepTopChildren(20);
+//        List<MoveNode> removeNodes = currentNode.keepTopChildren(10);
 /*
         for(MoveNode node:removeNodes) {
             this.removeNodes(node);
         }
 */
         nodes.clear();
-        LOG.info("NODES AFTER PRUNE: {} {}", nodes.size(), currentNode.getChildCount());
+        LOG.info("NODES: {} {}", currentNode.getChildCount(), currentNode.getNodeCount());
 
-        MoveNode moveNode = computeNextChildMove(currentNode, color, 4);
+        MoveNode moveNode = computeNextChildMove(currentNode, color, 4, 10);
         nodes.clear();
 
+        LOG.info("NODES: {} {}", currentNode.getChildCount(), currentNode.getNodeCount());
+//        moveNode = computeNextChildMove(currentNode, color, 6, 5);
+
+//        LOG.info("NODES: {} {}", currentNode.getChildCount(), currentNode.getNodeCount());
         return moveNode.getMove();
     }
 
-    public MoveNode computeNextChildMove(MoveNode currentNode, Color color, int depth) {
+    public MoveNode computeNextChildMove(MoveNode currentNode, Color color, int depth, int width) {
         if(depth == 0) {
             return currentNode;
         }
 
         if(currentNode.getChildCount() != 0) {
-            for(MoveNode child:currentNode.getChildren()) {
+            final List<MoveNode> children = currentNode.getChildren();
+            for(int i=0; i < (width == -1 ? children.size() : Math.min(width, children.size())); ++i) {
+                final MoveNode child = children.get(i);
                 if(child.getDepth() < depth) {
-                    computeNextChildMove(child, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE, depth-1);
+                    computeNextChildMove(child, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE, depth-1, width);
                 }
             }
 
@@ -99,8 +105,6 @@ public class MoveAI {
         if(depth == 0) {
             // compute the score
             double score = computeScore(currentNode);
-
-            LOG.debug("SCORE: {}", score);
 
             currentNode.setScore(score);
 
@@ -133,7 +137,7 @@ public class MoveAI {
                 Board moveBoard = new Board(currentNode.getBoard());
 
                 try {
-                    LOG.debug("Move: {} -> {}", Integer.toHexString(p), Integer.toHexString(m));
+                    //LOG.debug("Move: {} -> {}", Integer.toHexString(p), Integer.toHexString(m));
 
                     moveBoard.makeMove(p, m, false);
                     MoveNode childNode = null; // nodes.get(moveBoard);
@@ -162,7 +166,6 @@ public class MoveAI {
 
         // all moves put the king into check
         if(currentNode.getChildCount() == 0) {
-            LOG.warn("NO CHILDREN");
             currentNode.getBoard().printBoard();
             currentNode.setScore(computeScore(currentNode));
             currentNode.setDepth(depth);
