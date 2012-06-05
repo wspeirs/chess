@@ -16,6 +16,24 @@ public abstract class AbstractPiece implements Piece {
         this.color = color;
         this.POSITION_VALUES = positionValues;
     }
+    
+    public static Piece makePiece(char p) {
+        switch(p) {
+        case 'P': return new Pawn(Color.WHITE);
+        case 'p': return new Pawn(Color.BLACK);
+        case 'R': return new Rook(Color.WHITE);
+        case 'r': return new Rook(Color.BLACK);
+        case 'N': return new Knight(Color.WHITE);
+        case 'n': return new Knight(Color.BLACK);
+        case 'B': return new Bishop(Color.WHITE);
+        case 'b': return new Bishop(Color.BLACK);
+        case 'Q': return new Queen(Color.WHITE);
+        case 'q': return new Queen(Color.BLACK);
+        case 'K': return new King(Color.WHITE);
+        case 'k': return new King(Color.BLACK);
+        default: return null;
+        }
+    }
 
     public Color getColor() {
         return color;

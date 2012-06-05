@@ -7,6 +7,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.es.pieces.AbstractPiece;
 import com.es.pieces.Bishop;
 import com.es.pieces.King;
 import com.es.pieces.Knight;
@@ -131,6 +132,60 @@ public class Board implements Cloneable {
 
         // compute the hash code
         hashCode = whitePieces.hashCode() + blackPieces.hashCode() * 3 + board.hashCode() * 7;
+    }
+    
+    public Board(String layout) throws IllegalMoveException {
+        if(layout.length() != 64) {
+            throw new IllegalMoveException("Not enough values for the starting board");
+        }
+        
+        for(int i=0; i < layout.length(); ++i) {
+            if(i < 8) {
+                board[i + 0x70] = AbstractPiece.makePiece(layout.charAt(i));
+            } else if(i < 16) {
+                board[i + 0x60] = AbstractPiece.makePiece(layout.charAt(i));
+            } else if(i < 24) {
+                board[i + 0x50] = AbstractPiece.makePiece(layout.charAt(i));
+            } else if(i < 32) {
+                board[i + 0x40] = AbstractPiece.makePiece(layout.charAt(i));
+            } else if(i < 40) {
+                board[i + 0x30] = AbstractPiece.makePiece(layout.charAt(i));
+            } else if(i < 48) {
+                board[i + 0x20] = AbstractPiece.makePiece(layout.charAt(i));
+            } else if(i < 56) {
+                board[i + 0x10] = AbstractPiece.makePiece(layout.charAt(i));
+            } else {
+                board[i] = AbstractPiece.makePiece(layout.charAt(i));
+            }
+        }
+        
+        Arrays.fill(whitePieces, Board.MAX_SQUARE);
+        Arrays.fill(whiteCapturedPieces, Board.MAX_SQUARE);
+        
+        Arrays.fill(blackPieces, Board.MAX_SQUARE);
+        Arrays.fill(blackCapturedPieces, Board.MAX_SQUARE);
+        
+        int wIndex = 0;
+        int bIndex = 0;
+        
+        for(int i=0; i < Board.MAX_SQUARE; ++i) {
+            if(board[i].getColor().equals(Color.WHITE)) {
+                whitePieces[wIndex++] = i;
+                if(board[i] instanceof King) {
+                    whiteKing = i;
+                }
+            } else {
+                blackPieces[bIndex++] = i;
+                if(board[i] instanceof King) {
+                    blackKing = i;
+                }
+            }
+        }
+        
+        Arrays.sort(whitePieces);
+        Arrays.sort(blackPieces);
+        
+        hashCode = 0;
     }
 
     // copy constructor
