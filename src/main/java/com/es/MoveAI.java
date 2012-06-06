@@ -1,8 +1,6 @@
 package com.es;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,59 +11,63 @@ import com.es.pieces.Piece.Color;
 public class MoveAI {
     private static final Logger LOG = LoggerFactory.getLogger(MoveAI.class);
 
-    private Map<Board, MoveNode> nodes = new HashMap<Board, MoveNode>();
+    private TranspositionTable transpositionTable = new TranspositionTable();
+    private int transHit = 0;
     private Color colorPlaying;
 
     public MoveAI(Color colorPlaying) {
         this.colorPlaying = colorPlaying;
     }
 
-    public int getTotalNodes() {
-        return nodes.size();
-    }
-
     public MoveNode findNode(Board board) {
-        return nodes.get(board);
+        return transpositionTable.get(board);
     }
 
     public void removeNodes(MoveNode node) {
         for(MoveNode mn:node.getChildren()) {
-            // remove all children nodes
-            nodes.remove(mn.getBoard());
+            // remove all children transpositionTable
+            transpositionTable.remove(mn.getBoard());
 
             // remove all the children's children
             for(MoveNode cmn:mn.getChildren()) {
-                nodes.remove(cmn);
+                transpositionTable.remove(cmn);
             }
         }
 
         // remove this node
-        nodes.remove(node);
+        transpositionTable.remove(node);
     }
 
     public int[] computeNextMove(MoveNode currentNode, Color color) {
-        computeNextChildMove(currentNode, color, 2, -1);
-
-//        currentNode.printChildren();
-
-//        LOG.info("NODES: {} {}", currentNode.getChildCount(), currentNode.getNodeCount());
-
-//        List<MoveNode> removeNodes = currentNode.keepTopChildren(10);
 /*
-        for(MoveNode node:removeNodes) {
-            this.removeNodes(node);
+        MoveNode moveNode = computeNextChildMove(currentNode, color, 2, -1);
+        LOG.info("NODES: {}", new int[] { currentNode.getChildCount(), transHit, transpositionTable.size(), currentNode.getNodeCount() });
+
+        int width = currentNode.getChildCount() / 3;
+        int depth = 4;
+
+        while(width > 1) {
+            transHit = 0;
+            moveNode = computeNextChildMove(currentNode, color, depth, width);
+            LOG.info("NODES: {}", new int[] { width, transHit, transpositionTable.size(), currentNode.getNodeCount() });
+            width = width / 3;
+            depth = depth + 2;
         }
 */
-        nodes.clear();
-        LOG.info("NODES: {} {}", currentNode.getChildCount(), currentNode.getNodeCount());
+        transHit = 0;
+        MoveNode moveNode = computeNextChildMove(currentNode, color, 2, -1);
+        LOG.info("NODES: {}", new int[] { currentNode.getChildCount(), transHit, transpositionTable.size(), currentNode.getNodeCount() });
+        currentNode.keepTopChildren(10);
 
-        MoveNode moveNode = computeNextChildMove(currentNode, color, 4, 10);
-        nodes.clear();
+        moveNode = computeNextChildMove(currentNode, color, 4, 8);
+        LOG.info("NODES: {}", new int[] { currentNode.getChildCount(), transHit, transpositionTable.size(), currentNode.getNodeCount() });
 
-        LOG.info("NODES: {} {}", currentNode.getChildCount(), currentNode.getNodeCount());
-//        moveNode = computeNextChildMove(currentNode, color, 6, 5);
+        moveNode = computeNextChildMove(currentNode, color, 6, 2);
+        LOG.info("NODES: {}", new int[] { currentNode.getChildCount(), transHit, transpositionTable.size(), currentNode.getNodeCount() });
 
-//        LOG.info("NODES: {} {}", currentNode.getChildCount(), currentNode.getNodeCount());
+//        moveNode = computeNextChildMove(currentNode, color, 8, 2);
+//        LOG.info("NODES: {}", new int[] { currentNode.getChildCount(), transHit, transpositionTable.size(), currentNode.getNodeCount() });
+
         return moveNode.getMove();
     }
 
@@ -74,8 +76,12 @@ public class MoveAI {
             return currentNode;
         }
 
+        MoveNode ret;
+
+        // we have children, so we've searched this level already, so keep moving down
         if(currentNode.getChildCount() != 0) {
             final List<MoveNode> children = currentNode.getChildren();
+
             for(int i=0; i < (width == -1 ? children.size() : Math.min(width, children.size())); ++i) {
                 final MoveNode child = children.get(i);
                 if(child.getDepth() < depth) {
@@ -83,22 +89,16 @@ public class MoveAI {
                 }
             }
 
-            MoveNode ret;
-            if(colorPlaying.equals(color)) {
-                // we made a move for ourself, so get the best
-                ret = currentNode.getBestChild();
-            } else {
-                ret = currentNode.getWorstChild();
-            }
+            ret = (colorPlaying.equals(color) ? currentNode.getBestChild() : currentNode.getWorstChild());
 
             currentNode.setScore(ret.getScore());
             currentNode.setDepth(depth);
 
-            return ret;   // return the best child
         } else {
-//            LOG.info("CALLING NEXT: {} {}", depth, nodes.size());
-            return computeNextMove(currentNode, color, depth);
+            ret = computeNextMove(currentNode, color, depth);
         }
+
+        return ret;
     }
 
     public MoveNode computeNextMove(MoveNode currentNode, Color color, int depth) {
@@ -140,14 +140,14 @@ public class MoveAI {
                     //LOG.debug("Move: {} -> {}", Integer.toHexString(p), Integer.toHexString(m));
 
                     moveBoard.makeMove(p, m, false);
-                    MoveNode childNode = null; // nodes.get(moveBoard);
+                    MoveNode childNode = transpositionTable.get(moveBoard);
 
                     if(childNode == null) {
-                        childNode = new MoveNode(moveBoard, new int[] { p, m });
-                        // nodes.put(moveBoard, childNode);    // add to our set of nodes
+                        childNode = new MoveNode(moveBoard, currentNode, new int[] { p, m });
+                        transpositionTable.put(moveBoard, childNode);    // add to our transposition table
                         computeNextMove(childNode, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE, depth - 1);
                     } else {
-                        LOG.debug("GOT TRANSPOSITION");
+                        transHit++;
                     }
 
                     // by here we've recursed down
@@ -190,27 +190,37 @@ public class MoveAI {
 
     public double computeScore(MoveNode node) {
         final Board board = node.getBoard();
+        final Board parentBoard = node.getParent().getBoard();
         final int[] whitePieces = board.getPieces(Color.WHITE);
         final int[] blackPieces = board.getPieces(Color.BLACK);
+        final int[] whiteParentPieces = parentBoard.getPieces(Color.WHITE);
+        final int[] blackParentPieces = parentBoard.getPieces(Color.BLACK);
 
         double whiteScore = 0.0;
+        double whiteParentScore = 0.0;
         double blackScore = 0.0;
+        double blackParentScore = 0.0;
 
-        for(int p:whitePieces) {
-            if(p == Board.MAX_SQUARE) {
-                break;
+        for(int i=0; i < whitePieces.length; ++i) {
+            if(whitePieces[i] != Board.MAX_SQUARE) {
+                whiteScore += board.getPiece(whitePieces[i]).getValue();
             }
-            whiteScore += board.getPiece(p).getValue();
+
+            if(whiteParentPieces[i] != Board.MAX_SQUARE) {
+                whiteParentScore += parentBoard.getPiece(whiteParentPieces[i]).getValue();
+            }
+
+            if(blackPieces[i] != Board.MAX_SQUARE) {
+                blackScore += board.getPiece(blackPieces[i]).getValue();
+            }
+
+            if(blackParentPieces[i] != Board.MAX_SQUARE) {
+                blackParentScore += parentBoard.getPiece(blackParentPieces[i]).getValue();
+            }
         }
 
-        for(int p:blackPieces) {
-            if(p == Board.MAX_SQUARE) {
-                break;
-            }
-            blackScore += board.getPiece(p).getValue();
-        }
-
-        if(whiteScore != blackScore) {
+        // check to see if we've lost a pieces between the parent move and this move
+        if(whiteScore != whiteParentScore || blackScore != blackParentScore) {
             if(LOG.isDebugEnabled()) {
                 LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
                 LOG.info("CAPTURE WHITE SCORE: {} BLACK SCORE: {}", whiteScore, blackScore);

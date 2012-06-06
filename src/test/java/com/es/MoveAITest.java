@@ -21,31 +21,36 @@ public class MoveAITest {
 
         board.printBoard();
 
-        MoveNode node = new MoveNode(board, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        MoveNode node = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
         MoveAI ai = new MoveAI(Color.BLACK);
 
+        long start = System.currentTimeMillis();
         int[] move = ai.computeNextMove(node, Color.BLACK);
+        long end = System.currentTimeMillis();
+
+        System.out.println("TIME: " + (end - start));
 
         board.makeMove(move[0], move[1], false);
         board.printBoard();
 
-        System.out.println("* BEST *");
+        System.out.println("MOVE: " + Integer.toHexString(move[0]) + " -> " + Integer.toHexString(move[1]));
+
+        System.out.println("* NODE *");
         node.printChildren();
 
-        MoveNode c = node.getWorstChild();
-        c.getBestChild().getBoard().printBoard();
-        System.out.println("* WORST *");
-        c.printChildren();
+/*        System.out.println("* MOVES *");
 
-        c = node.getWorstChild().getBestChild();
-        c.getWorstChild().getBoard().printBoard();
-        System.out.println("* BEST *");
-        c.printChildren();
+        MoveNode c = node.getBestChild();
 
-        c = node.getWorstChild().getBestChild().getWorstChild();
-        c.getBestChild().getBoard().printBoard();
-        System.out.println("* WORST *");
-        c.printChildren();
+        while(true) {
+            c.printChildren();
+//            move = c.getMove();
+//            System.out.println(c.getScore() + ": " + Integer.toHexString(move[0]) + " -> " + Integer.toHexString(move[1]));
+
+            c = c.getChildren().get(0);
+            System.out.println();
+        }
+*/
     }
 
 }

@@ -1,7 +1,11 @@
 package com.es.pieces;
 
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
+import com.es.Board;
+import com.es.IllegalMoveException;
 import com.es.pieces.Piece.Color;
 
 public class KingTest extends BasePieceTest {
@@ -86,5 +90,75 @@ public class KingTest extends BasePieceTest {
     @Test
     public void testPositionValueSymmetry() {
         super.testPositionValueSymmetry(new King(Color.WHITE), new King(Color.BLACK));
+    }
+
+    @Test
+    public void testWhiteKingSideCastle() throws IllegalMoveException {
+        board = new Board();
+
+        board.capturePiece(0x05);   // bishop
+        board.capturePiece(0x06);   // knight
+
+        board.printBoard();
+
+        board.castel(Color.WHITE, true);
+
+        board.printBoard();
+        if(! (board.getPiece(0x05) instanceof Rook) || ! (board.getPiece(0x06) instanceof King)) {
+            fail("Castle didn't work");
+        }
+    }
+
+    @Test
+    public void testBlackKingSideCastle() throws IllegalMoveException {
+        board = new Board();
+
+        board.capturePiece(0x75);   // bishop
+        board.capturePiece(0x76);   // knight
+
+        board.printBoard();
+
+        board.castel(Color.BLACK, true);
+
+        board.printBoard();
+        if(! (board.getPiece(0x75) instanceof Rook) || ! (board.getPiece(0x76) instanceof King)) {
+            fail("Castle didn't work");
+        }
+    }
+
+    @Test
+    public void testWhiteQueenSideCastle() throws IllegalMoveException {
+        board = new Board();
+
+        board.capturePiece(0x01);   // knight
+        board.capturePiece(0x02);   // bishop
+        board.capturePiece(0x03);   // queen
+
+        board.printBoard();
+
+        board.castel(Color.WHITE, false);
+
+        board.printBoard();
+        if(! (board.getPiece(0x02) instanceof King) || ! (board.getPiece(0x03) instanceof Rook)) {
+            fail("Castle didn't work");
+        }
+    }
+
+    @Test
+    public void testBlackQueenSideCastle() throws IllegalMoveException {
+        board = new Board();
+
+        board.capturePiece(0x71);   // knight
+        board.capturePiece(0x72);   // bishop
+        board.capturePiece(0x73);   // queen
+
+        board.printBoard();
+
+        board.castel(Color.BLACK, false);
+
+        board.printBoard();
+        if(! (board.getPiece(0x72) instanceof King) || ! (board.getPiece(0x73) instanceof Rook)) {
+            fail("Castle didn't work");
+        }
     }
 }

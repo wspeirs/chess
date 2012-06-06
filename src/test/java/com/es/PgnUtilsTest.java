@@ -32,4 +32,18 @@ public class PgnUtilsTest {
         utils.parseGame(ClassLoader.getSystemResourceAsStream("valid.pgn"));
     }
 
+    @Test
+    public void testComputePawnPgnMove() {
+        String move = utils.computePgnMove(0x13, 0x23);
+
+        assertEquals("Pd2d3", move);
+    }
+
+    @Test
+    public void testComputeKnightCapturePgnMove() {
+        String move = utils.computePgnMove(0x01, 0x12);
+
+        assertEquals("Nb1xc2", move);
+    }
+
 }

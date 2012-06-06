@@ -66,7 +66,7 @@ public class Board implements Cloneable {
     private int blackKing;
     private int whiteKing;
 
-    private final int hashCode;
+    private int hashCode;
 
     public Board() {
         board = new Piece[MAX_SQUARE];
@@ -131,7 +131,7 @@ public class Board implements Cloneable {
         whiteKing = 0x04;
 
         // compute the hash code
-        hashCode = whitePieces.hashCode() + blackPieces.hashCode() * 3 + board.hashCode() * 7;
+        computeHashCode();
     }
     
     public Board(String layout) throws IllegalMoveException {
@@ -206,22 +206,15 @@ public class Board implements Cloneable {
     @Override
     public boolean equals(Object obj) {
 
-//        LOG.info("CHECKING EQUALS");
-
         if(obj instanceof Board) {
             Board board = (Board) obj;
 
-            for(int i=0; i < whitePieces.length; ++i) {
-                if(whitePieces[i] != board.whitePieces[i] || blackPieces[i] != board.blackPieces[i]) {
-//                    LOG.info("NOT EQUAL PIECES");
-                    return false;
-                } else if(this.board[i] != null && board.board[i] != null && (!this.board[i].equals(board.board[i]))) {
-//                    LOG.info("NOT EQUAL BOARD");
+            for(int i=0; i < Board.MAX_SQUARE; ++i) {
+                if(this.board[i] != board.board[i]) {
                     return false;
                 }
             }
 
-//            LOG.info("EQUAL");
             return true;
         }
 
@@ -229,9 +222,14 @@ public class Board implements Cloneable {
     }
 
     public int hashCode() {
-//        int hash = whitePieces.hashCode() + blackPieces.hashCode() * 3 + board.hashCode() * 7;
-//        LOG.info("HASH: " + hashCode);
         return hashCode;
+    }
+
+    private void computeHashCode() {
+        this.hashCode = 0;
+        for(int i=0; i < whitePieces.length; ++i) {
+            this.hashCode ^= (whitePieces[i] << (16 + i/2)) | (blackPieces[i] << (i/2));
+        }
     }
 
     public static int squareToRow(int square) {
@@ -268,6 +266,9 @@ public class Board implements Cloneable {
         blackKing = Board.MAX_SQUARE;
 
         Arrays.fill(board, null);
+
+        // compute the new hash code
+        computeHashCode();
     }
 
     public void printBoard() {
@@ -294,6 +295,14 @@ public class Board implements Cloneable {
      * @throws IllegalMoveException
      */
     public void makeMove(int fromSquare, int toSquare, boolean kingCheck) throws IllegalMoveException {
+        if(fromSquare == -1) {
+            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, true);
+            return;
+        } else if(fromSquare == -2){
+            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, false);
+            return;
+        }
+
         Piece fromPiece = board[fromSquare];
 
         if(fromPiece == null) {
@@ -350,9 +359,72 @@ public class Board implements Cloneable {
             }
         }
 
+        fromPiece.pieceMoved(); // mark the piece has having moved
+        computeHashCode();  // re-compute the hash code
+
         if(LOG.isTraceEnabled()) {
             this.printBoard();
         }
+    }
+
+    public void castel(Color color, boolean kingSide) throws IllegalMoveException {
+        int[] pieces = color.equals(Color.WHITE) ? whitePieces : blackPieces;
+        int kingPos = color.equals(Color.WHITE) ? whiteKing : blackKing;
+        int rookPos;
+
+        if(board[kingPos] != null && board[kingPos].hasMoved()) {
+            throw new IllegalMoveException("King has already moved, cannot castle");
+        }
+
+        if(kingSide) {
+            rookPos = color.equals(Color.WHITE) ? 0x07 : 0x77;
+        } else {
+            rookPos = color.equals(Color.WHITE) ? 0x00 : 0x70;
+        }
+
+        if(board[rookPos] != null && board[rookPos].hasMoved()) {
+            throw new IllegalMoveException("Rook has already moved, cannot castle");
+        }
+
+        // make sure the spaces between are clear
+        for(int i=Math.min(kingPos, rookPos) + 1; i < Math.max(kingPos, rookPos); ++i) {
+            if(board[i] != null) {
+                throw new IllegalMoveException("Pieces between king and rook, cannot castle");
+            }
+        }
+
+        board[kingPos].pieceMoved();
+        board[rookPos].pieceMoved();
+
+        if(kingSide) {
+            // move the king
+            pieces[Arrays.binarySearch(pieces, kingPos)] = kingPos + 2;
+            board[kingPos + 2] = board[kingPos];
+            board[kingPos] = null;
+            kingPos += 2;
+            Arrays.sort(pieces);
+
+            // move the rook
+            pieces[Arrays.binarySearch(pieces, rookPos)] =  kingPos - 1;
+            board[kingPos - 1] = board[rookPos];
+            board[rookPos] = null;
+            Arrays.sort(pieces);
+        } else {
+            // move the king
+            pieces[Arrays.binarySearch(pieces, kingPos)] = kingPos - 2;
+            board[kingPos - 2] = board[kingPos];
+            board[kingPos] = null;
+            kingPos -= 2;
+            Arrays.sort(pieces);
+
+            // move the rook
+            pieces[Arrays.binarySearch(pieces, rookPos)] =  kingPos + 1;
+            board[kingPos + 1] = board[rookPos];
+            board[rookPos] = null;
+            Arrays.sort(pieces);
+        }
+
+        computeHashCode(); // re-compute the hash code
     }
 
     /**
@@ -393,8 +465,9 @@ public class Board implements Cloneable {
             Arrays.sort(whiteCapturedPieces);
         }
 
-        // remove the piece from the board
-        board[pos] = null;
+        board[pos] = null; // remove the piece from the board
+        computeHashCode(); // re-compute the hash code
+
     }
 
     /**
@@ -426,8 +499,9 @@ public class Board implements Cloneable {
             }
         }
 
-        // add the piece to the board
-        board[square] = piece;
+        board[square] = piece; // add the piece to the board
+        computeHashCode(); // re-compute the hash code
+
     }
 
     public int[] getPieces(Color color) {

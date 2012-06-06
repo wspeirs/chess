@@ -15,7 +15,6 @@ import com.es.pieces.Bishop;
 import com.es.pieces.King;
 import com.es.pieces.Knight;
 import com.es.pieces.Pawn;
-import com.es.pieces.Piece;
 import com.es.pieces.Piece.Color;
 import com.es.pieces.Queen;
 import com.es.pieces.Rook;
@@ -58,6 +57,12 @@ public class PgnUtils {
         int curChar = 0;
         int pieceType = move.charAt(curChar);
         List<Integer> pieces;
+
+        if(move.equalsIgnoreCase("O-O")) {
+            return new int[] { -1, color.equals(Color.WHITE) ? 1 : 2 };
+        } else if(move.equalsIgnoreCase("O-O-O")) {
+            return new int[] { -2, color.equals(Color.WHITE) ? 1 : 2 };
+        }
 
         // get a list of pieces of that type
         switch(pieceType) {
@@ -145,6 +150,22 @@ public class PgnUtils {
             LOG.error("No piece found for the move: {}", move);
             throw new IllegalMoveException("Piece not found");
         }
+
+        return ret;
+    }
+
+    public String computePgnMove(int fromSquare, int toSquare) {
+        String ret = board.getPiece(fromSquare).toString().toUpperCase();
+
+        ret += (char) ((fromSquare & 0x0f) + 97);
+        ret += (fromSquare >> 4) + 1;
+
+        if(board.getPiece(toSquare) != null) {
+            ret += 'x';
+        }
+
+        ret += (char) ((toSquare & 0x0f) + 97);
+        ret += (toSquare >> 4) + 1;
 
         return ret;
     }
