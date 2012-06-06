@@ -8,6 +8,9 @@ import java.util.List;
 
 public class MoveNode {
 
+    private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
+    private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
+
     private Board board;
     private double score;
     private int depth;
@@ -78,7 +81,7 @@ public class MoveNode {
 
     public MoveNode getBestChild() {
         if(!isSorted) {
-            Collections.sort(children, new MoveNodeComparitor());
+            Collections.sort(children, increasingComparitor);
         }
 
         return children.get(0);
@@ -86,10 +89,10 @@ public class MoveNode {
 
     public MoveNode getWorstChild() {
         if(!isSorted) {
-            Collections.sort(children, new MoveNodeComparitor());
+            Collections.sort(children, decreasingComparitor);
         }
 
-        return children.get(children.size()-1);
+        return children.get(0);
     }
 
     public void addChild(MoveNode node) {
@@ -109,8 +112,15 @@ public class MoveNode {
     }
 
     public int getNodeCount() {
+        return getNodeCount(this.depth-1);
+    }
+
+    private int getNodeCount(int depth) {
         for(MoveNode c:children) {
-            nodeCount += c.getNodeCount();
+            if(c.depth != depth) {
+                return 0;
+            }
+            nodeCount += c.getNodeCount(depth-1);
         }
 
         nodeCount += children.size();
@@ -120,8 +130,18 @@ public class MoveNode {
 
     private static class MoveNodeComparitor implements Comparator<MoveNode> {
 
+        private boolean increasing;
+
+        public MoveNodeComparitor(boolean increasing) {
+            this.increasing = increasing;
+        }
+
         public int compare(MoveNode node1, MoveNode node2) {
-            return (node2.score < node1.score) ? -1 : ((node2.score > node1.score) ? 1 : 0);
+            if(increasing) {
+                return (node2.score < node1.score) ? -1 : ((node2.score > node1.score) ? 1 : 0);
+            } else {
+                return (node1.score < node2.score) ? -1 : ((node1.score > node2.score) ? 1 : 0);
+            }
         }
     }
 }

@@ -65,7 +65,7 @@ public class Board implements Cloneable {
     private int blackKing;
     private int whiteKing;
 
-    private final int hashCode;
+    private int hashCode;
 
     public Board() {
         board = new Piece[MAX_SQUARE];
@@ -130,7 +130,7 @@ public class Board implements Cloneable {
         whiteKing = 0x04;
 
         // compute the hash code
-        hashCode = whitePieces.hashCode() + blackPieces.hashCode() * 3 + board.hashCode() * 7;
+        computeHashCode();
     }
 
     // copy constructor
@@ -151,22 +151,15 @@ public class Board implements Cloneable {
     @Override
     public boolean equals(Object obj) {
 
-//        LOG.info("CHECKING EQUALS");
-
         if(obj instanceof Board) {
             Board board = (Board) obj;
 
-            for(int i=0; i < whitePieces.length; ++i) {
-                if(whitePieces[i] != board.whitePieces[i] || blackPieces[i] != board.blackPieces[i]) {
-//                    LOG.info("NOT EQUAL PIECES");
-                    return false;
-                } else if(this.board[i] != null && board.board[i] != null && (!this.board[i].equals(board.board[i]))) {
-//                    LOG.info("NOT EQUAL BOARD");
+            for(int i=0; i < Board.MAX_SQUARE; ++i) {
+                if(this.board[i] != board.board[i]) {
                     return false;
                 }
             }
 
-//            LOG.info("EQUAL");
             return true;
         }
 
@@ -174,9 +167,14 @@ public class Board implements Cloneable {
     }
 
     public int hashCode() {
-//        int hash = whitePieces.hashCode() + blackPieces.hashCode() * 3 + board.hashCode() * 7;
-//        LOG.info("HASH: " + hashCode);
         return hashCode;
+    }
+
+    private void computeHashCode() {
+        this.hashCode = 0;
+        for(int i=0; i < whitePieces.length; ++i) {
+            this.hashCode ^= (whitePieces[i] << (16 + i/2)) | (blackPieces[i] << (i/2));
+        }
     }
 
     public static int squareToRow(int square) {
@@ -213,6 +211,9 @@ public class Board implements Cloneable {
         blackKing = Board.MAX_SQUARE;
 
         Arrays.fill(board, null);
+
+        // compute the new hash code
+        computeHashCode();
     }
 
     public void printBoard() {
@@ -304,6 +305,7 @@ public class Board implements Cloneable {
         }
 
         fromPiece.pieceMoved(); // mark the piece has having moved
+        computeHashCode();  // re-compute the hash code
 
         if(LOG.isTraceEnabled()) {
             this.printBoard();
@@ -366,6 +368,8 @@ public class Board implements Cloneable {
             board[rookPos] = null;
             Arrays.sort(pieces);
         }
+
+        computeHashCode(); // re-compute the hash code
     }
 
     /**
@@ -406,8 +410,9 @@ public class Board implements Cloneable {
             Arrays.sort(whiteCapturedPieces);
         }
 
-        // remove the piece from the board
-        board[pos] = null;
+        board[pos] = null; // remove the piece from the board
+        computeHashCode(); // re-compute the hash code
+
     }
 
     /**
@@ -439,8 +444,9 @@ public class Board implements Cloneable {
             }
         }
 
-        // add the piece to the board
-        board[square] = piece;
+        board[square] = piece; // add the piece to the board
+        computeHashCode(); // re-compute the hash code
+
     }
 
     public int[] getPieces(Color color) {
