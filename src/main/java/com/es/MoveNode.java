@@ -6,7 +6,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class MoveNode {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MoveNode.class);
 
     private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
     private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
@@ -112,20 +117,20 @@ public class MoveNode {
     }
 
     public int getNodeCount() {
-        return getNodeCount(this.depth-1);
+        return getNodeCount(0, this.depth);
     }
 
-    private int getNodeCount(int depth) {
+    private int getNodeCount(int count, int depth) {
         for(MoveNode c:children) {
-            if(c.depth != depth) {
-                return 0;
+            // only recurse if it's not a transposition
+            if(c.depth > depth) {
+                continue;
             }
-            nodeCount += c.getNodeCount(depth-1);
+
+            count = c.getNodeCount(count, depth-1);
         }
 
-        nodeCount += children.size();
-
-        return nodeCount;
+        return count + 1;
     }
 
     private static class MoveNodeComparitor implements Comparator<MoveNode> {
