@@ -187,7 +187,7 @@ public class MoveAI {
         return child;   // return the best child
     }
 
-    public double computeScore(MoveNode node) {
+    public int computeScore(MoveNode node) {
         final Board board = node.getBoard();
         final Board parentBoard = node.getParent().getBoard();
         final int[] whitePieces = board.getPieces(Color.WHITE);
@@ -195,10 +195,10 @@ public class MoveAI {
         final int[] whiteParentPieces = parentBoard.getPieces(Color.WHITE);
         final int[] blackParentPieces = parentBoard.getPieces(Color.BLACK);
 
-        double whiteScore = 0.0;
-        double whiteParentScore = 0.0;
-        double blackScore = 0.0;
-        double blackParentScore = 0.0;
+        int whiteScore = 0;
+        int whiteParentScore = 0;
+        int blackScore = 0;
+        int blackParentScore = 0;
 
         for(int i=0; i < whitePieces.length; ++i) {
             if(whitePieces[i] != Board.MAX_SQUARE) {
@@ -222,7 +222,7 @@ public class MoveAI {
         if(whiteScore != whiteParentScore || blackScore != blackParentScore) {
             if(LOG.isDebugEnabled()) {
                 LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
-                LOG.info("CAPTURE WHITE SCORE: {} BLACK SCORE: {}", whiteScore, blackScore);
+                LOG.info("SCORE: {}", colorPlaying.equals(Color.WHITE) ? (whiteScore - blackScore) * 100 : (blackScore - whiteScore) * 100);
             }
             return colorPlaying.equals(Color.WHITE) ? (whiteScore - blackScore) * 100 : (blackScore - whiteScore) * 100;
         }
@@ -247,7 +247,7 @@ public class MoveAI {
 
         if(LOG.isDebugEnabled()) {
             LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
-            LOG.info("POSITION WHITE SCORE: {} BLACK SCORE: {}", whiteScore, blackScore);
+            LOG.info("SCORE: {}", colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore);
         }
 
         return colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore;

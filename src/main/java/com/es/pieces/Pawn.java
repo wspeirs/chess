@@ -11,7 +11,7 @@ import com.es.Board;
 public class Pawn extends AbstractPiece {
 
     private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
-    private static final double[][] POSITION_VALUES =
+    private static final int[][] POSITION_VALUES =
     { {  1,  1,  1,  1,  1,  1,  1,  1 },
       { 50, 50, 50, 50, 50, 50, 50, 50 },
       { 10, 10, 20, 30, 30, 20, 10, 10 },
@@ -26,8 +26,8 @@ public class Pawn extends AbstractPiece {
         super(color, POSITION_VALUES);
     }
 
-    public double getValue() {
-        return 1.0;
+    public int getValue() {
+        return 100;
     }
 
     public String toString() {

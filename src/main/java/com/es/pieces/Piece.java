@@ -24,9 +24,9 @@ public interface Piece {
      */
     public int[] generateAllMoves(Board board, int curPos);
 
-    public double getValue();
+    public int getValue();
 
-    public double getPositionValue(int square);
+    public int getPositionValue(int square);
 
     public boolean hasMoved();
     public void pieceMoved();

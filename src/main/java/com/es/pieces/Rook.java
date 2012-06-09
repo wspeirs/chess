@@ -10,7 +10,7 @@ import com.es.Board;
 public class Rook extends AbstractPiece {
 
     private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
-    private static final double[][] POSITION_VALUES =
+    private static final int[][] POSITION_VALUES =
     { {  1,  1,  1,  1,  1,  1,  1,  1 },
       {  5, 10, 10, 10, 10, 10, 10,  5 },
       { -5,  1,  1,  1,  1,  1,  1, -5 },
@@ -25,8 +25,8 @@ public class Rook extends AbstractPiece {
         super(color, POSITION_VALUES);
     }
 
-    public double getValue() {
-        return 5.0;
+    public int getValue() {
+        return 500;
     }
 
     public String toString() {
