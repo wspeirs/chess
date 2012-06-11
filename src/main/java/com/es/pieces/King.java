@@ -10,7 +10,7 @@ import com.es.Board;
 public class King extends AbstractPiece {
 
     private static final Logger LOG = LoggerFactory.getLogger(Bishop.class);
-    private static final double POSITION_VALUES[][] =
+    private static final int POSITION_VALUES[][] =
     { { -30,-40,-40,-50,-50,-40,-40,-30 },
       { -30,-40,-40,-50,-50,-40,-40,-30 },
       { -30,-40,-40,-50,-50,-40,-40,-30 },
@@ -25,8 +25,8 @@ public class King extends AbstractPiece {
         super(color, POSITION_VALUES);
     }
 
-    public double getValue() {
-        return 1000.0;
+    public int getValue() {
+        return 100000;
     }
 
     public String toString() {

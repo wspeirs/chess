@@ -15,9 +15,9 @@ public class MoveAITest {
         board.makeMove(0x33, 0x43);
 
         board.makeMove(0x71, 0x52);
-        board.makeMove(0x52, 0x44);
+//        board.makeMove(0x52, 0x44);
 
-        board.makeMove(0x15, 0x35);
+//        board.makeMove(0x15, 0x35);
 
         board.printBoard();
 
@@ -38,19 +38,22 @@ public class MoveAITest {
         System.out.println("* NODE *");
         node.printChildren();
 
-/*        System.out.println("* MOVES *");
+        System.out.println("* MOVES *");
 
         MoveNode c = node.getBestChild();
 
         while(true) {
-            c.printChildren();
+            c.getBoard().printBoard();
+            System.out.println("SCORE: " + ai.computeScore(c) + "DEPTH: " + c.getDepth());
+
+//            c.printChildren();
 //            move = c.getMove();
 //            System.out.println(c.getScore() + ": " + Integer.toHexString(move[0]) + " -> " + Integer.toHexString(move[1]));
 
             c = c.getChildren().get(0);
             System.out.println();
         }
-*/
+
     }
 
 }

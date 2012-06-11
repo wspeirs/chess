@@ -8,12 +8,12 @@ import com.es.Board;
 public abstract class AbstractPiece implements Piece {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractPiece.class);
-    private final double[][] POSITION_VALUES;
+    private final int[][] POSITION_VALUES;
 
     private Color color;
     private boolean hasMoved = false;
 
-    public AbstractPiece(Piece.Color color, double[][] positionValues) {
+    public AbstractPiece(Piece.Color color, int[][] positionValues) {
         this.color = color;
         this.POSITION_VALUES = positionValues;
     }
@@ -40,16 +40,15 @@ public abstract class AbstractPiece implements Piece {
         return color;
     }
 
-    public double getPositionValue(int square) {
+    public int getPositionValue(int square) {
         int col = Board.squareToCol(square);
-        int row = Board.squareToRow(square);
+        int row = 7 - Board.squareToRow(square);
 
         if(getColor().equals(Color.BLACK)) {
-            row = (row - 7) * -1;
-            col = (col - 7) * -1;
+            col = (7 - col);
         }
 
-        return POSITION_VALUES[row][col] * getValue();
+        return POSITION_VALUES[row][col] + getValue();
     }
 
     /**

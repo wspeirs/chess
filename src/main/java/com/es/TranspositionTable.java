@@ -9,7 +9,7 @@ public class TranspositionTable extends LinkedHashMap<Board, MoveNode> {
     private static final int CAPACITY = 100000;
 
     public TranspositionTable() {
-        super(CAPACITY + 1, 1.1f, true);
+        super(CAPACITY + 1, 1.1f, false);
     }
 
     @Override
