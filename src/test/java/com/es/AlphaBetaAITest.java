@@ -15,7 +15,7 @@ public class AlphaBetaAITest {
     NegaScoutAI nega = new NegaScoutAI(Color.WHITE);
     MoveAI normal = new MoveAI(Color.WHITE);
 
-    static final int DEPTH = 1;
+    static final int DEPTH = 3;
 
     public void setupBoard() {
         board.clearBoard();
@@ -47,7 +47,7 @@ public class AlphaBetaAITest {
         System.out.println("RET: " + ret);
 
         //
-        // setup alpha-beta
+        // setup negascout
         //
         setupBoard();
         MoveNode negaNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
@@ -76,16 +76,17 @@ public class AlphaBetaAITest {
         alphaBetaNode.printChildren();
         printMoves(alphaBetaNode.getBestChild());
         System.out.println();
-
+/*
         System.out.println("* NEGA: " + negaTime);
         negaNode.printChildren();
         printMoves(negaNode.getBestChild());
         System.out.println();
-
+*/
         System.out.println("* NORMAL: " + normalTime);
         normalNode.printChildren();
         printMoves(normalNode.getBestChild());
         System.out.println();
+        
     }
 
     public void printMoves(MoveNode node) {

@@ -62,7 +62,7 @@ public class AlphaBetaAI {
 
                     if(beta <= alpha) {
                         LOG.debug("{} <= {}; RETURNING ALPHA", beta, alpha);
-                        node.setScore(node.getBestChild().getScore());
+                        node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
                         node.setDepth(depth);
                         return colorPlaying.equals(color) ? alpha : beta;
                     }
@@ -78,7 +78,7 @@ public class AlphaBetaAI {
             }
         }
 
-        node.setScore(node.getBestChild().getScore());
+        node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
         node.setDepth(depth);
 
         LOG.debug("NORMAL ALPHA RET: {}", alpha);
@@ -145,7 +145,7 @@ public class AlphaBetaAI {
 
         if(LOG.isDebugEnabled()) {
             LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
-            LOG.info("SCORE: {}", colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore);
+            LOG.info("WHITE: {} BLACK: {} SCORE: " + (colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore), whiteScore, blackScore);
         }
 
         return colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore;

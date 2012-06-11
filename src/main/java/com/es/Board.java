@@ -154,10 +154,7 @@ public class Board implements Cloneable {
         }
         
         Arrays.fill(whitePieces, Board.MAX_SQUARE);
-        Arrays.fill(whiteCapturedPieces, Board.MAX_SQUARE);
-        
         Arrays.fill(blackPieces, Board.MAX_SQUARE);
-        Arrays.fill(blackCapturedPieces, Board.MAX_SQUARE);
         
         int wIndex = 0;
         int bIndex = 0;
