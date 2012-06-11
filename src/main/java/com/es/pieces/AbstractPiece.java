@@ -24,11 +24,10 @@ public abstract class AbstractPiece implements Piece {
 
     public int getPositionValue(int square) {
         int col = Board.squareToCol(square);
-        int row = Board.squareToRow(square);
+        int row = 7 - Board.squareToRow(square);
 
         if(getColor().equals(Color.BLACK)) {
-            row = (row - 7) * -1;
-            col = (col - 7) * -1;
+            col = (7 - col);
         }
 
         return POSITION_VALUES[row][col] + getValue();

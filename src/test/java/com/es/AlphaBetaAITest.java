@@ -12,7 +12,10 @@ public class AlphaBetaAITest {
 
     Board board = new Board();
     AlphaBetaAI alphaBeta = new AlphaBetaAI(Color.WHITE);
+    NegaScoutAI nega = new NegaScoutAI(Color.WHITE);
     MoveAI normal = new MoveAI(Color.WHITE);
+
+    static final int DEPTH = 1;
 
     public void setupBoard() {
         board.clearBoard();
@@ -28,27 +31,55 @@ public class AlphaBetaAITest {
 
     @Test
     public void testAlphabeta() {
-        LogManager.getRootLogger().setLevel(Level.INFO);
+        LogManager.getRootLogger().setLevel(Level.DEBUG);
+
+        //
+        // setup alpha-beta
+        //
         setupBoard();
         MoveNode alphaBetaNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
 
         long start = System.currentTimeMillis();
-        int ret = alphaBeta.alphabeta(alphaBetaNode, 3, -1000000, 10000000, Color.WHITE);
+        int ret = alphaBeta.alphabeta(alphaBetaNode, DEPTH, -1000000, 10000000, Color.WHITE);
         alphaBetaNode.getBestChild();
         long alphaBetaTime = System.currentTimeMillis() - start;
 
         System.out.println("RET: " + ret);
 
+        //
+        // setup alpha-beta
+        //
+        setupBoard();
+        MoveNode negaNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+
+        start = System.currentTimeMillis();
+        ret = nega.negascout(negaNode, DEPTH, -1000000, 10000000, Color.WHITE);
+        negaNode.getBestChild();
+        long negaTime = System.currentTimeMillis() - start;
+
+        System.out.println("RET: " + ret);
+
+        //
+        // setup normal
+        //
         setupBoard();
         MoveNode normalNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
 
         start = System.currentTimeMillis();
-        normal.computeNextMove(normalNode, Color.WHITE, 3);
+        normal.computeNextMove(normalNode, Color.WHITE, DEPTH);
         long normalTime = System.currentTimeMillis() - start;
 
+        //
+        // print the results
+        //
         System.out.println("* ALPHA BETA: " + alphaBetaTime);
         alphaBetaNode.printChildren();
         printMoves(alphaBetaNode.getBestChild());
+        System.out.println();
+
+        System.out.println("* NEGA: " + negaTime);
+        negaNode.printChildren();
+        printMoves(negaNode.getBestChild());
         System.out.println();
 
         System.out.println("* NORMAL: " + normalTime);

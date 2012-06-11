@@ -6,16 +6,16 @@ import org.slf4j.LoggerFactory;
 import com.es.pieces.King;
 import com.es.pieces.Piece.Color;
 
-public class AlphaBetaAI {
-    private static final Logger LOG = LoggerFactory.getLogger(AlphaBetaAI.class);
+public class NegaScoutAI {
+    private static final Logger LOG = LoggerFactory.getLogger(NegaScoutAI.class);
 
     private Color colorPlaying;
 
-    public AlphaBetaAI(Color colorPlaying) {
+    public NegaScoutAI(Color colorPlaying) {
         this.colorPlaying = colorPlaying;
     }
 
-    public int alphabeta(MoveNode node, int depth, int alpha, int beta, Color color) {
+    public int negascout(MoveNode node, int depth, int alpha, int beta, Color color) {
         if(depth == 0) {
             int score = computeScore(node);
             node.setScore(score);
@@ -26,6 +26,9 @@ public class AlphaBetaAI {
         Board board = node.getBoard();
         int[] pieces = board.getPieces(color);
 
+        int b = beta;
+
+        // generate all the moves for each of these pieces
         for(int p:pieces) {
             if(p == Board.MAX_SQUARE) {
                 break;
@@ -46,26 +49,35 @@ public class AlphaBetaAI {
                 Board moveBoard = new Board(node.getBoard());
 
                 try {
-                    //LOG.debug("Move: {} -> {}", Integer.toHexString(p), Integer.toHexString(m));
-
                     moveBoard.makeMove(p, m, false);
                     MoveNode childNode = new MoveNode(moveBoard, node, new int[] { p, m });
 
-                    if(colorPlaying.equals(color)) {
-                        alpha = Math.max(alpha, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
-                    } else {
-                        beta = Math.min(beta, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
+                    int score = negascout(childNode, depth - 1, -1 * b, -1 * alpha, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE) * -1;
+
+                    if(alpha < score && score < beta && node.getChildCount() != 0) {
+                        LOG.debug("NULL WINDOW FAILED HIGH");
+                        score = negascout(childNode, depth - 1, -1 * beta, -1 * alpha, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE) * -1;
                     }
 
                     // by here we've recursed down
                     node.addChild(childNode);  // add the new node
 
-                    if(beta <= alpha) {
-                        LOG.debug("{} <= {}; RETURNING ALPHA", beta, alpha);
-                        node.setScore(node.getBestChild().getScore());
+                    alpha = Math.max(alpha, score);
+
+                    if(alpha >= beta) {
+                        LOG.debug("BETA CUTOFF");
+
+                        if(color.equals(colorPlaying)) {
+                            node.setScore(node.getBestChild().getScore());
+                        } else {
+                            node.setScore(node.getWorstChild().getScore());
+                        }
                         node.setDepth(depth);
-                        return colorPlaying.equals(color) ? alpha : beta;
+
+                        return alpha;
                     }
+
+                    b = alpha + 1;
 
                 } catch (IllegalMoveException e) {
                     LOG.warn("Illegal move");
@@ -78,11 +90,15 @@ public class AlphaBetaAI {
             }
         }
 
-        node.setScore(node.getBestChild().getScore());
+        if(color.equals(colorPlaying)) {
+            node.setScore(node.getBestChild().getScore());
+        } else {
+            node.setScore(node.getWorstChild().getScore());
+        }
         node.setDepth(depth);
 
         LOG.debug("NORMAL ALPHA RET: {}", alpha);
-        return colorPlaying.equals(color) ? alpha : beta;
+        return alpha;
     }
 
     public int computeScore(MoveNode node) {

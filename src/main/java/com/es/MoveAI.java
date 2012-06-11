@@ -247,6 +247,7 @@ public class MoveAI {
 
         if(LOG.isDebugEnabled()) {
             LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
+            LOG.info("WHITE: {} BLACK: {}", whiteScore, blackScore);
             LOG.info("SCORE: {}", colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore);
         }
 
