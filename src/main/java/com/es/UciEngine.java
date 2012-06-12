@@ -1,6 +1,9 @@
 package com.es;
 
+import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 import jcpi.AbstractCommunication;
 import jcpi.AbstractEngine;
@@ -18,9 +21,10 @@ import jcpi.commands.GuiBestMoveCommand;
 import jcpi.commands.GuiInformationCommand;
 import jcpi.commands.GuiInitializeAnswerCommand;
 import jcpi.commands.GuiReadyAnswerCommand;
+import jcpi.data.GenericFile;
 import jcpi.data.GenericMove;
 import jcpi.data.GenericPosition;
-import jcpi.data.IllegalNotationException;
+import jcpi.data.GenericRank;
 import jcpi.standardio.StandardIoCommunication;
 
 import org.apache.log4j.Level;
@@ -33,8 +37,22 @@ import com.es.pieces.Piece.Color;
 public class UciEngine extends AbstractEngine {
     private static final Logger LOG = LoggerFactory.getLogger(UciEngine.class);
     
+	private AbstractCommunication communication;
     private Board board;
     private Color color;
+
+	private static final Map<GenericPosition, Integer> positions = new EnumMap<GenericPosition, Integer>(GenericPosition.class);
+
+	static {
+		for (GenericPosition position : GenericPosition.values()) {
+			int file = Arrays.asList(GenericFile.values()).indexOf(position.file);
+			int rank = Arrays.asList(GenericRank.values()).indexOf(position.rank);
+
+			int intPosition = rank * 16 + file;
+
+			positions.put(position, intPosition);
+		}
+	}
 
     public static void main(String[] args) {
         // Choose and create a communication channel. For now there exists only
@@ -50,6 +68,8 @@ public class UciEngine extends AbstractEngine {
 
     public UciEngine(AbstractCommunication communication) {
         super(communication);
+        
+        this.communication = communication;
     }
 
     public void visit(EngineInitializeRequestCommand command) {
@@ -102,14 +122,11 @@ public class UciEngine extends AbstractEngine {
         // Setup the board & color
         board = new Board();
         color = Color.WHITE;
-        
-        PgnUtils utils = new PgnUtils(board);
 
         try {
             List<GenericMove> moveList = command.moveList;
             for (GenericMove move : moveList) {
-                int[] userMove = utils.parseSingleMove(color, command.board.getPiece(move.from).toChar() + move.toString());
-                board.makeMove(userMove[0], userMove[1]);
+                board.makeMove(positions.get(move.from), positions.get(move.to));
                 
                 if (color == Color.WHITE) {
                     color = Color.BLACK;
@@ -134,15 +151,16 @@ public class UciEngine extends AbstractEngine {
 
         int[] aiMove = ai.computeNextMove(currentNode, color);
 
-        PgnUtils utils = new PgnUtils(board);
-        String move = utils.computePgnMove(aiMove[0], aiMove[1]).substring(1);
-        
-        try {
-            GenericMove genericMove = new GenericMove(move);
-            this.communication.send(new GuiBestMoveCommand(genericMove, null));
-        } catch (IllegalNotationException e) {
-            new EngineQuitCommand().accept(this);
-        }
+		GenericFile file = GenericFile.values()[aiMove[0] % 16];
+		GenericRank rank = GenericRank.values()[aiMove[0] >>> 4];
+		GenericPosition from = GenericPosition.valueOf(file, rank);
+		
+		file = GenericFile.values()[aiMove[1] % 16];
+		rank = GenericRank.values()[aiMove[1] >>> 4];
+		GenericPosition to = GenericPosition.valueOf(file, rank);
+
+        GenericMove genericMove = new GenericMove(from, to);
+        this.communication.send(new GuiBestMoveCommand(genericMove, null));
     }
 
     public void visit(EngineStopCalculatingCommand command) {
