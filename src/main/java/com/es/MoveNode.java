@@ -18,11 +18,11 @@ public class MoveNode {
 
     private Board board;
     private int score;
+    private int retVal;
     private int depth;
     private int[] move;
     private MoveNode parent;
     private List<MoveNode> children = new ArrayList<MoveNode>();
-    private int nodeCount = 0;
     private boolean isSorted = false;
 
     public MoveNode(Board board, MoveNode parent, int[] move) {
@@ -45,6 +45,14 @@ public class MoveNode {
 
     public void setScore(int score) {
         this.score = score;
+    }
+
+    public int getRetVal() {
+        return retVal;
+    }
+
+    public void setRetVal(int retVal) {
+        this.retVal = retVal;
     }
 
     public int getDepth() {

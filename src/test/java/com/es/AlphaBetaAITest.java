@@ -24,7 +24,6 @@ public class AlphaBetaAITest {
     }
 
     public void setupBoard() {
-/*
         board.clearBoard();
 
         board.addPiece(new Pawn(Color.BLACK), 0x63);
@@ -34,7 +33,6 @@ public class AlphaBetaAITest {
         board.addPiece(new Pawn(Color.WHITE), 0x13);
 //        board.addPiece(new Pawn(Color.WHITE), 0x14);
         board.addPiece(new Queen(Color.WHITE), 0x03);
-*/
     }
 
     @Test
