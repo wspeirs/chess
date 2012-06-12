@@ -1,28 +1,49 @@
-package com.es;
+package com.es.engines;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.commons.configuration.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.es.AlphaBetaAI;
+import com.es.Board;
+import com.es.IllegalMoveException;
+import com.es.MoveNode;
+import com.es.PgnUtils;
 import com.es.pieces.Piece.Color;
 
-public class GameEngine {
+public class GuiEngine extends Engine {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(GuiEngine.class);
+    
+    private Board board;
+    private AlphaBetaAI ai;
+    private PgnUtils utils;
 
-    public static void main(String[] args) throws IOException {
-        Logger.getRootLogger().setLevel(Level.INFO);
+    public GuiEngine(Configuration config) {
+        super(config);
+        this.board = new Board();
+        this.ai = new AlphaBetaAI(Color.BLACK);
+        this.utils = new PgnUtils(this.board);
+    }
 
-        Board board = new Board();  // setup the board
+    @Override
+    public void play() {
         MoveNode currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
-        MoveAI ai = new MoveAI(Color.BLACK);    // create the AI
-
-        PgnUtils utils = new PgnUtils(board);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String line;
+        String line = "go";
 
-        while(!(line = reader.readLine()).equals("q")) {
+        while(!"q".equalsIgnoreCase(line)) {
+            try {
+                line = reader.readLine();
+            } catch (IOException e) {
+                LOG.error("Error reading input: {}", e.getMessage());
+                break;
+            }
+            
             try {
                 int[] userMove = utils.parseSingleMove(Color.WHITE, line);
 
@@ -34,13 +55,7 @@ public class GameEngine {
 
             board.printBoard();
 
-            currentNode = ai.findNode(board);
-
-            if(currentNode == null) {
-                currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
-            } else {
-                System.out.println("NODE FOUND");
-            }
+            currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
 
             long start = System.currentTimeMillis();
             int[] aiMove = ai.computeNextMove(currentNode, Color.BLACK);
@@ -74,7 +89,6 @@ public class GameEngine {
 
             board.printBoard();
         }
-
     }
 
 }

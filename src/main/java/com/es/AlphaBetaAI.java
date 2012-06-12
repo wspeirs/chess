@@ -16,6 +16,12 @@ public class AlphaBetaAI {
     public AlphaBetaAI(Color colorPlaying) {
         this.colorPlaying = colorPlaying;
     }
+    
+    public int[] computeNextMove(MoveNode node, Color color) {
+        alphabeta(node, 4, -1000000, 1000000, color);
+        
+        return node.getMove();
+    }
 
     public int alphabeta(MoveNode node, int depth, int alpha, int beta, Color color) {
         if(depth == 0) {
