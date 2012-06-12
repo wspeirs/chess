@@ -103,7 +103,7 @@ public class MoveAI {
     public MoveNode computeNextMove(MoveNode currentNode, Color color, int depth) {
         if(depth == 0) {
             // compute the score
-            double score = computeScore(currentNode);
+            int score = computeScore(currentNode);
 
             currentNode.setScore(score);
 

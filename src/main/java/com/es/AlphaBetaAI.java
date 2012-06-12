@@ -9,6 +9,8 @@ import com.es.pieces.Piece.Color;
 public class AlphaBetaAI {
     private static final Logger LOG = LoggerFactory.getLogger(AlphaBetaAI.class);
 
+    private TranspositionTable transpositionTable = new TranspositionTable();
+    private int transHit = 0;
     private Color colorPlaying;
 
     public AlphaBetaAI(Color colorPlaying) {
@@ -49,16 +51,35 @@ public class AlphaBetaAI {
                     //LOG.debug("Move: {} -> {}", Integer.toHexString(p), Integer.toHexString(m));
 
                     moveBoard.makeMove(p, m, false);
-                    MoveNode childNode = new MoveNode(moveBoard, node, new int[] { p, m });
-
-                    if(colorPlaying.equals(color)) {
-                        alpha = Math.max(alpha, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
+                    MoveNode childNode = transpositionTable.get(moveBoard);
+                    boolean addToTable = false;
+                    
+                    if(childNode == null) {
+                        childNode = new MoveNode(moveBoard, node, new int[] { p, m });
+                        addToTable = true;
+                        if(colorPlaying.equals(color)) {
+                            alpha = Math.max(alpha, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
+                        } else {
+                            beta = Math.min(beta, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
+                        }
                     } else {
-                        beta = Math.min(beta, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
+                        LOG.debug("TRANS HIT");
+/*
+                        if(colorPlaying.equals(color)) {
+                            alpha = Math.max(alpha, childNode.getBestChild().getScore());
+                        } else {
+                            beta = Math.min(beta, childNode.getWorstChild().getScore());
+                        }
+*/                        
+                        transHit++;
                     }
 
                     // by here we've recursed down
                     node.addChild(childNode);  // add the new node
+                    
+                    if(addToTable) {
+                        // transpositionTable.put(moveBoard, childNode);
+                    }
 
                     if(beta <= alpha) {
                         LOG.debug("{} <= {}; RETURNING ALPHA", beta, alpha);
@@ -144,8 +165,8 @@ public class AlphaBetaAI {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
-            LOG.info("WHITE: {} BLACK: {} SCORE: " + (colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore), whiteScore, blackScore);
+//            LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
+//            LOG.info("WHITE: {} BLACK: {} SCORE: " + (colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore), whiteScore, blackScore);
         }
 
         return colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore;

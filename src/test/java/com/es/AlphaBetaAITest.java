@@ -2,6 +2,7 @@ package com.es;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.es.pieces.Pawn;
@@ -15,23 +16,29 @@ public class AlphaBetaAITest {
     NegaScoutAI nega = new NegaScoutAI(Color.WHITE);
     MoveAI normal = new MoveAI(Color.WHITE);
 
-    static final int DEPTH = 3;
+    static final int DEPTH = 4;
+    
+    @Before
+    public void setup() {
+        LogManager.getRootLogger().setLevel(Level.DEBUG);
+    }
 
     public void setupBoard() {
+/*
         board.clearBoard();
 
         board.addPiece(new Pawn(Color.BLACK), 0x63);
-//        board.addPiece(new Pawn(Color.BLACK), 0x64);
+        board.addPiece(new Pawn(Color.BLACK), 0x64);
         board.addPiece(new Queen(Color.BLACK), 0x73);
 
         board.addPiece(new Pawn(Color.WHITE), 0x13);
 //        board.addPiece(new Pawn(Color.WHITE), 0x14);
         board.addPiece(new Queen(Color.WHITE), 0x03);
+*/
     }
 
     @Test
     public void testAlphabeta() {
-        LogManager.getRootLogger().setLevel(Level.DEBUG);
 
         //
         // setup alpha-beta
@@ -45,7 +52,7 @@ public class AlphaBetaAITest {
         long alphaBetaTime = System.currentTimeMillis() - start;
 
         System.out.println("RET: " + ret);
-
+/*
         //
         // setup negascout
         //
@@ -68,11 +75,11 @@ public class AlphaBetaAITest {
         start = System.currentTimeMillis();
         normal.computeNextMove(normalNode, Color.WHITE, DEPTH);
         long normalTime = System.currentTimeMillis() - start;
-
+*/
         //
         // print the results
         //
-        System.out.println("* ALPHA BETA: " + alphaBetaTime);
+        System.out.println("* ALPHA BETA: " + alphaBetaTime + " " + alphaBetaNode.getNodeCount());
         alphaBetaNode.printChildren();
         printMoves(alphaBetaNode.getBestChild());
         System.out.println();
@@ -81,12 +88,12 @@ public class AlphaBetaAITest {
         negaNode.printChildren();
         printMoves(negaNode.getBestChild());
         System.out.println();
-*/
-        System.out.println("* NORMAL: " + normalTime);
+
+        System.out.println("* NORMAL: " + normalTime + " " + normalNode.getNodeCount());
         normalNode.printChildren();
         printMoves(normalNode.getBestChild());
         System.out.println();
-        
+*/        
     }
 
     public void printMoves(MoveNode node) {

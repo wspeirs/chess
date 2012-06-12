@@ -17,7 +17,7 @@ public class MoveNode {
     private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
     private Board board;
-    private double score;
+    private int score;
     private int depth;
     private int[] move;
     private MoveNode parent;
@@ -39,11 +39,11 @@ public class MoveNode {
         return board;
     }
 
-    public double getScore() {
+    public int getScore() {
         return score;
     }
 
-    public void setScore(double score) {
+    public void setScore(int score) {
         this.score = score;
     }
 
