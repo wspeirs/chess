@@ -50,6 +50,9 @@ public class MoveAITest {
 //            move = c.getMove();
 //            System.out.println(c.getScore() + ": " + Integer.toHexString(move[0]) + " -> " + Integer.toHexString(move[1]));
 
+            if(c.getChildCount() == 0) {
+                break;
+            }
             c = c.getChildren().get(0);
             System.out.println();
         }

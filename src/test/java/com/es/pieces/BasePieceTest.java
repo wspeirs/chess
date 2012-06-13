@@ -3,6 +3,7 @@ package com.es.pieces;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
+import org.junit.Test;
 
 import com.es.Board;
 
@@ -12,6 +13,11 @@ public class BasePieceTest {
     @Before
     public void setup() {
         board.clearBoard();
+    }
+
+    @Test
+    public void test() {
+
     }
 
     public void verifyMoves(int[] validMoves, int[] moves) {

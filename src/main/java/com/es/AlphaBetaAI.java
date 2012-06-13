@@ -17,6 +17,12 @@ public class AlphaBetaAI {
         this.colorPlaying = colorPlaying;
     }
 
+    public int[] computeNextMove(MoveNode currentNode, Color currentColor) {
+        alphabeta(currentNode, 4, -1000000, 10000000, Color.WHITE);
+
+        return currentNode.getMove();
+    }
+
     public int alphabeta(MoveNode node, int depth, int alpha, int beta, Color color) {
         if(depth == 0) {
             int score = computeScore(node);
@@ -53,7 +59,7 @@ public class AlphaBetaAI {
                     moveBoard.makeMove(p, m, false);
                     MoveNode childNode = transpositionTable.get(moveBoard);
                     boolean addToTable = false;
-                    
+
                     if(childNode == null) {
                         childNode = new MoveNode(moveBoard, node, new int[] { p, m });
                         addToTable = true;
@@ -70,13 +76,13 @@ public class AlphaBetaAI {
                         } else {
                             beta = Math.min(beta, childNode.getWorstChild().getScore());
                         }
-*/                        
+*/
                         transHit++;
                     }
 
                     // by here we've recursed down
                     node.addChild(childNode);  // add the new node
-                    
+
                     if(addToTable) {
                         // transpositionTable.put(moveBoard, childNode);
                     }

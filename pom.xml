@@ -4,6 +4,39 @@
   <artifactId>chess</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>Chess</name>
+  <build>
+ 		<plugins>
+ 			<plugin>
+ 				<groupId>org.apache.maven.plugins</groupId>
+ 				<artifactId>maven-compiler-plugin</artifactId>
+ 				<version>2.5.1</version>
+ 				<configuration>
+ 				  <source>1.6</source>
+ 				  <target>1.6</target>
+ 				</configuration>
+ 			</plugin>
+ 			<plugin>
+ 				<groupId>org.apache.maven.plugins</groupId>
+ 				<artifactId>maven-shade-plugin</artifactId>
+ 				<version>1.7</version>
+ 				<executions>
+	          <execution>
+	            <phase>package</phase>
+	            <goals>
+	              <goal>shade</goal>
+	            </goals>
+	            <configuration>
+	              <transformers>
+	                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+	                  <mainClass>com.es.UciEngine</mainClass>
+	                </transformer>
+	              </transformers>
+	            </configuration>
+	          </execution>
+	        </executions>
+ 			</plugin>
+ 		</plugins>
+  </build>
   <dependencies>
   	<dependency>
   		<groupId>org.apache.commons</groupId>
@@ -31,6 +64,13 @@
         <groupId>log4j</groupId>
         <artifactId>apache-log4j-extras</artifactId>
         <version>1.1</version>
+    </dependency>
+    <dependency>
+    	<groupId>junit</groupId>
+    	<artifactId>junit</artifactId>
+    	<version>4.10</version>
+    	<type>jar</type>
+    	<scope>test</scope>
     </dependency>
   </dependencies>
 </project>
