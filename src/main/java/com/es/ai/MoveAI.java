@@ -1,10 +1,12 @@
-package com.es;
+package com.es.ai;
 
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.es.Board;
+import com.es.IllegalMoveException;
 import com.es.pieces.King;
 import com.es.pieces.Piece.Color;
 

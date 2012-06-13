@@ -32,10 +32,10 @@ import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.es.AlphaBetaAI;
 import com.es.Board;
 import com.es.IllegalMoveException;
-import com.es.MoveNode;
+import com.es.ai.AlphaBetaAI;
+import com.es.ai.MoveNode;
 import com.es.pieces.Piece.Color;
 
 public class UciEngine extends AbstractEngine implements Engine {

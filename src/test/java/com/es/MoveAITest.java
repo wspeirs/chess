@@ -2,6 +2,8 @@ package com.es;
 
 import org.junit.Test;
 
+import com.es.ai.MoveAI;
+import com.es.ai.MoveNode;
 import com.es.pieces.Piece.Color;
 
 public class MoveAITest {

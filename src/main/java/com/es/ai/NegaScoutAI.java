@@ -1,41 +1,36 @@
-package com.es;
-
+package com.es.ai;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.es.Board;
+import com.es.IllegalMoveException;
 import com.es.pieces.King;
 import com.es.pieces.Piece.Color;
 
-public class AlphaBetaAI {
-    private static final Logger LOG = LoggerFactory.getLogger(AlphaBetaAI.class);
+public class NegaScoutAI {
+    private static final Logger LOG = LoggerFactory.getLogger(NegaScoutAI.class);
 
-    private TranspositionTable transpositionTable = new TranspositionTable();
-    private int transHit = 0;
     private Color colorPlaying;
 
-    public AlphaBetaAI(Color colorPlaying) {
+    public NegaScoutAI(Color colorPlaying) {
         this.colorPlaying = colorPlaying;
     }
 
-    public int[] computeNextMove(MoveNode node, Color color) {
-        alphabeta(node, 4, -1000000, 1000000, color);
-
-        return node.getMove();
-    }
-
-    public int alphabeta(MoveNode node, int depth, int alpha, int beta, Color color) {
+    public int negascout(MoveNode node, int depth, int alpha, int beta, Color color) {
         if(depth == 0) {
             int score = computeScore(node);
             node.setScore(score);
             node.setDepth(depth);
-            node.setRetVal(score);
             return score;
         }
 
         Board board = node.getBoard();
         int[] pieces = board.getPieces(color);
 
+        int b = beta;
+
+        // generate all the moves for each of these pieces
         for(int p:pieces) {
             if(p == Board.MAX_SQUARE) {
                 break;
@@ -57,46 +52,34 @@ public class AlphaBetaAI {
 
                 try {
                     moveBoard.makeMove(p, m, false);
-                    MoveNode childNode = transpositionTable.get(moveBoard);
-                    boolean addToTable = false;
-                    if(childNode == null || childNode.getDepth() <= depth) {
-                        childNode = new MoveNode(moveBoard, node, new int[] { p, m });
-                        addToTable = true;
-                        if(colorPlaying.equals(color)) {
-                            alpha = Math.max(alpha, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
-                        } else {
-                            beta = Math.min(beta, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
-                        }
-                    } else {
-                        if( (color.equals(Color.WHITE) && p > 0x30) || (color.equals(Color.BLACK) && p < 0x40)) {
-                            LOG.debug("TRANS HIT: {}", color.equals(Color.WHITE) ? "WHITE" : "BLACK");
-                            LOG.debug("Move: {} -> {}", Integer.toHexString(p), Integer.toHexString(m));
-                        }
+                    MoveNode childNode = new MoveNode(moveBoard, node, new int[] { p, m });
 
-                        if(colorPlaying.equals(color)) {
-                            alpha = Math.max(alpha, childNode.getRetVal());
-                        } else {
-                            beta = Math.min(beta, childNode.getRetVal());
-                        }
+                    int score = negascout(childNode, depth - 1, -1 * b, -1 * alpha, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE) * -1;
 
-                        transHit++;
-                    }
-
-                    if(addToTable) {
-                        transpositionTable.put(moveBoard, childNode);
+                    if(alpha < score && score < beta && node.getChildCount() != 0) {
+                        LOG.debug("NULL WINDOW FAILED HIGH");
+                        score = negascout(childNode, depth - 1, -1 * beta, -1 * alpha, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE) * -1;
                     }
 
                     // by here we've recursed down
                     node.addChild(childNode);  // add the new node
 
-                    if(beta <= alpha) {
-                        //LOG.debug("{} <= {}; RETURNING ALPHA", beta, alpha);
-                        node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
+                    alpha = Math.max(alpha, score);
+
+                    if(alpha >= beta) {
+                        LOG.debug("BETA CUTOFF");
+
+                        if(color.equals(colorPlaying)) {
+                            node.setScore(node.getBestChild().getScore());
+                        } else {
+                            node.setScore(node.getWorstChild().getScore());
+                        }
                         node.setDepth(depth);
-                        int retVal = colorPlaying.equals(color) ? alpha : beta;
-                        node.setRetVal(retVal);
-                        return retVal;
+
+                        return alpha;
                     }
+
+                    b = alpha + 1;
 
                 } catch (IllegalMoveException e) {
                     LOG.warn("Illegal move");
@@ -109,14 +92,15 @@ public class AlphaBetaAI {
             }
         }
 
-        node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
+        if(color.equals(colorPlaying)) {
+            node.setScore(node.getBestChild().getScore());
+        } else {
+            node.setScore(node.getWorstChild().getScore());
+        }
         node.setDepth(depth);
 
-        int retVal = colorPlaying.equals(color) ? alpha : beta;
-        node.setRetVal(retVal);
-
-        //LOG.debug("NORMAL ALPHA RET: {}", alpha);
-        return retVal;
+        LOG.debug("NORMAL ALPHA RET: {}", alpha);
+        return alpha;
     }
 
     public int computeScore(MoveNode node) {
@@ -153,8 +137,8 @@ public class AlphaBetaAI {
         // check to see if we've lost a pieces between the parent move and this move
         if(whiteScore != whiteParentScore || blackScore != blackParentScore) {
             if(LOG.isDebugEnabled()) {
-//                LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
-//                LOG.info("SCORE: {}", colorPlaying.equals(Color.WHITE) ? (whiteScore - blackScore) * 100 : (blackScore - whiteScore) * 100);
+                LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
+                LOG.info("SCORE: {}", colorPlaying.equals(Color.WHITE) ? (whiteScore - blackScore) * 100 : (blackScore - whiteScore) * 100);
             }
             return colorPlaying.equals(Color.WHITE) ? (whiteScore - blackScore) * 100 : (blackScore - whiteScore) * 100;
         }
@@ -178,8 +162,8 @@ public class AlphaBetaAI {
         }
 
         if(LOG.isDebugEnabled()) {
-//            LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
-//            LOG.info("WHITE: {} BLACK: {} SCORE: " + (colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore), whiteScore, blackScore);
+            LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
+            LOG.info("SCORE: {}", colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore);
         }
 
         return colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore;

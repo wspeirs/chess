@@ -1,7 +1,9 @@
-package com.es;
+package com.es.ai;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.es.Board;
 
 public class TranspositionTable extends LinkedHashMap<Board, MoveNode> {
 

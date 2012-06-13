@@ -5,6 +5,10 @@ import org.apache.log4j.LogManager;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.es.ai.AlphaBetaAI;
+import com.es.ai.MoveAI;
+import com.es.ai.MoveNode;
+import com.es.ai.NegaScoutAI;
 import com.es.pieces.Pawn;
 import com.es.pieces.Piece.Color;
 import com.es.pieces.Queen;
