@@ -15,16 +15,17 @@ import com.es.MoveNode;
 import com.es.PgnUtils;
 import com.es.pieces.Piece.Color;
 
-public class GuiEngine extends Engine {
-    
+public class GuiEngine implements Engine {
+
     private static final Logger LOG = LoggerFactory.getLogger(GuiEngine.class);
-    
+
+    private Configuration config;
     private Board board;
     private AlphaBetaAI ai;
     private PgnUtils utils;
 
     public GuiEngine(Configuration config) {
-        super(config);
+        this.config = config;
         this.board = new Board();
         this.ai = new AlphaBetaAI(Color.BLACK);
         this.utils = new PgnUtils(this.board);
@@ -43,7 +44,7 @@ public class GuiEngine extends Engine {
                 LOG.error("Error reading input: {}", e.getMessage());
                 break;
             }
-            
+
             try {
                 int[] userMove = utils.parseSingleMove(Color.WHITE, line);
 

@@ -1,4 +1,4 @@
-package com.es;
+package com.es.engines;
 
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -25,13 +25,23 @@ import jcpi.data.GenericFile;
 import jcpi.data.GenericMove;
 import jcpi.data.GenericPosition;
 import jcpi.data.GenericRank;
-import jcpi.standardio.StandardIoCommunication;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.es.AlphaBetaAI;
+import com.es.Board;
+import com.es.IllegalMoveException;
+import com.es.MoveNode;
 import com.es.pieces.Piece.Color;
 
-public class UciEngine extends AbstractEngine {
-//    private static final Logger LOG = LoggerFactory.getLogger(UciEngine.class);
+public class UciEngine extends AbstractEngine implements Engine {
+    private static final Logger LOG = LoggerFactory.getLogger(UciEngine.class);
 
+    private Configuration config;
     private Board board;
     private Color color;
     private static final Map<GenericPosition, Integer> positions = new EnumMap<GenericPosition, Integer>(GenericPosition.class);
@@ -47,37 +57,26 @@ public class UciEngine extends AbstractEngine {
         }
     }
 
-    public static void main(String[] args) {
-        // Choose and create a communication channel. For now there exists only
-        // an object for the standard io communication.
-        AbstractCommunication communication = new StandardIoCommunication();
-
-        // Create your engine.
-        AbstractEngine engine = new UciEngine(communication);
-
-        // Start the engine.
-        engine.run();
-    }
-
-    public UciEngine(AbstractCommunication communication) {
+    public UciEngine(Configuration config, AbstractCommunication communication) {
         super(communication);
+        this.config = config;
     }
 
     public void visit(EngineInitializeRequestCommand command) {
-//        LOG.info("Engine Initialize Request");
+        LOG.info("Engine Initialize Request");
         new EngineStopCalculatingCommand().accept(this);
         this.communication.send(new GuiInitializeAnswerCommand("chess 1.0", "William Speirs"));
     }
 
     public void visit(EngineSetOptionCommand command) {
-//        LOG.info("Engine Set Option");
+        LOG.info("Engine Set Option");
     }
 
     public void visit(EngineDebugCommand command) {
-//        LOG.info("Engine Debug Command");
+        LOG.info("Engine Debug Command");
 
         GuiInformationCommand infoCommand = new GuiInformationCommand();
-/*
+
         if(LOG.isDebugEnabled()) {
             infoCommand.setString("Turning off debugging mode");
             LogManager.getLogger(UciEngine.class).setLevel(Level.INFO);
@@ -85,19 +84,19 @@ public class UciEngine extends AbstractEngine {
             infoCommand.setString("Turning on debugging mode");
             LogManager.getLogger(UciEngine.class).setLevel(Level.DEBUG);
         }
-*/
+
         this.communication.send(infoCommand);
     }
 
     public void visit(EngineReadyRequestCommand command) {
-//        LOG.info("Engine Ready Request");
+        LOG.info("Engine Ready Request");
 
         // Send the token back
         this.communication.send(new GuiReadyAnswerCommand(command.token));
     }
 
     public void visit(EngineNewGameCommand command) {
-//        LOG.info("Engine New Game");
+        LOG.info("Engine New Game");
 
         // It might be good to stop computing first...
         new EngineStopCalculatingCommand().accept(this);
@@ -108,7 +107,7 @@ public class UciEngine extends AbstractEngine {
     }
 
     public void visit(EngineAnalyzeCommand command) {
-//        LOG.info("Engine Analyze");
+        LOG.info("Engine Analyze");
 
         // Setup the board & color
         board = new Board();
@@ -131,7 +130,7 @@ public class UciEngine extends AbstractEngine {
     }
 
     public void visit(EngineStartCalculatingCommand command) {
-//        LOG.info("Engine Start Calculating");
+        LOG.info("Engine Start Calculating");
 
         AlphaBetaAI ai = new AlphaBetaAI(color);    // create the AI
 
@@ -152,17 +151,22 @@ public class UciEngine extends AbstractEngine {
     }
 
     public void visit(EngineStopCalculatingCommand command) {
-//        LOG.info("Engine Stop Calculating");
+        LOG.info("Engine Stop Calculating");
     }
 
     public void visit(EnginePonderHitCommand command) {
-//        LOG.info("Engine Ponder Hit");
+        LOG.info("Engine Ponder Hit");
         // We have a ponder hit, it's your turn now!
     }
 
     @Override
     protected void quit() {
         new EngineStopCalculatingCommand().accept(this);
+    }
+
+    @Override
+    public void play() {
+        this.run();
     }
 
 }
