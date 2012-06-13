@@ -73,8 +73,8 @@ public class MoveNode {
         return children.size();
     }
 
-    public List<MoveNode> getChildren() {
-        return children;
+    public MoveNode getFirstChild() {
+        return children.get(0);
     }
 
     public List<MoveNode> keepTopChildren(int numberToKeep) {

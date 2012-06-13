@@ -98,12 +98,7 @@ public class CmdConfiguration extends AbstractConfiguration {
     }
 
     public Object getProperty(String arg) {
-        try {
-            return commandLine.getParsedOptionValue(arg);
-        } catch (ParseException e) {
-            LOG.warn("Error getting property {}: {}", arg, e.getMessage());
-            return null;
-        }
+            return commandLine.getOptionValue(arg);
     }
 
     public boolean isEmpty() {
