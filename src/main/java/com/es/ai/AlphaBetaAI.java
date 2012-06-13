@@ -23,7 +23,7 @@ public class AlphaBetaAI {
     public int[] computeNextMove(MoveNode node, Color color) {
         alphabeta(node, 4, -1000000, 1000000, color);
 
-        return node.getMove();
+        return node.getBestChild().getMove();
     }
 
     public int alphabeta(MoveNode node, int depth, int alpha, int beta, Color color) {

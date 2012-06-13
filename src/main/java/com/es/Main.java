@@ -6,12 +6,16 @@ import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.es.engines.Engine;
 import com.es.engines.GuiEngine;
 import com.es.engines.UciEngine;
 
 public class Main {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
     /**
      * @param args
@@ -26,8 +30,14 @@ public class Main {
 
         // take properties from the command line first
         config.addConfiguration(cmdConfig);
-        // then from a configuration file
-        config.addConfiguration(new PropertiesConfiguration("chess.properties"));
+
+        try {
+            // then from a configuration file
+            config.addConfiguration(new PropertiesConfiguration("chess.properties"));
+        } catch(ConfigurationException e) {
+            LOG.warn("No chess.properties file found");
+        }
+
         // finally the defaults
         config.addConfiguration(configureDefaults());
 

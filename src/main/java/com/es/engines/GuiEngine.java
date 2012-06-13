@@ -37,6 +37,8 @@ public class GuiEngine implements Engine {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line = "go";
 
+        board.printBoard();
+
         while(!"q".equalsIgnoreCase(line)) {
             try {
                 line = reader.readLine();

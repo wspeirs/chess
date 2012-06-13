@@ -9,9 +9,7 @@ import com.es.ai.AlphaBetaAI;
 import com.es.ai.MoveAI;
 import com.es.ai.MoveNode;
 import com.es.ai.NegaScoutAI;
-import com.es.pieces.Pawn;
 import com.es.pieces.Piece.Color;
-import com.es.pieces.Queen;
 
 public class AlphaBetaAITest {
 
@@ -21,15 +19,17 @@ public class AlphaBetaAITest {
     MoveAI normal = new MoveAI(Color.WHITE);
 
     static final int DEPTH = 4;
-    
+
     @Before
     public void setup() {
         LogManager.getRootLogger().setLevel(Level.DEBUG);
     }
 
-    public void setupBoard() {
-        board.clearBoard();
+    public void setupBoard() throws IllegalMoveException {
+//        board.clearBoard();
 
+        board.makeMove(0x13, 0x33);
+/*
         board.addPiece(new Pawn(Color.BLACK), 0x63);
         board.addPiece(new Pawn(Color.BLACK), 0x64);
         board.addPiece(new Queen(Color.BLACK), 0x73);
@@ -37,10 +37,11 @@ public class AlphaBetaAITest {
         board.addPiece(new Pawn(Color.WHITE), 0x13);
 //        board.addPiece(new Pawn(Color.WHITE), 0x14);
         board.addPiece(new Queen(Color.WHITE), 0x03);
+*/
     }
 
     @Test
-    public void testAlphabeta() {
+    public void testAlphabeta() throws IllegalMoveException {
 
         //
         // setup alpha-beta
@@ -49,11 +50,16 @@ public class AlphaBetaAITest {
         MoveNode alphaBetaNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
 
         long start = System.currentTimeMillis();
-        int ret = alphaBeta.alphabeta(alphaBetaNode, DEPTH, -1000000, 10000000, Color.WHITE);
+        int ret = alphaBeta.alphabeta(alphaBetaNode, DEPTH, -1000000, 10000000, Color.BLACK);
         alphaBetaNode.getBestChild();
         long alphaBetaTime = System.currentTimeMillis() - start;
 
         System.out.println("RET: " + ret);
+
+        String from = Integer.toHexString(alphaBetaNode.getBestChild().getMove()[0]);
+        String to = Integer.toHexString(alphaBetaNode.getBestChild().getMove()[1]);
+
+        System.out.println("MOVE: " + from + " -> " + to);
 /*
         //
         // setup negascout
@@ -95,7 +101,7 @@ public class AlphaBetaAITest {
         normalNode.printChildren();
         printMoves(normalNode.getBestChild());
         System.out.println();
-*/        
+*/
     }
 
     public void printMoves(MoveNode node) {
