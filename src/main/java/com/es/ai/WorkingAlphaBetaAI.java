@@ -19,6 +19,10 @@ public class WorkingAlphaBetaAI {
     public WorkingAlphaBetaAI(Color colorPlaying) {
         this.colorPlaying = colorPlaying;
     }
+    
+    public int getTransHit() {
+        return transHit;
+    }
 
     public int[] computeNextMove(MoveNode node, Color color) {
         alphabeta(node, 6, -1000000, 1000000, color);

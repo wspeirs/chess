@@ -1,6 +1,7 @@
 package com.es.ai;
 
 
+import org.apache.commons.collections.primitives.ArrayIntList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,10 @@ public class AlphaBetaAI {
     public AlphaBetaAI(Color colorPlaying) {
         this.colorPlaying = colorPlaying;
     }
+    
+    public int getTransHit() {
+        return transHit;
+    }
 
     public int[] computeNextMove(MoveNode node, Color color) {
         alphabeta(node, 6, -1000000, 1000000, color);
@@ -36,11 +41,118 @@ public class AlphaBetaAI {
         }
 
         Board board = node.getBoard();
-        int[] pieces = board.getPieces(color);
+        int[] boardPieces = board.getPieces(color);
 
+/*        
+        int[] childrenPieces = node.getChildrenPieces();
+        int[] pieces = childrenPieces;
+        
+        // we want to make sure we walk through all the pieces
+        if(childrenPieces.length < boardPieces.length) {
+            int[] boardNoChildrenPieces = Arrays.copyOf(boardPieces, boardPieces.length);
+            
+            for(int p:childrenPieces) {
+                ArraySet.removeNumber(boardNoChildrenPieces, p, Board.MAX_SQUARE);
+            }
+        }
+*/
+        int[] allMoves = this.generateAllMoves(board, boardPieces);
+        int[] ret = { 0, -100000000 };
+        
+        for(int i = 0; i < allMoves.length; i += 2) {
+
+            // compute alpha-beta for the move
+            ret = alphabeta(node, depth, allMoves[i], allMoves[i+1], alpha, beta, color);
+
+            // update the values of alpha and beta
+            alpha = ret[1];
+            beta = ret[2];
+
+            // we need to break from this loop
+            if(ret[0] == -1) {
+                break;
+            }
+        }
+
+        final int retVal = colorPlaying.equals(color) ? alpha : beta;
+        
+        node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
+        node.setDepth(depth);
+        node.setRetVal(retVal);
+
+        return retVal;
+    }
+    
+    
+    public int[] alphabeta(MoveNode node, int depth, int from, int to, int alpha, int beta, Color color) {
+        final Board moveBoard = new Board(node.getBoard());
+
+        try {
+            moveBoard.makeMove(from, to, false);
+        } catch (IllegalMoveException e) {
+            LOG.warn("Illegal move");
+            if(!e.isKingInCheck()) {
+                LOG.error("Illegal move during compute: {}", e.getMessage());
+                moveBoard.printBoard();
+                System.exit(-1);
+            }
+            
+            System.out.println("GOT HERE!!!");
+            // return here, but continue searching
+            return new int[] { 1, alpha, beta };
+        }
+
+        boolean addToTable = false;
+        MoveNode childNode = transpositionTable.get(moveBoard);
+
+        // check to see if we need to create a new node, or if we can use the one from the table
+        if(childNode == null || childNode.getDepth() <= depth) {
+            childNode = new MoveNode(moveBoard, node, new int[] { from, to });
+            addToTable = true;
+            
+            // get the alpha or beta depending upon who's turn it is
+            if(colorPlaying.equals(color)) {
+                alpha = Math.max(alpha, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
+            } else {
+                beta = Math.min(beta, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
+            }
+        } else {
+            // using the node from the table, get the alpha and beta
+            if(colorPlaying.equals(color)) {
+                alpha = Math.max(alpha, childNode.getRetVal());
+            } else {
+                beta = Math.min(beta, childNode.getRetVal());
+            }
+
+            transHit++;
+        }
+
+        if(addToTable) {
+            transpositionTable.put(moveBoard, childNode);
+        }
+
+        // by here we've recursed down, so add the new node
+        node.addChild(childNode);
+
+        // see if we have a cut-off
+        if(beta <= alpha) {
+            node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
+            node.setDepth(depth);
+            node.setRetVal(colorPlaying.equals(color) ? alpha : beta);
+            
+            return new int[] {-1, alpha, beta };
+        }
+
+
+        return new int[] { 1, alpha, beta };
+    }
+    
+    public int[] generateAllMoves(Board board, int[] pieces) {
+        ArrayIntList allMoves = new ArrayIntList(161);
+        
         for(int p:pieces) {
             if(p == Board.MAX_SQUARE) {
-                break;
+                break;  // in sorted order, so we can break early
             }
 
             // only check the king moves if it's in check
@@ -54,71 +166,13 @@ public class AlphaBetaAI {
                 if(m == Board.MAX_SQUARE) {
                     break;  // always in sorted order, so we're done here
                 }
-
-                Board moveBoard = new Board(node.getBoard());
-
-                try {
-                    moveBoard.makeMove(p, m, false);
-                    MoveNode childNode = transpositionTable.get(moveBoard);
-                    boolean addToTable = false;
-                    if(childNode == null || childNode.getDepth() <= depth) {
-                        childNode = new MoveNode(moveBoard, node, new int[] { p, m });
-                        addToTable = true;
-                        if(colorPlaying.equals(color)) {
-                            alpha = Math.max(alpha, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
-                        } else {
-                            beta = Math.min(beta, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
-                        }
-                    } else {
-                        if( (color.equals(Color.WHITE) && p > 0x30) || (color.equals(Color.BLACK) && p < 0x40)) {
-                            LOG.debug("TRANS HIT: {}", color.equals(Color.WHITE) ? "WHITE" : "BLACK");
-                            LOG.debug("Move: {} -> {}", Integer.toHexString(p), Integer.toHexString(m));
-                        }
-
-                        if(colorPlaying.equals(color)) {
-                            alpha = Math.max(alpha, childNode.getRetVal());
-                        } else {
-                            beta = Math.min(beta, childNode.getRetVal());
-                        }
-
-                        transHit++;
-                    }
-
-                    if(addToTable) {
-                        transpositionTable.put(moveBoard, childNode);
-                    }
-
-                    // by here we've recursed down
-                    node.addChild(childNode);  // add the new node
-
-                    if(beta <= alpha) {
-                        //LOG.debug("{} <= {}; RETURNING ALPHA", beta, alpha);
-                        node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
-                        node.setDepth(depth);
-                        int retVal = colorPlaying.equals(color) ? alpha : beta;
-                        node.setRetVal(retVal);
-                        return retVal;
-                    }
-
-                } catch (IllegalMoveException e) {
-                    LOG.warn("Illegal move");
-                    if(!e.isKingInCheck()) {
-                        LOG.error("Illegal move during compute: {}", e.getMessage());
-                        moveBoard.printBoard();
-                        System.exit(-1);
-                    }
-                }
+                
+                allMoves.add(p);
+                allMoves.add(m);
             }
         }
-
-        node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
-        node.setDepth(depth);
-
-        int retVal = colorPlaying.equals(color) ? alpha : beta;
-        node.setRetVal(retVal);
-
-        //LOG.debug("NORMAL ALPHA RET: {}", alpha);
-        return retVal;
+        
+        return allMoves.toArray();
     }
 
     public int computeScore(MoveNode node) {

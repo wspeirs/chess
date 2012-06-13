@@ -18,11 +18,11 @@ public class MoveNode {
     private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
     private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
-    private Board board;
+    private final Board board;
+    private final int[] move;
     private int score;
     private int retVal;
     private int depth;
-    private int[] move;
     private MoveNode parent;
     private List<MoveNode> children = new ArrayList<MoveNode>();
     private boolean isSorted = false;
@@ -77,23 +77,6 @@ public class MoveNode {
         return children.get(0);
     }
 
-    public List<MoveNode> keepTopChildren(int numberToKeep) {
-        List<MoveNode> bottomChildren = new ArrayList<MoveNode>();
-        Iterator<MoveNode> it = children.iterator();
-
-        for(int i=0; it.hasNext(); ++i) {
-            if(i < numberToKeep) {
-                it.next();
-            } else {
-                MoveNode tmp = it.next();
-                bottomChildren.add(tmp);
-                it.remove();
-            }
-        }
-
-        return bottomChildren;
-    }
-
     public MoveNode getBestChild() {
         if(!isSorted) {
             Collections.sort(children, increasingComparitor);
@@ -113,6 +96,17 @@ public class MoveNode {
     public void addChild(MoveNode node) {
         isSorted = false;
         children.add(node);
+    }
+    
+    public int[] getChildrenPieces() {
+        int[] ret = new int[children.size()];
+        int i =0;
+        
+        for(MoveNode child:children) {
+            ret[i++] = child.getMove()[0];
+        }
+        
+        return ret;
     }
 
     public void printChildren() {

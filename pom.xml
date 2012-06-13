@@ -82,5 +82,10 @@
     	<artifactId>commons-configuration</artifactId>
     	<version>1.8</version>
     </dependency>
+    <dependency>
+    	<groupId>commons-primitives</groupId>
+    	<artifactId>commons-primitives</artifactId>
+    	<version>1.0</version>
+    </dependency>
   </dependencies>
 </project>
