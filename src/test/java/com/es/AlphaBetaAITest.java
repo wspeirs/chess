@@ -37,6 +37,12 @@ public class AlphaBetaAITest {
         board.addPiece(new Queen(Color.WHITE), 0x03);
 */
     }
+    
+    public static void main(String[] args) throws Exception {
+        new AlphaBetaAITest().testAlphabeta();
+        
+        Thread.sleep(1000);
+    }
 
     @Test
     public void testAlphabeta() throws IllegalMoveException {

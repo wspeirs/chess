@@ -1,6 +1,8 @@
 package com.es.ai;
 
 
+import java.util.Arrays;
+
 import org.apache.commons.collections.primitives.ArrayIntList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +62,9 @@ public class AlphaBetaAI {
         int[] ret = { 0, -100000000 };
         
         for(int i = 0; i < allMoves.length; i += 2) {
+            
+            if(allMoves[i] == Board.MAX_SQUARE)
+                break;
 
             // compute alpha-beta for the move
             ret = alphabeta(node, depth, allMoves[i], allMoves[i+1], alpha, beta, color);
@@ -148,7 +153,9 @@ public class AlphaBetaAI {
     }
     
     public int[] generateAllMoves(Board board, int[] pieces) {
-        ArrayIntList allMoves = new ArrayIntList(161);
+//        ArrayIntList allMoves = new ArrayIntList(161);
+        int[] allMoves = new int[161 * 2];
+        int i = 0;
         
         for(int p:pieces) {
             if(p == Board.MAX_SQUARE) {
@@ -167,12 +174,19 @@ public class AlphaBetaAI {
                     break;  // always in sorted order, so we're done here
                 }
                 
-                allMoves.add(p);
-                allMoves.add(m);
+                allMoves[i++] = p;
+                allMoves[i++] = m;
+                
+//                allMoves.add(p);
+//                allMoves.add(m);
             }
         }
         
-        return allMoves.toArray();
+        Arrays.fill(allMoves, i, allMoves.length, Board.MAX_SQUARE);
+        return allMoves;
+        
+//        return allMoves.toArray();
+        
     }
 
     public int computeScore(MoveNode node) {
