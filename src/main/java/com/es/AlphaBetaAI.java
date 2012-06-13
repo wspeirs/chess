@@ -1,6 +1,8 @@
 package com.es;
 
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.es.pieces.King;
 import com.es.pieces.Piece.Color;
