@@ -103,7 +103,7 @@ public class AlphaBetaAITest {
 
     public void printMoves(MoveNode node) {
         while(true) {
-            node.getBoard().printBoard();
+            System.out.println(node.getBoard().toString());
             System.out.println("SCORE: " + alphaBeta.computeScore(node) + " DEPTH: " + node.getDepth());
 
             if(node.getChildCount() == 0)

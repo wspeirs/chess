@@ -19,7 +19,7 @@ public class BoardTest {
 
     @Test
     public void testPrintBoard() {
-        board.printBoard();
+        System.out.println(board.toString());
     }
 
     @Test

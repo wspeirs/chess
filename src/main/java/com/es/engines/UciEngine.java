@@ -145,8 +145,11 @@ public class UciEngine extends AbstractEngine implements Engine {
     public void visit(EngineStartCalculatingCommand command) {
         LOG.info("Engine Start Calculating");
         
+        LOG.debug("CREATED AI WITH COLOR: {}", color);
         AlphaBetaAI ai = new AlphaBetaAI(color);    // create the AI
 
+        LOG.debug("CUR NODE CHILD COUNT: {}", currentNode.getChildCount());
+        
         // go through and find the user's move, if we can
         if(currentNode.getChildCount() > 0) {
             MoveNode tmpNode = currentNode.getBestChild();
@@ -160,7 +163,9 @@ public class UciEngine extends AbstractEngine implements Engine {
             currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
         }
 
+        LOG.debug("COMPUTING NEXT MOVE FOR: {}", color);
         int[] aiMove = ai.computeNextMove(currentNode, color);
+        LOG.debug("FOUND MOVE: {} -> {}", Integer.toHexString(aiMove[0]), Integer.toHexString(aiMove[1]));
 
         GenericFile file = GenericFile.values()[aiMove[0] % 16];
         GenericRank rank = GenericRank.values()[aiMove[0] >>> 4];
@@ -169,13 +174,11 @@ public class UciEngine extends AbstractEngine implements Engine {
         file = GenericFile.values()[aiMove[1] % 16];
         rank = GenericRank.values()[aiMove[1] >>> 4];
         GenericPosition to = GenericPosition.valueOf(file, rank);
-
         
         if(LOG.isInfoEnabled()) {
-            LOG.info("SENDING MOVE: {} -> {}", Integer.toHexString(aiMove[0]), Integer.toHexString(aiMove[1]));
             LOG.info("SENDING MOVE: {} -> {}", from, to);
             
-            currentNode.printChildren();
+            LOG.info(currentNode.childrenToString());
         }
         
         GenericMove genericMove = new GenericMove(from, to);

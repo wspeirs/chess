@@ -97,7 +97,7 @@ public class AlphaBetaAI {
             LOG.warn("Illegal move");
             if(!e.isKingInCheck()) {
                 LOG.error("Illegal move during compute: {}", e.getMessage());
-                moveBoard.printBoard();
+                System.out.println(moveBoard.toString());
                 System.exit(-1);
             }
             

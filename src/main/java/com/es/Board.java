@@ -258,17 +258,22 @@ public class Board implements Cloneable {
         computeHashCode();
     }
 
-    public void printBoard() {
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        
         for(int r=7; r >= 0; --r) {
             for(int c = 0; c < 8; ++c) {
                 Piece p = board[(r << 4) + c];
 
-                System.out.print(p == null ? "-" : p.toString());
-                System.out.print(" ");
+                sb.append(p == null ? "-" : p.toString());
+                sb.append(" ");
             }
-            System.out.println();
+            sb.append("\n");
         }
-        System.out.println();
+        sb.append("\n");
+        
+        return sb.toString();
     }
 
     public void makeMove(int fromSquare, int toSquare) throws IllegalMoveException {
@@ -350,7 +355,7 @@ public class Board implements Cloneable {
         computeHashCode();  // re-compute the hash code
 
         if(LOG.isTraceEnabled()) {
-            this.printBoard();
+            LOG.trace(this.toString());
         }
     }
 

@@ -37,7 +37,7 @@ public class GuiEngine implements Engine {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line = "go";
 
-        board.printBoard();
+        System.out.println(board.toString());
 
         while(!"q".equalsIgnoreCase(line)) {
             try {
@@ -57,7 +57,7 @@ public class GuiEngine implements Engine {
                 continue;
             }
 
-            board.printBoard();
+            System.out.println(board.toString());
             
             // go through and find the user's move, if we can
             if(currentNode.getChildCount() > 0) {
@@ -98,7 +98,7 @@ public class GuiEngine implements Engine {
                 System.exit(-1);
             }
 
-            board.printBoard();
+            System.out.println(board.toString());
         }
     }
 

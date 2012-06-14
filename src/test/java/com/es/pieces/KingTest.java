@@ -99,11 +99,11 @@ public class KingTest extends BasePieceTest {
         board.capturePiece(0x05);   // bishop
         board.capturePiece(0x06);   // knight
 
-        board.printBoard();
+        System.out.println(board.toString());
 
         board.castel(Color.WHITE, true);
 
-        board.printBoard();
+        System.out.println(board.toString());
         if(! (board.getPiece(0x05) instanceof Rook) || ! (board.getPiece(0x06) instanceof King)) {
             fail("Castle didn't work");
         }
@@ -116,11 +116,11 @@ public class KingTest extends BasePieceTest {
         board.capturePiece(0x75);   // bishop
         board.capturePiece(0x76);   // knight
 
-        board.printBoard();
+        System.out.println(board.toString());
 
         board.castel(Color.BLACK, true);
 
-        board.printBoard();
+        System.out.println(board.toString());
         if(! (board.getPiece(0x75) instanceof Rook) || ! (board.getPiece(0x76) instanceof King)) {
             fail("Castle didn't work");
         }
@@ -134,11 +134,11 @@ public class KingTest extends BasePieceTest {
         board.capturePiece(0x02);   // bishop
         board.capturePiece(0x03);   // queen
 
-        board.printBoard();
+        System.out.println(board.toString());
 
         board.castel(Color.WHITE, false);
 
-        board.printBoard();
+        System.out.println(board.toString());
         if(! (board.getPiece(0x02) instanceof King) || ! (board.getPiece(0x03) instanceof Rook)) {
             fail("Castle didn't work");
         }
@@ -152,11 +152,11 @@ public class KingTest extends BasePieceTest {
         board.capturePiece(0x72);   // bishop
         board.capturePiece(0x73);   // queen
 
-        board.printBoard();
+        System.out.println(board.toString());
 
         board.castel(Color.BLACK, false);
 
-        board.printBoard();
+        System.out.println(board.toString());
         if(! (board.getPiece(0x72) instanceof King) || ! (board.getPiece(0x73) instanceof Rook)) {
             fail("Castle didn't work");
         }
