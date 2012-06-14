@@ -3,7 +3,6 @@ package com.es.ai;
 
 import java.util.Arrays;
 
-import org.apache.commons.collections.primitives.ArrayIntList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +27,7 @@ public class AlphaBetaAI {
     }
 
     public int[] computeNextMove(MoveNode node, Color color) {
-        alphabeta(node, 6, -1000000, 1000000, color);
+        alphabeta(node, 4, -1000000, 1000000, color);
 
         return node.getBestChild().getMove();
     }
@@ -102,7 +101,7 @@ public class AlphaBetaAI {
                 System.exit(-1);
             }
             
-            System.out.println("GOT HERE!!!");
+            LOG.info("GOT HERE!!!");
             // return here, but continue searching
             return new int[] { 1, alpha, beta };
         }

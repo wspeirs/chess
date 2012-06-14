@@ -71,7 +71,7 @@ public class AlphaBetaAITest {
         // print the results
         //
         System.out.println("* WORKING ALPHA BETA: " + time + " " + workingAlphaBetaNode.getNodeCount());
-        workingAlphaBetaNode.printChildren();
+        System.out.println(workingAlphaBetaNode.childrenToString());
         printMoves(workingAlphaBetaNode.getBestChild());
         System.out.println();
 
@@ -96,7 +96,7 @@ public class AlphaBetaAITest {
         // print the results
         //
         System.out.println("* ALPHA BETA: " + time + " " + alphaBetaNode.getNodeCount());
-        alphaBetaNode.printChildren();
+        System.out.println(alphaBetaNode.childrenToString());
         printMoves(alphaBetaNode.getBestChild());
         System.out.println();
     }

@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.es.Board;
 
-public class MoveNode {
+public final class MoveNode {
 
     private static final Logger LOG = LoggerFactory.getLogger(MoveNode.class);
 
@@ -76,6 +76,14 @@ public class MoveNode {
     public MoveNode getFirstChild() {
         return children.get(0);
     }
+    
+    public void clearChildren() {
+        for(MoveNode child:children) {
+            child.parent = null;
+        }
+        
+        children.clear();
+    }
 
     public MoveNode getBestChild() {
         if(!isSorted) {
@@ -98,6 +106,18 @@ public class MoveNode {
         children.add(node);
     }
     
+    public MoveNode findChild(int from, int to) {
+        for(MoveNode child:children) {
+            int[] move = child.getMove();
+            
+            if(move[0] == from && move[1] == to) {
+                return child;
+            }
+        }
+        
+        return null;
+    }
+    
     public int[] getChildrenPieces() {
         int[] ret = new int[children.size()];
         int i =0;
@@ -109,15 +129,22 @@ public class MoveNode {
         return ret;
     }
 
-    public void printChildren() {
-        Iterator<MoveNode> it = children.iterator();
+    public String childrenToString() {
+        final StringBuilder sb = new StringBuilder();
+        final Iterator<MoveNode> it = children.iterator();
 
         while(it.hasNext()) {
             MoveNode curNode = it.next();
             int[] move = curNode.getMove();
 
-            System.out.println(curNode.getScore() + ": " + Integer.toHexString(move[0]) + " -> " + Integer.toHexString(move[1]));
+            sb.append(curNode.getScore());
+            sb.append(": ");
+            sb.append(Integer.toHexString(move[0]));
+            sb.append(" -> ");
+            sb.append(Integer.toHexString(move[1]));
         }
+        
+        return sb.toString();
     }
 
     public int getNodeCount() {

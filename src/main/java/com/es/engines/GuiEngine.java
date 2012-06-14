@@ -47,8 +47,9 @@ public class GuiEngine implements Engine {
                 break;
             }
 
+            int[] userMove;
             try {
-                int[] userMove = utils.parseSingleMove(Color.WHITE, line);
+                userMove = utils.parseSingleMove(Color.WHITE, line);
 
                 board.makeMove(userMove[0], userMove[1]);
             } catch(IllegalMoveException e) {
@@ -57,26 +58,33 @@ public class GuiEngine implements Engine {
             }
 
             board.printBoard();
+            
+            // go through and find the user's move, if we can
+            if(currentNode.getChildCount() > 0) {
+                MoveNode tmpNode = currentNode.getBestChild();
+                currentNode.clearChildren();    // so these can be GCed
+                currentNode = tmpNode.findChild(userMove[0], userMove[1]);
+                tmpNode.clearChildren();    // so these can be GCed
+            }
 
-            currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+            if(currentNode == null) {
+                System.out.println("CREATING NEW NODE");
+                currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+            }
 
             long start = System.currentTimeMillis();
             int[] aiMove = ai.computeNextMove(currentNode, Color.BLACK);
             long time = System.currentTimeMillis() - start;
 
-            currentNode.printChildren();
+            System.out.println(currentNode.childrenToString());
             System.out.println();
-
-            String from = Integer.toHexString(aiMove[0]);
-            String to = Integer.toHexString(aiMove[1]);
-            System.out.println("MOVE (" + currentNode.getScore() + "): " + from + " -> " + to);
 
             double nodeCount = currentNode.getNodeCount();
             double nps = (nodeCount / (double)time) * 1000.0;
-
-            System.out.println("TIME: " + time);
-            System.out.println("NODES: " + nodeCount);
-            System.out.println("NPS: " + nps);
+            System.out.println("TIME: " + time + " NODES: " + nodeCount + " NPS: " + nps);
+            
+            Runtime rt = Runtime.getRuntime();
+            System.out.format("TOTAL MEM: %,d FREE MEM: %,d%n%n", rt.totalMemory(), rt.freeMemory());
 
             // print out the PGN move
             final String pgnMove = utils.computePgnMove(aiMove[0], aiMove[1]);

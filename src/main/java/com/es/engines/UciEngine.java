@@ -45,6 +45,9 @@ public class UciEngine extends AbstractEngine implements Engine {
     private Board board;
     private Color color;
     private static final Map<GenericPosition, Integer> positions = new EnumMap<GenericPosition, Integer>(GenericPosition.class);
+    private MoveNode currentNode;
+    private int moveCount;
+    private int[] lastOpponentMove;
 
     static {
         for (GenericPosition position : GenericPosition.values()) {
@@ -69,11 +72,11 @@ public class UciEngine extends AbstractEngine implements Engine {
     }
 
     public void visit(EngineSetOptionCommand command) {
-        LOG.info("Engine Set Option");
+        LOG.info("Engine Set Option: name={} value={}", command.name, command.value);
     }
 
     public void visit(EngineDebugCommand command) {
-        LOG.info("Engine Debug Command");
+        LOG.info("Engine Debug Command: debug={} toggle={}", command.debug, command.toggle);
 
         GuiInformationCommand infoCommand = new GuiInformationCommand();
 
@@ -89,7 +92,7 @@ public class UciEngine extends AbstractEngine implements Engine {
     }
 
     public void visit(EngineReadyRequestCommand command) {
-        LOG.info("Engine Ready Request");
+        LOG.info("Engine Ready Request: {}", command.token);
 
         // Send the token back
         this.communication.send(new GuiReadyAnswerCommand(command.token));
@@ -102,39 +105,60 @@ public class UciEngine extends AbstractEngine implements Engine {
         new EngineStopCalculatingCommand().accept(this);
 
         // Setup the new game
-
-        // Don't start computing though!
+        currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        board = new Board();
+        moveCount = 0;
     }
 
     public void visit(EngineAnalyzeCommand command) {
-        LOG.info("Engine Analyze");
+        LOG.info("Engine Analyze: color={}", command.board.getActiveColor().toChar());
+        
+        if(LOG.isInfoEnabled()) {
+            LOG.info("MOVE LIST SIZE: {}", command.moveList.size());
+            LOG.info("BOARD SENT:");
+            LOG.info(command.board.toString());
+        }
 
-        // Setup the board & color
-        board = new Board();
-        color = Color.WHITE;
-
-        try {
-            List<GenericMove> moveList = command.moveList;
-            for (GenericMove move : moveList) {
-                board.makeMove(positions.get(move.from), positions.get(move.to));
-
-                if (color == Color.WHITE) {
-                    color = Color.BLACK;
-                } else {
-                    color = Color.WHITE;
-                }
+        // update the board with the moves made
+        if(command.moveList.size() != 0) {
+            GenericMove move = command.moveList.get(command.moveList.size()-1);
+            lastOpponentMove = new int[] { positions.get(move.from), positions.get(move.to) };
+            
+            try {
+                board.makeMove(lastOpponentMove[0], lastOpponentMove[1]);
+            } catch (IllegalMoveException e) {
+                LOG.error("Illegal move: {}", e.getMessage());
+                new EngineQuitCommand().accept(this);
             }
-        } catch (IllegalMoveException e) {
-            new EngineQuitCommand().accept(this);
+            
+            // update the color
+            if(command.board.getActiveColor().toChar() == 'w') {
+                color = Color.BLACK;
+            } else {
+                color = Color.WHITE;
+            }
+        } else {
+            color = Color.WHITE;
         }
     }
 
     public void visit(EngineStartCalculatingCommand command) {
         LOG.info("Engine Start Calculating");
-
+        
         AlphaBetaAI ai = new AlphaBetaAI(color);    // create the AI
 
-        MoveNode currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        // go through and find the user's move, if we can
+        if(currentNode.getChildCount() > 0) {
+            MoveNode tmpNode = currentNode.getBestChild();
+            currentNode.clearChildren();    // so these can be GCed
+            currentNode = tmpNode.findChild(lastOpponentMove[0], lastOpponentMove[1]);
+            tmpNode.clearChildren();    // so these can be GCed
+        }
+
+        if(currentNode == null) {
+            LOG.info("CREATING NEW NODE");
+            currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        }
 
         int[] aiMove = ai.computeNextMove(currentNode, color);
 
@@ -146,6 +170,14 @@ public class UciEngine extends AbstractEngine implements Engine {
         rank = GenericRank.values()[aiMove[1] >>> 4];
         GenericPosition to = GenericPosition.valueOf(file, rank);
 
+        
+        if(LOG.isInfoEnabled()) {
+            LOG.info("SENDING MOVE: {} -> {}", Integer.toHexString(aiMove[0]), Integer.toHexString(aiMove[1]));
+            LOG.info("SENDING MOVE: {} -> {}", from, to);
+            
+            currentNode.printChildren();
+        }
+        
         GenericMove genericMove = new GenericMove(from, to);
         this.communication.send(new GuiBestMoveCommand(genericMove, null));
     }
@@ -161,6 +193,7 @@ public class UciEngine extends AbstractEngine implements Engine {
 
     @Override
     protected void quit() {
+        LOG.info("Quit");
         new EngineStopCalculatingCommand().accept(this);
     }
 
