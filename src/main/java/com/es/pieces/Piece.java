@@ -5,8 +5,18 @@ import com.es.Board;
 public interface Piece {
 
     public enum Color {
-        BLACK,
-        WHITE
+        BLACK("BLACK"),
+        WHITE("WHITE");
+        
+        private final String name;
+        
+        private Color(String name) {
+            this.name = name;
+        }
+        
+        public String toString() {
+            return name;
+        }
     }
 
     /**
