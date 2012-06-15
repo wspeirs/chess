@@ -55,7 +55,11 @@ public class Main {
             throw new ConfigurationException("A mode of " + mode + " is not supported");
         }
 
-        engine.play();  // start the game
+        try {
+            engine.play();  // start the game
+        } catch(Exception e) {
+            LOG.error("Caught exception in play(): {}", e);
+        }
     }
 
     private static BaseConfiguration configureDefaults() {
@@ -63,6 +67,7 @@ public class Main {
 
         defaults.addProperty(CmdConfiguration.TRANSPOSITION_TABLE_SIZE, 100000);
         defaults.addProperty(CmdConfiguration.MODE, "GUI");
+        defaults.addProperty(CmdConfiguration.DEPTH, 4);
 
         return defaults;
     }

@@ -3,10 +3,12 @@ package com.es.ai;
 
 import java.util.Arrays;
 
+import org.apache.commons.configuration.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.es.Board;
+import com.es.CmdConfiguration;
 import com.es.IllegalMoveException;
 import com.es.pieces.King;
 import com.es.pieces.Piece.Color;
@@ -17,9 +19,11 @@ public class AlphaBetaAI {
     private TranspositionTable transpositionTable = new TranspositionTable();
     private int transHit = 0;
     private Color colorPlaying;
+    private Configuration configuration;
 
-    public AlphaBetaAI(Color colorPlaying) {
+    public AlphaBetaAI(Color colorPlaying, Configuration configuration) {
         this.colorPlaying = colorPlaying;
+        this.configuration = configuration;
     }
     
     public int getTransHit() {
@@ -27,7 +31,7 @@ public class AlphaBetaAI {
     }
 
     public int[] computeNextMove(MoveNode node, Color color) {
-        alphabeta(node, 4, -1000000, 1000000, color);
+        alphabeta(node, configuration.getInt(CmdConfiguration.DEPTH), -1000000, 1000000, color);
 
         return node.getBestChild().getMove();
     }

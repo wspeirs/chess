@@ -15,6 +15,8 @@ public final class MoveNode {
 
     private static final Logger LOG = LoggerFactory.getLogger(MoveNode.class);
 
+    private static final String LINE_BREAK = System.getProperty("line.separator");
+
     private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
     private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
@@ -142,6 +144,7 @@ public final class MoveNode {
             sb.append(Integer.toHexString(move[0]));
             sb.append(" -> ");
             sb.append(Integer.toHexString(move[1]));
+            sb.append(LINE_BREAK);
         }
         
         return sb.toString();

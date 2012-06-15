@@ -49,7 +49,9 @@ import com.es.pieces.Rook;
  */
 public class Board implements Cloneable {
 
-    public static final Logger LOG = LoggerFactory.getLogger(Board.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Board.class);
+    
+    private static final String LINE_BREAK = System.getProperty("line.separator");
 
     public static final int MAX_ROW = 8;
     public static final int MAX_COL = 8;
@@ -269,9 +271,9 @@ public class Board implements Cloneable {
                 sb.append(p == null ? "-" : p.toString());
                 sb.append(" ");
             }
-            sb.append("\n");
+            sb.append(LINE_BREAK);
         }
-        sb.append("\n");
+        sb.append(LINE_BREAK);
         
         return sb.toString();
     }
@@ -304,6 +306,7 @@ public class Board implements Cloneable {
         // check to see if the move is legal or not
         if(Arrays.binarySearch(fromPiece.generateAllMoves(this, fromSquare), toSquare) < 0) {
             LOG.error("Illegal move {} - > {} for {}", new String[] { Integer.toHexString(fromSquare), Integer.toHexString(toSquare), fromPiece.toString() } );
+            LOG.error("CURRENT BOARD: {}", this.toString());
             throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
         }
 

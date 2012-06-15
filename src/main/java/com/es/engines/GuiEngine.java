@@ -27,7 +27,7 @@ public class GuiEngine implements Engine {
     public GuiEngine(Configuration config) {
         this.config = config;
         this.board = new Board();
-        this.ai = new AlphaBetaAI(Color.BLACK);
+        this.ai = new AlphaBetaAI(Color.BLACK, config);
         this.utils = new PgnUtils(this.board);
     }
 

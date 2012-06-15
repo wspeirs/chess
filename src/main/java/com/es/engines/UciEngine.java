@@ -103,10 +103,10 @@ public class UciEngine extends AbstractEngine implements Engine {
 
         // It might be good to stop computing first...
         new EngineStopCalculatingCommand().accept(this);
-
+        
         // Setup the new game
-        currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
         board = new Board();
+        currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
         moveCount = 0;
     }
 
@@ -125,6 +125,7 @@ public class UciEngine extends AbstractEngine implements Engine {
             lastOpponentMove = new int[] { positions.get(move.from), positions.get(move.to) };
             
             try {
+                LOG.debug("MAKING OPPONENT MOVE: {} -> {}", move.from, move.to);
                 board.makeMove(lastOpponentMove[0], lastOpponentMove[1]);
             } catch (IllegalMoveException e) {
                 LOG.error("Illegal move: {}", e.getMessage());
@@ -132,10 +133,10 @@ public class UciEngine extends AbstractEngine implements Engine {
             }
             
             // update the color
-            if(command.board.getActiveColor().toChar() == 'w') {
-                color = Color.BLACK;
-            } else {
+            if(command.moveList.size() % 2 == 0) {
                 color = Color.WHITE;
+            } else {
+                color = Color.BLACK;
             }
         } else {
             color = Color.WHITE;
@@ -146,7 +147,7 @@ public class UciEngine extends AbstractEngine implements Engine {
         LOG.info("Engine Start Calculating");
         
         LOG.debug("CREATED AI WITH COLOR: {}", color);
-        AlphaBetaAI ai = new AlphaBetaAI(color);    // create the AI
+        AlphaBetaAI ai = new AlphaBetaAI(color, config);    // create the AI
 
         LOG.debug("CUR NODE CHILD COUNT: {}", currentNode.getChildCount());
         
@@ -164,9 +165,13 @@ public class UciEngine extends AbstractEngine implements Engine {
         }
 
         LOG.debug("COMPUTING NEXT MOVE FOR: {}", color);
+        
+        long start = System.currentTimeMillis();
         int[] aiMove = ai.computeNextMove(currentNode, color);
+        long time = System.currentTimeMillis() - start;
+        
         LOG.debug("FOUND MOVE: {} -> {}", Integer.toHexString(aiMove[0]), Integer.toHexString(aiMove[1]));
-
+        
         GenericFile file = GenericFile.values()[aiMove[0] % 16];
         GenericRank rank = GenericRank.values()[aiMove[0] >>> 4];
         GenericPosition from = GenericPosition.valueOf(file, rank);
@@ -181,7 +186,24 @@ public class UciEngine extends AbstractEngine implements Engine {
             LOG.info(currentNode.childrenToString());
         }
         
+        try {
+            // make the move on the board
+            board.makeMove(aiMove[0], aiMove[1]);
+        } catch (IllegalMoveException e) {
+            LOG.error("AI MADE AN ILLEGAL MOVE: {}", e.getMessage());
+            new EngineQuitCommand().accept(this);
+        }
+        
         GenericMove genericMove = new GenericMove(from, to);
+        
+        GuiInformationCommand infoCmd = new GuiInformationCommand();
+        
+        infoCmd.setCurrentMove(genericMove);
+        infoCmd.setDepth(4);
+        infoCmd.setTime(time);
+        
+        communication.send(infoCmd);
+
         this.communication.send(new GuiBestMoveCommand(genericMove, null));
     }
 

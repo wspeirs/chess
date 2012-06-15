@@ -23,6 +23,7 @@ public class CmdConfiguration extends AbstractConfiguration {
     public static final String PGN_FILE = "pgn-file";
     public static final String TRANSPOSITION_TABLE_SIZE = "trans-table-size";
     public static final String MODE = "mode";
+    public static final String DEPTH = "depth";
     
     private Options options;
     private CommandLine commandLine = null;
@@ -50,10 +51,17 @@ public class CmdConfiguration extends AbstractConfiguration {
                                                .withDescription("The mode to run the engine in: GUI or UCI. Default is GUI.")
                                                .create("m");
 
+        @SuppressWarnings("static-access")
+        final Option depthOption = OptionBuilder.withLongOpt(DEPTH)
+                                                .hasArg()
+                                                .withDescription("The number of nodes to search")
+                                                .create("d");
+
         // add all the options from above
         options.addOption(fileOption);
         options.addOption(transOption);
         options.addOption(modeOption);
+        options.addOption(depthOption);
 
         // add new simple options
         options.addOption(new Option("h", "help", false, "Print this help message"));

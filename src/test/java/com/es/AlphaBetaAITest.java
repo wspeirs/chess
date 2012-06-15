@@ -1,5 +1,6 @@
 package com.es;
 
+import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.junit.Before;
@@ -14,11 +15,14 @@ public class AlphaBetaAITest {
 
     Board board = new Board();
     WorkingAlphaBetaAI workingAB = new WorkingAlphaBetaAI(Color.WHITE);
-    AlphaBetaAI alphaBeta = new AlphaBetaAI(Color.WHITE);
+    BaseConfiguration defaults = new BaseConfiguration();
+    AlphaBetaAI alphaBeta = new AlphaBetaAI(Color.WHITE, defaults);
 
     static final int DEPTH = 4;
+    
     @Before
     public void setup() {
+        defaults.addProperty(CmdConfiguration.DEPTH, DEPTH);
         LogManager.getRootLogger().setLevel(Level.DEBUG);
     }
 
