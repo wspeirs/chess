@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.es.Board;
+import com.es.PgnUtils;
 
 public final class MoveNode {
 
@@ -141,9 +142,16 @@ public final class MoveNode {
 
             sb.append(curNode.getScore());
             sb.append(": ");
-            sb.append(Integer.toHexString(move[0]));
-            sb.append(" -> ");
-            sb.append(Integer.toHexString(move[1]));
+            
+            sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move[0], move[1]));
+            
+            while(curNode.getChildCount() != 0) {
+                curNode = curNode.getFirstChild();
+                move = curNode.getMove();
+                sb.append(" ");
+                sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move[0], move[1]));
+            }                
+            
             sb.append(LINE_BREAK);
         }
         

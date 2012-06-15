@@ -81,7 +81,7 @@ public class CmdConfiguration extends AbstractConfiguration {
     }
     
     public void printHelp() {
-        new HelpFormatter().printHelp("lima", options);
+        new HelpFormatter().printHelp("chess", options);
     }
     
     private void constructKeysList() {
