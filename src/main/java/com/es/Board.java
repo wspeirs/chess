@@ -47,10 +47,10 @@ import com.es.pieces.Rook;
  * </code>
  *
  */
-public class Board implements Cloneable {
+public final class Board implements Cloneable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Board.class);
-    
+
     private static final String LINE_BREAK = System.getProperty("line.separator");
 
     public static final int MAX_ROW = 8;
@@ -129,12 +129,12 @@ public class Board implements Cloneable {
         // compute the hash code
         computeHashCode();
     }
-    
+
     public Board(String layout) throws IllegalMoveException {
         if(layout.length() != 64) {
             throw new IllegalMoveException("Not enough values for the starting board");
         }
-        
+
         for(int i=0; i < layout.length(); ++i) {
             if(i < 8) {
                 board[i + 0x70] = AbstractPiece.makePiece(layout.charAt(i));
@@ -154,13 +154,13 @@ public class Board implements Cloneable {
                 board[i] = AbstractPiece.makePiece(layout.charAt(i));
             }
         }
-        
+
         Arrays.fill(whitePieces, Board.MAX_SQUARE);
         Arrays.fill(blackPieces, Board.MAX_SQUARE);
-        
+
         int wIndex = 0;
         int bIndex = 0;
-        
+
         for(int i=0; i < Board.MAX_SQUARE; ++i) {
             if(board[i].getColor().equals(Color.WHITE)) {
                 whitePieces[wIndex++] = i;
@@ -174,10 +174,10 @@ public class Board implements Cloneable {
                 }
             }
         }
-        
+
         Arrays.sort(whitePieces);
         Arrays.sort(blackPieces);
-        
+
         hashCode = 0;
     }
 
@@ -263,8 +263,10 @@ public class Board implements Cloneable {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        
+
         for(int r=7; r >= 0; --r) {
+            sb.append(r+1);
+            sb.append(" ");
             for(int c = 0; c < 8; ++c) {
                 Piece p = board[(r << 4) + c];
 
@@ -273,8 +275,15 @@ public class Board implements Cloneable {
             }
             sb.append(LINE_BREAK);
         }
+
+        sb.append("  ");
+        for(int i=0x61; i < 0x69; ++i) {
+            sb.append((char)i);
+            sb.append(" ");
+        }
+
         sb.append(LINE_BREAK);
-        
+
         return sb.toString();
     }
 

@@ -58,7 +58,7 @@ public class Main {
         try {
             engine.play();  // start the game
         } catch(Exception e) {
-            LOG.error("Caught exception in play(): {}", e);
+            LOG.error("Caught exception in play()", e);
         }
     }
 

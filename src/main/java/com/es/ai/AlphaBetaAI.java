@@ -25,7 +25,7 @@ public class AlphaBetaAI {
         this.colorPlaying = colorPlaying;
         this.configuration = configuration;
     }
-    
+
     public int getTransHit() {
         return transHit;
     }
@@ -48,14 +48,14 @@ public class AlphaBetaAI {
         Board board = node.getBoard();
         int[] boardPieces = board.getPieces(color);
 
-/*        
+/*
         int[] childrenPieces = node.getChildrenPieces();
         int[] pieces = childrenPieces;
-        
+
         // we want to make sure we walk through all the pieces
         if(childrenPieces.length < boardPieces.length) {
             int[] boardNoChildrenPieces = Arrays.copyOf(boardPieces, boardPieces.length);
-            
+
             for(int p:childrenPieces) {
                 ArraySet.removeNumber(boardNoChildrenPieces, p, Board.MAX_SQUARE);
             }
@@ -63,9 +63,9 @@ public class AlphaBetaAI {
 */
         int[] allMoves = this.generateAllMoves(board, boardPieces);
         int[] ret = { 0, -100000000 };
-        
+
         for(int i = 0; i < allMoves.length; i += 2) {
-            
+
             if(allMoves[i] == Board.MAX_SQUARE)
                 break;
 
@@ -83,15 +83,15 @@ public class AlphaBetaAI {
         }
 
         final int retVal = colorPlaying.equals(color) ? alpha : beta;
-        
+
         node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
         node.setDepth(depth);
         node.setRetVal(retVal);
 
         return retVal;
     }
-    
-    
+
+
     public int[] alphabeta(MoveNode node, int depth, int from, int to, int alpha, int beta, Color color) {
         final Board moveBoard = new Board(node.getBoard());
 
@@ -104,26 +104,30 @@ public class AlphaBetaAI {
                 System.out.println(moveBoard.toString());
                 System.exit(-1);
             }
-            
+
             LOG.info("GOT HERE!!!");
             // return here, but continue searching
             return new int[] { 1, alpha, beta };
         }
 
-        boolean addToTable = false;
         MoveNode childNode = transpositionTable.get(moveBoard);
 
         // check to see if we need to create a new node, or if we can use the one from the table
         if(childNode == null || childNode.getDepth() <= depth) {
             childNode = new MoveNode(moveBoard, node, new int[] { from, to });
-            addToTable = true;
-            
+
             // get the alpha or beta depending upon who's turn it is
             if(colorPlaying.equals(color)) {
                 alpha = Math.max(alpha, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
             } else {
                 beta = Math.min(beta, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));
             }
+
+            // add the new node
+            node.addChild(childNode);
+
+            // add it to the transposition table
+            transpositionTable.put(moveBoard, childNode);
         } else {
             // using the node from the table, get the alpha and beta
             if(colorPlaying.equals(color)) {
@@ -133,33 +137,29 @@ public class AlphaBetaAI {
             }
 
             transHit++;
-        }
 
-        if(addToTable) {
-            transpositionTable.put(moveBoard, childNode);
+            // add the child node's children to the current node's children
+            node.addChildren(childNode);
         }
-
-        // by here we've recursed down, so add the new node
-        node.addChild(childNode);
 
         // see if we have a cut-off
         if(beta <= alpha) {
             node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
             node.setDepth(depth);
             node.setRetVal(colorPlaying.equals(color) ? alpha : beta);
-            
+
             return new int[] {-1, alpha, beta };
         }
 
 
         return new int[] { 1, alpha, beta };
     }
-    
+
     public int[] generateAllMoves(Board board, int[] pieces) {
 //        ArrayIntList allMoves = new ArrayIntList(161);
         int[] allMoves = new int[161 * 2];
         int i = 0;
-        
+
         for(int p:pieces) {
             if(p == Board.MAX_SQUARE) {
                 break;  // in sorted order, so we can break early
@@ -176,20 +176,20 @@ public class AlphaBetaAI {
                 if(m == Board.MAX_SQUARE) {
                     break;  // always in sorted order, so we're done here
                 }
-                
+
                 allMoves[i++] = p;
                 allMoves[i++] = m;
-                
+
 //                allMoves.add(p);
 //                allMoves.add(m);
             }
         }
-        
+
         Arrays.fill(allMoves, i, allMoves.length, Board.MAX_SQUARE);
         return allMoves;
-        
+
 //        return allMoves.toArray();
-        
+
     }
 
     public int computeScore(MoveNode node) {

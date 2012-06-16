@@ -79,12 +79,12 @@ public final class MoveNode {
     public MoveNode getFirstChild() {
         return children.get(0);
     }
-    
+
     public void clearChildren() {
         for(MoveNode child:children) {
             child.parent = null;
         }
-        
+
         children.clear();
     }
 
@@ -108,27 +108,37 @@ public final class MoveNode {
         isSorted = false;
         children.add(node);
     }
-    
+
+    /**
+     * Adds all of the node's children to this node's children.
+     * @param node The node who's children should be added
+     */
+    public void addChildren(MoveNode node) {
+        for(MoveNode child:node.children) {
+            this.addChild(child);
+        }
+    }
+
     public MoveNode findChild(int from, int to) {
         for(MoveNode child:children) {
             int[] move = child.getMove();
-            
+
             if(move[0] == from && move[1] == to) {
                 return child;
             }
         }
-        
+
         return null;
     }
-    
+
     public int[] getChildrenPieces() {
         int[] ret = new int[children.size()];
         int i =0;
-        
+
         for(MoveNode child:children) {
             ret[i++] = child.getMove()[0];
         }
-        
+
         return ret;
     }
 
@@ -142,19 +152,19 @@ public final class MoveNode {
 
             sb.append(curNode.getScore());
             sb.append(": ");
-            
+
             sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move[0], move[1]));
-            
+
             while(curNode.getChildCount() != 0) {
                 curNode = curNode.getFirstChild();
                 move = curNode.getMove();
                 sb.append(" ");
                 sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move[0], move[1]));
-            }                
-            
+            }
+
             sb.append(LINE_BREAK);
         }
-        
+
         return sb.toString();
     }
 

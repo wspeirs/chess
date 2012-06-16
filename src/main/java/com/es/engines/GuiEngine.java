@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.es.Board;
+import com.es.CmdConfiguration;
 import com.es.IllegalMoveException;
 import com.es.PgnUtils;
 import com.es.ai.AlphaBetaAI;
@@ -37,6 +38,9 @@ public class GuiEngine implements Engine {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line = "go";
 
+        // print out some config info
+        System.out.println("DEPTH: " + config.getInt(CmdConfiguration.DEPTH));
+
         System.out.println(board.toString());
 
         while(!"q".equalsIgnoreCase(line)) {
@@ -58,7 +62,7 @@ public class GuiEngine implements Engine {
             }
 
             System.out.println(board.toString());
-            
+
             // go through and find the user's move, if we can
             if(currentNode.getChildCount() > 0) {
                 MoveNode tmpNode = currentNode.getBestChild();
@@ -82,7 +86,7 @@ public class GuiEngine implements Engine {
             double nodeCount = currentNode.getNodeCount();
             double nps = (nodeCount / (double)time) * 1000.0;
             System.out.println("TIME: " + time + " NODES: " + nodeCount + " NPS: " + nps);
-            
+
             Runtime rt = Runtime.getRuntime();
             System.out.format("TOTAL MEM: %,d FREE MEM: %,d%n%n", rt.totalMemory(), rt.freeMemory());
 
