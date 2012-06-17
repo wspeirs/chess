@@ -1,6 +1,7 @@
 package com.es.ai;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -9,8 +10,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.es.ArraySet;
 import com.es.Board;
 import com.es.PgnUtils;
+import com.es.pieces.Piece.Color;
 
 public final class MoveNode {
 
@@ -132,19 +135,32 @@ public final class MoveNode {
     }
 
     public int[] getChildrenPieces() {
-        int[] ret = new int[children.size()];
-        int i =0;
+        final int[] ret = new int[children.size()];
+        final int[] set = new int[children.size()];
 
-        for(MoveNode child:children) {
-            ret[i++] = child.getMove()[0];
+        if(ret.length == 0) {
+            return ret;
         }
 
-        return ret;
+        Arrays.fill(set, Board.MAX_SQUARE);
+
+        int i = 0;
+        for(final MoveNode child:children) {
+            final int piece = child.getMove()[0];
+
+            // add the piece to ret only if we haven't already added it
+            if(ArraySet.addNumber(set, piece)) {
+                ret[i++] = piece;
+            }
+        }
+        // return the array with the unique pieces
+        return Arrays.copyOf(ret, i);
     }
 
     public String childrenToString() {
         final StringBuilder sb = new StringBuilder();
         final Iterator<MoveNode> it = children.iterator();
+        final AlphaBetaAI ai = new AlphaBetaAI(Color.BLACK);
 
         while(it.hasNext()) {
             MoveNode curNode = it.next();
@@ -155,11 +171,19 @@ public final class MoveNode {
 
             sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move[0], move[1]));
 
+            sb.append(" (");
+            sb.append(ai.computeScore(curNode));
+            sb.append(")");
+
             while(curNode.getChildCount() != 0) {
                 curNode = curNode.getFirstChild();
                 move = curNode.getMove();
                 sb.append(" ");
                 sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move[0], move[1]));
+
+                sb.append(" (");
+                sb.append(ai.computeScore(curNode));
+                sb.append(")");
             }
 
             sb.append(LINE_BREAK);

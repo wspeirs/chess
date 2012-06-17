@@ -59,6 +59,9 @@ public class Main {
             engine.play();  // start the game
         } catch(Exception e) {
             LOG.error("Caught exception in play()", e);
+            if("GUI".equalsIgnoreCase(mode)) {
+                System.err.println("Caught exception in play()");
+            }
         }
     }
 

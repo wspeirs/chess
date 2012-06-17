@@ -2,7 +2,6 @@ package com.es.engines;
 
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 
 import jcpi.AbstractCommunication;
@@ -103,7 +102,7 @@ public class UciEngine extends AbstractEngine implements Engine {
 
         // It might be good to stop computing first...
         new EngineStopCalculatingCommand().accept(this);
-        
+
         // Setup the new game
         board = new Board();
         currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
@@ -112,7 +111,7 @@ public class UciEngine extends AbstractEngine implements Engine {
 
     public void visit(EngineAnalyzeCommand command) {
         LOG.info("Engine Analyze: color={}", command.board.getActiveColor().toChar());
-        
+
         if(LOG.isInfoEnabled()) {
             LOG.info("MOVE LIST SIZE: {}", command.moveList.size());
             LOG.info("BOARD SENT:");
@@ -123,15 +122,15 @@ public class UciEngine extends AbstractEngine implements Engine {
         if(command.moveList.size() != 0) {
             GenericMove move = command.moveList.get(command.moveList.size()-1);
             lastOpponentMove = new int[] { positions.get(move.from), positions.get(move.to) };
-            
+
             try {
                 LOG.debug("MAKING OPPONENT MOVE: {} -> {}", move.from, move.to);
-                board.makeMove(lastOpponentMove[0], lastOpponentMove[1]);
+                board.makeMove(lastOpponentMove[0], lastOpponentMove[1], false);
             } catch (IllegalMoveException e) {
-                LOG.error("Illegal move: {}", e.getMessage());
+                LOG.error("Illegal move: {}", e.getMessage(), e);
                 new EngineQuitCommand().accept(this);
             }
-            
+
             // update the color
             if(command.moveList.size() % 2 == 0) {
                 color = Color.WHITE;
@@ -145,12 +144,12 @@ public class UciEngine extends AbstractEngine implements Engine {
 
     public void visit(EngineStartCalculatingCommand command) {
         LOG.info("Engine Start Calculating");
-        
+
         LOG.debug("CREATED AI WITH COLOR: {}", color);
         AlphaBetaAI ai = new AlphaBetaAI(color, config);    // create the AI
 
         LOG.debug("CUR NODE CHILD COUNT: {}", currentNode.getChildCount());
-        
+
         // go through and find the user's move, if we can
         if(currentNode.getChildCount() > 0) {
             MoveNode tmpNode = currentNode.getBestChild();
@@ -165,13 +164,13 @@ public class UciEngine extends AbstractEngine implements Engine {
         }
 
         LOG.debug("COMPUTING NEXT MOVE FOR: {}", color);
-        
+
         long start = System.currentTimeMillis();
         int[] aiMove = ai.computeNextMove(currentNode, color);
         long time = System.currentTimeMillis() - start;
-        
+
         LOG.debug("FOUND MOVE: {} -> {}", Integer.toHexString(aiMove[0]), Integer.toHexString(aiMove[1]));
-        
+
         GenericFile file = GenericFile.values()[aiMove[0] % 16];
         GenericRank rank = GenericRank.values()[aiMove[0] >>> 4];
         GenericPosition from = GenericPosition.valueOf(file, rank);
@@ -179,13 +178,13 @@ public class UciEngine extends AbstractEngine implements Engine {
         file = GenericFile.values()[aiMove[1] % 16];
         rank = GenericRank.values()[aiMove[1] >>> 4];
         GenericPosition to = GenericPosition.valueOf(file, rank);
-        
+
         if(LOG.isInfoEnabled()) {
             LOG.info("SENDING MOVE: {} -> {}", from, to);
-            
+
             LOG.info(currentNode.childrenToString());
         }
-        
+
         try {
             // make the move on the board
             board.makeMove(aiMove[0], aiMove[1]);
@@ -193,15 +192,15 @@ public class UciEngine extends AbstractEngine implements Engine {
             LOG.error("AI MADE AN ILLEGAL MOVE: {}", e.getMessage());
             new EngineQuitCommand().accept(this);
         }
-        
+
         GenericMove genericMove = new GenericMove(from, to);
-        
+
         GuiInformationCommand infoCmd = new GuiInformationCommand();
-        
+
         infoCmd.setCurrentMove(genericMove);
         infoCmd.setDepth(4);
         infoCmd.setTime(time);
-        
+
         communication.send(infoCmd);
 
         this.communication.send(new GuiBestMoveCommand(genericMove, null));

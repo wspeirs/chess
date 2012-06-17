@@ -5,7 +5,7 @@
 
   <appender name="file" class="org.apache.log4j.RollingFileAppender"> 
     <param name="file" value="chess.log"/>
-    <param name="MaxFileSize" value="1MB"/>
+    <param name="MaxFileSize" value="100MB"/>
     <layout class="org.apache.log4j.PatternLayout"> 
       <param name="ConversionPattern" value="[%F:%L] %m%n"/> 
     </layout> 
