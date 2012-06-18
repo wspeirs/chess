@@ -16,7 +16,7 @@ public class AlphaBetaAITest {
     Board board = new Board();
     WorkingAlphaBetaAI workingAB = new WorkingAlphaBetaAI(Color.WHITE);
     BaseConfiguration defaults = new BaseConfiguration();
-    AlphaBetaAI alphaBeta = new AlphaBetaAI(Color.WHITE, defaults);
+    AlphaBetaAI alphaBeta = new AlphaBetaAI(Color.WHITE);
 
     static final int DEPTH = 4;
     
@@ -42,12 +42,21 @@ public class AlphaBetaAITest {
 */
     }
     
-    public static void main(String[] args) throws Exception {
-        new AlphaBetaAITest().testAlphabeta();
+   
+    @Test
+    public void test() throws Exception {
+        setupBoard();
+        MoveNode alphaBetaNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+
+        long start = System.currentTimeMillis();
+        int[] ret = alphaBeta.computeNextMove(alphaBetaNode, Color.WHITE);
+        alphaBetaNode.getBestChild();
+        long time = System.currentTimeMillis() - start;
         
-        Thread.sleep(1000);
+        System.out.println(alphaBetaNode.childrenToString());
     }
 
+/*
     @Test
     public void testAlphabeta() throws IllegalMoveException {
         long start, time;
@@ -116,5 +125,5 @@ public class AlphaBetaAITest {
             System.out.println();
         }
     }
-
+*/
 }

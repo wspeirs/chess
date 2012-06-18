@@ -50,7 +50,7 @@ public class AlphaBetaAI {
             alphabeta(node, d, -1000000, 1000000, color);
             long time = System.currentTimeMillis() - start;
 
-            System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount());
+            System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount() + " CHILD: " + node.getChildCount());
             System.out.println(node.childrenToString());
         }
 
@@ -126,6 +126,12 @@ public class AlphaBetaAI {
             }
 
             if(beta <= alpha) {
+                int childCount = node.getChildCount();
+                int removeCount = node.removeChildrenAfter(child);
+                
+                if(removeCount != 0) {
+                    LOG.info("REMOVED {} OF {} CHILDREN", removeCount, childCount);
+                }
                 break;
             }
         }
@@ -167,7 +173,7 @@ public class AlphaBetaAI {
             return new int[] { alpha, beta };
         }
 
-        MoveNode childNode = transpositionTable.get(moveBoard);
+        MoveNode childNode = null; // transpositionTable.get(moveBoard);
 
         // check to see if we need to create a new node, or if we can use the one from the table
         if(childNode == null || childNode.getDepth() <= depth) {

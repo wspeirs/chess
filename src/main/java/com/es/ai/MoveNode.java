@@ -86,6 +86,7 @@ public final class MoveNode {
     public void clearChildren() {
         for(MoveNode child:children) {
             child.parent = null;
+            child.clearChildren();
         }
 
         children.clear();
@@ -133,6 +134,33 @@ public final class MoveNode {
 
         return null;
     }
+    
+    public int removeChildrenAfter(MoveNode child) {
+        if(child == null) {
+            return 0;
+        }
+        
+        Iterator<MoveNode> it = children.iterator();
+        boolean found = false;
+        int removeCount = 0;
+        
+        while(it.hasNext()) {
+            MoveNode node = it.next();
+            
+            if(node.equals(child)) {
+                found = true;
+                continue;
+            }
+            
+            if(found) {
+                node.clearChildren();
+                it.remove();
+                ++removeCount;
+            }
+        }
+        
+        return removeCount;
+    }
 
     public int[] getChildrenPieces() {
         final int[] ret = new int[children.size()];
@@ -173,6 +201,8 @@ public final class MoveNode {
 
             sb.append(" (");
             sb.append(ai.computeScore(curNode));
+            sb.append(" ");
+            sb.append(curNode.depth);
             sb.append(")");
 
             while(curNode.getChildCount() != 0) {
@@ -183,6 +213,8 @@ public final class MoveNode {
 
                 sb.append(" (");
                 sb.append(ai.computeScore(curNode));
+                sb.append(" ");
+                sb.append(curNode.depth);
                 sb.append(")");
             }
 
