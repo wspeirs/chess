@@ -44,14 +44,14 @@ public class AlphaBetaAI {
     }
 
     public int[] computeNextMove(MoveNode node, Color color) {
-        for(int d=2; d <= 6; d++) {
+        for(int d=2; d <= 5; d++) {
             transHit = 0;
             long start = System.currentTimeMillis();
             alphabeta(node, d, -1000000, 1000000, color);
             long time = System.currentTimeMillis() - start;
 
-            System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount() + " CHILD: " + node.getChildCount());
-            System.out.println(node.childrenToString());
+//            System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount() + " CHILD: " + node.getChildCount());
+//            System.out.println(node.childrenToString());
         }
 
         return node.getBestChild().getMove();
@@ -91,8 +91,21 @@ public class AlphaBetaAI {
 
             final int length = i;
 
+            // copy over all the rest of the pieces from the board
             for( ; boardNoChildrenPieces[i - length] != Board.MAX_SQUARE; ++i) {
                 boardPieces[i] = boardNoChildrenPieces[i - length];
+            }
+            
+            // ensure any other spaces are set to MAX_SQUARE
+            for( ; i < boardPieces.length; ++i) {
+                boardPieces[i] = Board.MAX_SQUARE;
+            }
+        }
+        
+        // DEBUG: Check to make sure all the pieces are really in the board
+        for(int p:boardPieces) {
+            if(Arrays.binarySearch(board.getPieces(color), p) < 0) {
+                System.out.println("GOT HERE");
             }
         }
 
@@ -119,19 +132,15 @@ public class AlphaBetaAI {
             } else {
                 // compute alpha-beta for the move
                 ret = alphabeta(node, depth, allMoves[i], allMoves[i+1], alpha, beta, color);
-
+                
                 // update the values of alpha and beta
                 alpha = ret[0];
                 beta = ret[1];
             }
 
             if(beta <= alpha) {
-                int childCount = node.getChildCount();
-                int removeCount = node.removeChildrenAfter(child);
-                
-                if(removeCount != 0) {
-                    LOG.info("REMOVED {} OF {} CHILDREN", removeCount, childCount);
-                }
+                // node.removeChildrenAfter(child);
+                node.removeNotAtDepth(depth-1);
                 break;
             }
         }
@@ -173,7 +182,7 @@ public class AlphaBetaAI {
             return new int[] { alpha, beta };
         }
 
-        MoveNode childNode = null; // transpositionTable.get(moveBoard);
+        MoveNode childNode = transpositionTable.get(moveBoard);
 
         // check to see if we need to create a new node, or if we can use the one from the table
         if(childNode == null || childNode.getDepth() <= depth) {
@@ -208,9 +217,13 @@ public class AlphaBetaAI {
 
         // see if we have a cut-off
         if(beta <= alpha) {
-            node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
             node.setDepth(depth);
             node.setRetVal(colorPlaying.equals(color) ? alpha : beta);
+            if(node.getChildCount() != 0) {
+                node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
+            } else {
+                node.setScore(node.getRetVal());
+            }
 
             return new int[] {alpha, beta };
         }
@@ -305,9 +318,11 @@ public class AlphaBetaAI {
                 }
 
                 if(targetPiece.getColor().equals(targetColor)) {
-                    ret += targetPiece.getValue() * .25;
+                    // check for an attack
+                    ret += targetPiece.getValue() * .5;
                 } else {
-                    ret += targetPiece.getValue() * 0.50;
+                    // check for a defense
+                    ret += targetPiece.getValue() * 0.250;
                 }
             }
         }

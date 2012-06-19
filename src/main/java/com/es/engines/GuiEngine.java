@@ -71,11 +71,11 @@ public class GuiEngine implements Engine {
                 tmpNode.clearChildren();    // so these can be GCed
             }
 
-            currentNode = null;
-
             if(currentNode == null) {
-                System.out.println("CREATING NEW NODE");
+                LOG.info("COULDN'T FIND USER MOVE {} -> {}", Integer.toHexString(userMove[0]), Integer.toHexString(userMove[1]));
                 currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+            } else {
+                LOG.info("FOUND NODE FOR {} -> {}", Integer.toHexString(userMove[0]), Integer.toHexString(userMove[1]));
             }
 
             long start = System.currentTimeMillis();

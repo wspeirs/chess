@@ -125,6 +125,23 @@ public class UciEngine extends AbstractEngine implements Engine {
 
             try {
                 LOG.debug("MAKING OPPONENT MOVE: {} -> {}", move.from, move.to);
+                
+                if(lastOpponentMove[0] == 0x04 && lastOpponentMove[1] == 0x06) {
+                    lastOpponentMove[0] = -1;
+                    lastOpponentMove[1] = 1;
+                } else if (lastOpponentMove[0] == 0x04 && lastOpponentMove[1] == 0x02) {
+                    lastOpponentMove[0] = -2;
+                    lastOpponentMove[1] = 1;
+                } else if(lastOpponentMove[0] == 0x74 && lastOpponentMove[1] == 0x76) {
+                    lastOpponentMove[0] = -1;
+                    lastOpponentMove[1] = 2;
+                } else if(lastOpponentMove[0] == 0x74 && lastOpponentMove[1] == 0x72) {
+                    lastOpponentMove[0] = -2;
+                    lastOpponentMove[1] = 2;
+                }
+                
+                LOG.debug("MAKING OPPONENT MOVE: {} -> {}", Integer.toHexString(lastOpponentMove[0]), Integer.toHexString(lastOpponentMove[1]));
+
                 board.makeMove(lastOpponentMove[0], lastOpponentMove[1], false);
             } catch (IllegalMoveException e) {
                 LOG.error("Illegal move: {}", e.getMessage(), e);
@@ -159,8 +176,10 @@ public class UciEngine extends AbstractEngine implements Engine {
         }
 
         if(currentNode == null) {
-            LOG.info("CREATING NEW NODE");
+            LOG.info("COULDN'T FIND USER MOVE {} -> {}", Integer.toHexString(lastOpponentMove[0]), Integer.toHexString(lastOpponentMove[1]));
             currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        } else {
+//            LOG.info("FOUND NODE FOR {} -> {}", Integer.toHexString(lastOpponentMove[0]), Integer.toHexString(lastOpponentMove[1]));
         }
 
         LOG.debug("COMPUTING NEXT MOVE FOR: {}", color);
