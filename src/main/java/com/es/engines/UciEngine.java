@@ -2,6 +2,7 @@ package com.es.engines;
 
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import jcpi.AbstractCommunication;
@@ -35,18 +36,14 @@ import com.es.Board;
 import com.es.IllegalMoveException;
 import com.es.ai.AlphaBetaAI;
 import com.es.ai.MoveNode;
-import com.es.pieces.Piece.Color;
 
 public class UciEngine extends AbstractEngine implements Engine {
     private static final Logger LOG = LoggerFactory.getLogger(UciEngine.class);
 
     private Configuration config;
     private Board board;
-    private Color color;
     private static final Map<GenericPosition, Integer> positions = new EnumMap<GenericPosition, Integer>(GenericPosition.class);
     private MoveNode currentNode;
-    private int moveCount;
-    private int[] lastOpponentMove;
 
     static {
         for (GenericPosition position : GenericPosition.values()) {
@@ -102,11 +99,6 @@ public class UciEngine extends AbstractEngine implements Engine {
 
         // It might be good to stop computing first...
         new EngineStopCalculatingCommand().accept(this);
-
-        // Setup the new game
-        board = new Board();
-        currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
-        moveCount = 0;
     }
 
     public void visit(EngineAnalyzeCommand command) {
@@ -118,74 +110,39 @@ public class UciEngine extends AbstractEngine implements Engine {
             LOG.info(command.board.toString());
         }
 
-        // update the board with the moves made
-        if(command.moveList.size() != 0) {
-            GenericMove move = command.moveList.get(command.moveList.size()-1);
-            lastOpponentMove = new int[] { positions.get(move.from), positions.get(move.to) };
+        // Setup the new game
+        // We can receive any board here! So mirror the GenericBoard on our internal board.
+        board = new Board(command.board);
+        currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
 
-            try {
-                LOG.debug("MAKING OPPONENT MOVE: {} -> {}", move.from, move.to);
-                
-                if(lastOpponentMove[0] == 0x04 && lastOpponentMove[1] == 0x06) {
-                    lastOpponentMove[0] = -1;
-                    lastOpponentMove[1] = 1;
-                } else if (lastOpponentMove[0] == 0x04 && lastOpponentMove[1] == 0x02) {
-                    lastOpponentMove[0] = -2;
-                    lastOpponentMove[1] = 1;
-                } else if(lastOpponentMove[0] == 0x74 && lastOpponentMove[1] == 0x76) {
-                    lastOpponentMove[0] = -1;
-                    lastOpponentMove[1] = 2;
-                } else if(lastOpponentMove[0] == 0x74 && lastOpponentMove[1] == 0x72) {
-                    lastOpponentMove[0] = -2;
-                    lastOpponentMove[1] = 2;
-                }
-                
-                LOG.debug("MAKING OPPONENT MOVE: {} -> {}", Integer.toHexString(lastOpponentMove[0]), Integer.toHexString(lastOpponentMove[1]));
-
-                board.makeMove(lastOpponentMove[0], lastOpponentMove[1], false);
-            } catch (IllegalMoveException e) {
+		// Make all moves here! UCI is not stateful! So we have to setup the board as the protocol says.
+		// Don't just take the last move!
+		List<GenericMove> moveList = command.moveList;
+		for (GenericMove move : moveList) {
+			try {
+				this.board.makeMove(positions.get(move.from), positions.get(move.to), false);
+			} catch (IllegalMoveException e) {
                 LOG.error("Illegal move: {}", e.getMessage(), e);
                 new EngineQuitCommand().accept(this);
-            }
-
-            // update the color
-            if(command.moveList.size() % 2 == 0) {
-                color = Color.WHITE;
-            } else {
-                color = Color.BLACK;
-            }
-        } else {
-            color = Color.WHITE;
-        }
+			}
+		}
     }
 
     public void visit(EngineStartCalculatingCommand command) {
         LOG.info("Engine Start Calculating");
 
-        LOG.debug("CREATED AI WITH COLOR: {}", color);
-        AlphaBetaAI ai = new AlphaBetaAI(color, config);    // create the AI
+		// The game state is now encoded within the board. Get everything from the board now.
+        LOG.debug("CREATED AI WITH COLOR: {}", board.getActiveColor());
+        AlphaBetaAI ai = new AlphaBetaAI(board.getActiveColor(), config);    // create the AI
 
         LOG.debug("CUR NODE CHILD COUNT: {}", currentNode.getChildCount());
 
-        // go through and find the user's move, if we can
-        if(currentNode.getChildCount() > 0) {
-            MoveNode tmpNode = currentNode.getBestChild();
-            currentNode.clearChildren();    // so these can be GCed
-            currentNode = tmpNode.findChild(lastOpponentMove[0], lastOpponentMove[1]);
-            tmpNode.clearChildren();    // so these can be GCed
-        }
+        currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
 
-        if(currentNode == null) {
-            LOG.info("COULDN'T FIND USER MOVE {} -> {}", Integer.toHexString(lastOpponentMove[0]), Integer.toHexString(lastOpponentMove[1]));
-            currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
-        } else {
-//            LOG.info("FOUND NODE FOR {} -> {}", Integer.toHexString(lastOpponentMove[0]), Integer.toHexString(lastOpponentMove[1]));
-        }
-
-        LOG.debug("COMPUTING NEXT MOVE FOR: {}", color);
+        LOG.debug("COMPUTING NEXT MOVE FOR: {}", board.getActiveColor());
 
         long start = System.currentTimeMillis();
-        int[] aiMove = ai.computeNextMove(currentNode, color);
+        int[] aiMove = ai.computeNextMove(currentNode, board.getActiveColor());
         long time = System.currentTimeMillis() - start;
 
         LOG.debug("FOUND MOVE: {} -> {}", Integer.toHexString(aiMove[0]), Integer.toHexString(aiMove[1]));
