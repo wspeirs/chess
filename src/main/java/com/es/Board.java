@@ -4,6 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import jcpi.data.GenericBoard;
+import jcpi.data.GenericColor;
+import jcpi.data.GenericFile;
+import jcpi.data.GenericPiece;
+import jcpi.data.GenericPosition;
+import jcpi.data.GenericRank;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +64,8 @@ public final class Board implements Cloneable {
     public static final int MAX_COL = 8;
     public static final int MAX_SQUARE = 0x78;
 
-    private Piece[] board;
 
+    private Piece[] board;
     private int[] blackPieces;
 
     private int[] whitePieces;
@@ -66,7 +73,10 @@ public final class Board implements Cloneable {
     private int blackKing;
     private int whiteKing;
 
-    private int hashCode;
+	// Do encode the active color into the board!
+	private Color activeColor = Color.WHITE;
+
+	private int hashCode;
 
     public Board() {
         board = new Piece[MAX_SQUARE];
@@ -194,6 +204,55 @@ public final class Board implements Cloneable {
         this.hashCode = board.hashCode;
     }
 
+	// Mirror the GenericBoard on our internal board!
+	// Please review!
+    public Board(GenericBoard genericBoard) {
+        board = new Piece[MAX_SQUARE];
+
+        blackPieces = new int[16];
+        whitePieces = new int[16];
+        int w = 0;
+        int b = 0;
+
+		// Initialize the board
+        for (GenericPosition position : GenericPosition.values()) {
+			GenericPiece genericPiece = genericBoard.getPiece(position);
+			if (genericPiece != null) {
+	            int file = Arrays.asList(GenericFile.values()).indexOf(position.file);
+	            int rank = Arrays.asList(GenericRank.values()).indexOf(position.rank);
+
+	            int intPosition = rank * 16 + file;
+
+	            board[intPosition] = AbstractPiece.makePiece(genericPiece.toChar());
+	            
+	            if (genericPiece.color == GenericColor.WHITE) {
+                    whitePieces[w++] = intPosition;
+                } else {
+                    blackPieces[b++] = intPosition;
+	            }
+	            
+	            if (genericPiece == GenericPiece.BLACKKING) {
+	            	blackKing = intPosition;
+	            } else if (genericPiece == GenericPiece.WHITEKING) {
+	            	whiteKing = intPosition;
+	            }
+			}
+        }
+
+        Arrays.sort(whitePieces);
+        Arrays.sort(blackPieces);
+
+        if (genericBoard.getActiveColor() == GenericColor.WHITE) {
+        	activeColor = Color.WHITE;
+        } else {
+        	assert genericBoard.getActiveColor() == GenericColor.BLACK;
+        	activeColor = Color.BLACK;
+        }
+        
+        // compute the hash code
+        computeHashCode();
+    }
+    
     @Override
     public boolean equals(Object obj) {
 
@@ -243,6 +302,10 @@ public final class Board implements Cloneable {
         return board;
     }
 
+    public Color getActiveColor() {
+    	return activeColor;
+    }
+    
     /**
      * Removes all the pieces from the board.
      * Useful for debugging.
@@ -364,6 +427,10 @@ public final class Board implements Cloneable {
         }
 
         fromPiece.pieceMoved(); // mark the piece has having moved
+        
+        // Switch the active color if we make a move on the board.
+        activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
+        
         computeHashCode();  // re-compute the hash code
 
         if(LOG.isTraceEnabled()) {
