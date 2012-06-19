@@ -44,7 +44,7 @@ public class AlphaBetaAI {
     }
 
     public int[] computeNextMove(MoveNode node, Color color) {
-        for(int d=2; d <= 6; d++) {
+        for(int d=2; d <= 4; d++) {
             transHit = 0;
             long start = System.currentTimeMillis();
             alphabeta(node, d, -1000000, 1000000, color);
@@ -199,16 +199,11 @@ public class AlphaBetaAI {
             // add the child node's children to the current node's children
             node.addChildren(childNode);
         }
-
-        // see if we have a cut-off
-        if(beta <= alpha) {
-            node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
-            node.setDepth(depth);
-            node.setRetVal(colorPlaying.equals(color) ? alpha : beta);
-
-            return new int[] {alpha, beta };
-        }
-
+/*
+        node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
+        node.setDepth(depth);
+        node.setRetVal(colorPlaying.equals(color) ? alpha : beta);
+*/
         return new int[] { alpha, beta };
     }
 

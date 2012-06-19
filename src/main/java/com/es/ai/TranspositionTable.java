@@ -8,7 +8,7 @@ import com.es.Board;
 public class TranspositionTable extends LinkedHashMap<Board, MoveNode> {
 
     private static final long serialVersionUID = 1L;
-    private static final int CAPACITY = 100000;
+    private static final int CAPACITY = 0; // 100000;
 
     public TranspositionTable() {
         super(CAPACITY + 1, 1.1f, false);

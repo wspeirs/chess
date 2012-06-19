@@ -173,6 +173,8 @@ public final class MoveNode {
 
             sb.append(" (");
             sb.append(ai.computeScore(curNode));
+            sb.append(" ");
+            sb.append(curNode.depth);
             sb.append(")");
 
             while(curNode.getChildCount() != 0) {
@@ -183,6 +185,8 @@ public final class MoveNode {
 
                 sb.append(" (");
                 sb.append(ai.computeScore(curNode));
+                sb.append(" ");
+                sb.append(curNode.depth);
                 sb.append(")");
             }
 
