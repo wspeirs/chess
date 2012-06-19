@@ -86,6 +86,7 @@ public final class MoveNode {
     public void clearChildren() {
         for(MoveNode child:children) {
             child.parent = null;
+            // child.clearChildren();
         }
 
         children.clear();
@@ -132,6 +133,50 @@ public final class MoveNode {
         }
 
         return null;
+    }
+    
+    public int removeChildrenAfter(MoveNode child) {
+        if(child == null) {
+            return 0;
+        }
+        
+        Iterator<MoveNode> it = children.iterator();
+        boolean found = false;
+        int removeCount = 0;
+        
+        while(it.hasNext()) {
+            MoveNode node = it.next();
+            
+            if(node.equals(child)) {
+                found = true;
+                continue;
+            }
+            
+            if(found) {
+                node.clearChildren();
+                it.remove();
+                ++removeCount;
+            }
+        }
+        
+        return removeCount;
+    }
+
+    public int removeNotAtDepth(int depth) {
+        Iterator<MoveNode> it = children.iterator();
+        int removeCount = 0;
+        
+        while(it.hasNext()) {
+            MoveNode node = it.next();
+            
+            if(node.depth != depth) {
+                node.clearChildren();
+                it.remove();
+                ++removeCount;
+            }
+        }
+        
+        return removeCount;
     }
 
     public int[] getChildrenPieces() {
@@ -181,6 +226,9 @@ public final class MoveNode {
                 curNode = curNode.getFirstChild();
                 move = curNode.getMove();
                 sb.append(" ");
+                if(curNode == null || curNode.parent == null) {
+                    continue;
+                }
                 sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move[0], move[1]));
 
                 sb.append(" (");

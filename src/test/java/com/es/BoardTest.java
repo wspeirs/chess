@@ -55,7 +55,7 @@ public class BoardTest {
 
         System.out.println(board.toString());
 
-        AlphaBetaAI ai = new AlphaBetaAI(Color.BLACK, null);
+        AlphaBetaAI ai = new AlphaBetaAI(Color.BLACK);
 
         System.out.println("SCORE: " + ai.computeScore(new MoveNode(board, null, new int[] { })));
     }

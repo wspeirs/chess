@@ -299,10 +299,10 @@ public final class Board implements Cloneable {
      */
     public void makeMove(int fromSquare, int toSquare, boolean kingCheck) throws IllegalMoveException {
         if(fromSquare == -1) {
-            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, true);
+            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, true, kingCheck);
             return;
         } else if(fromSquare == -2){
-            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, false);
+            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, false, kingCheck);
             return;
         }
 
@@ -371,12 +371,12 @@ public final class Board implements Cloneable {
         }
     }
 
-    public void castel(Color color, boolean kingSide) throws IllegalMoveException {
+    public void castel(Color color, boolean kingSide, boolean kingCheck) throws IllegalMoveException {
         int[] pieces = color.equals(Color.WHITE) ? whitePieces : blackPieces;
         int kingPos = color.equals(Color.WHITE) ? whiteKing : blackKing;
         int rookPos;
 
-        if(board[kingPos] != null && board[kingPos].hasMoved()) {
+        if(kingCheck && board[kingPos] != null && board[kingPos].hasMoved()) {
             throw new IllegalMoveException("King has already moved, cannot castle");
         }
 
@@ -386,14 +386,16 @@ public final class Board implements Cloneable {
             rookPos = color.equals(Color.WHITE) ? 0x00 : 0x70;
         }
 
-        if(board[rookPos] != null && board[rookPos].hasMoved()) {
+        if(kingCheck && board[rookPos] != null && board[rookPos].hasMoved()) {
             throw new IllegalMoveException("Rook has already moved, cannot castle");
         }
 
         // make sure the spaces between are clear
-        for(int i=Math.min(kingPos, rookPos) + 1; i < Math.max(kingPos, rookPos); ++i) {
-            if(board[i] != null) {
-                throw new IllegalMoveException("Pieces between king and rook, cannot castle");
+        if(kingCheck) {
+            for(int i=Math.min(kingPos, rookPos) + 1; i < Math.max(kingPos, rookPos); ++i) {
+                if(board[i] != null) {
+                    throw new IllegalMoveException("Pieces between king and rook, cannot castle");
+                }
             }
         }
 

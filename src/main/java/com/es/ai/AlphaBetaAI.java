@@ -50,8 +50,8 @@ public class AlphaBetaAI {
             alphabeta(node, d, -1000000, 1000000, color);
             long time = System.currentTimeMillis() - start;
 
-            System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount());
-            System.out.println(node.childrenToString());
+//            System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount() + " CHILD: " + node.getChildCount());
+//            System.out.println(node.childrenToString());
         }
 
         return node.getBestChild().getMove();
@@ -91,8 +91,21 @@ public class AlphaBetaAI {
 
             final int length = i;
 
+            // copy over all the rest of the pieces from the board
             for( ; boardNoChildrenPieces[i - length] != Board.MAX_SQUARE; ++i) {
                 boardPieces[i] = boardNoChildrenPieces[i - length];
+            }
+
+            // ensure any other spaces are set to MAX_SQUARE
+            for( ; i < boardPieces.length; ++i) {
+                boardPieces[i] = Board.MAX_SQUARE;
+            }
+        }
+
+        // DEBUG: Check to make sure all the pieces are really in the board
+        for(int p:boardPieces) {
+            if(Arrays.binarySearch(board.getPieces(color), p) < 0) {
+                System.out.println("GOT HERE");
             }
         }
 
@@ -126,6 +139,8 @@ public class AlphaBetaAI {
             }
 
             if(beta <= alpha) {
+                // node.removeChildrenAfter(child);
+                node.removeNotAtDepth(depth-1);
                 break;
             }
         }
@@ -199,11 +214,20 @@ public class AlphaBetaAI {
             // add the child node's children to the current node's children
             node.addChildren(childNode);
         }
-/*
-        node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
-        node.setDepth(depth);
-        node.setRetVal(colorPlaying.equals(color) ? alpha : beta);
-*/
+
+        // see if we have a cut-off
+        if(beta <= alpha) {
+            node.setDepth(depth);
+            node.setRetVal(colorPlaying.equals(color) ? alpha : beta);
+            if(node.getChildCount() != 0) {
+                node.setScore((colorPlaying.equals(color) ? node.getBestChild() : node.getWorstChild()).getScore());
+            } else {
+                node.setScore(node.getRetVal());
+            }
+
+            return new int[] {alpha, beta };
+        }
+
         return new int[] { alpha, beta };
     }
 
@@ -294,9 +318,11 @@ public class AlphaBetaAI {
                 }
 
                 if(targetPiece.getColor().equals(targetColor)) {
-                    ret += targetPiece.getValue() * .25;
+                    // check for an attack
+                    ret += targetPiece.getValue() * .5;
                 } else {
-                    ret += targetPiece.getValue() * 0.50;
+                    // check for a defense
+                    ret += targetPiece.getValue() * 0.250;
                 }
             }
         }
