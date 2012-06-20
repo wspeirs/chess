@@ -38,7 +38,7 @@ public class King extends AbstractPiece {
     }
 
     public int[] generateAllMoves(Board board, int curPos) {
-        int[] ret = new int[8]; // can only ever move 8 positions
+        int[] ret = new int[10]; // can only ever move 8 positions
         int retIndex = 0;
 
         addPos(board, ret, retIndex++, curPos + 0x11); // check upper-right
@@ -50,6 +50,14 @@ public class King extends AbstractPiece {
         addPos(board, ret, retIndex++, curPos - 0x10); // move to back
         addPos(board, ret, retIndex++, curPos + 0x01); // move to right
         addPos(board, ret, retIndex++, curPos - 0x01); // move to left
+        
+        if(board.canKingCastle(getColor())) {
+            ret[retIndex++] = getColor().equals(Color.WHITE) ? 0x06 : 0x76; 
+        }
+        
+        if(board.canQueenCastle(getColor())) {
+            ret[retIndex++] = getColor().equals(Color.WHITE) ? 0x02 : 0x72;
+        }
 
         Arrays.fill(ret, retIndex, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
         Arrays.sort(ret);   // sort the array

@@ -79,7 +79,7 @@ public final class Board implements Cloneable {
     private boolean blackKingCastle = false;
     private boolean blackQueenCastle = false;
     
-    private int enPasse = Board.MAX_SQUARE;
+    private int enPassant = Board.MAX_SQUARE;
 
 	private Color activeColor = Color.WHITE;
 
@@ -146,7 +146,7 @@ public final class Board implements Cloneable {
         whiteKingCastle = whiteQueenCastle = blackKingCastle = blackQueenCastle = true;
         
         // set the en passe
-        enPasse = Board.MAX_SQUARE;
+        enPassant = Board.MAX_SQUARE;
 
         // compute the hash code
         computeHashCode();
@@ -169,7 +169,7 @@ public final class Board implements Cloneable {
         this.blackKingCastle = board.blackKingCastle;
         this.blackQueenCastle = board.blackQueenCastle;
         
-        this.enPasse = board.enPasse;
+        this.enPassant = board.enPassant;
     }
 
 	// construct from a GenericBoard
@@ -217,27 +217,31 @@ public final class Board implements Cloneable {
         }
         
         // set the castling
-        if(genericBoard.getCastling(GenericColor.WHITE, GenericCastling.KINGSIDE).equals(GenericFile.Fh)) {
+        if(genericBoard.getCastling(GenericColor.WHITE, GenericCastling.KINGSIDE) != null) {
             whiteKingCastle = true;
         }
         
-        if(genericBoard.getCastling(GenericColor.WHITE, GenericCastling.QUEENSIDE).equals(GenericFile.Fa)) {
+        if(genericBoard.getCastling(GenericColor.WHITE, GenericCastling.QUEENSIDE) != null) {
             whiteQueenCastle = true;
         }
         
-        if(genericBoard.getCastling(GenericColor.BLACK, GenericCastling.KINGSIDE).equals(GenericFile.Fh)) {
+        if(genericBoard.getCastling(GenericColor.BLACK, GenericCastling.KINGSIDE) != null) {
             blackKingCastle = true;
         }
         
-        if(genericBoard.getCastling(GenericColor.BLACK, GenericCastling.QUEENSIDE).equals(GenericFile.Fa)) {
+        if(genericBoard.getCastling(GenericColor.BLACK, GenericCastling.QUEENSIDE) != null) {
             blackQueenCastle = true;
         }
         
         // set the en passe
-        int file = Arrays.asList(GenericFile.values()).indexOf(genericBoard.getEnPassant().file);
-        int rank = Arrays.asList(GenericFile.values()).indexOf(genericBoard.getEnPassant().rank);
+        final GenericPosition ep = genericBoard.getEnPassant();
         
-        this.enPasse = rank * 16 + file;
+        if(ep != null) {
+            int file = Arrays.asList(GenericFile.values()).indexOf(ep.file);
+            int rank = Arrays.asList(GenericFile.values()).indexOf(ep.rank);
+            
+            this.enPassant = rank * 16 + file;
+        }
         
         // compute the hash code
         computeHashCode();
@@ -293,10 +297,26 @@ public final class Board implements Cloneable {
     }
 
     /**
-     * @return the enPasse
+     * @return the enPassant
      */
-    public int getEnPasse() {
-        return enPasse;
+    public int getEnPassant() {
+        return enPassant;
+    }
+    
+    public boolean canKingCastle(Color color) {
+        if(color.equals(Color.WHITE)) {
+            return whiteKingCastle && board[0x05] == null && board[0x06] == null;
+        } else {
+            return blackKingCastle && board[0x75] == null && board[0x76] == null;
+        }
+    }
+    
+    public boolean canQueenCastle(Color color) {
+        if(color.equals(Color.WHITE)) {
+            return whiteQueenCastle && board[0x01] == null && board[0x02] == null && board[0x03] == null;
+        } else {
+            return blackQueenCastle && board[0x71] == null && board[0x72] == null && board[0x73] == null;
+        }
     }
 
     public Color getActiveColor() {
@@ -315,6 +335,10 @@ public final class Board implements Cloneable {
         blackKing = Board.MAX_SQUARE;
 
         Arrays.fill(board, null);
+        
+        whiteKingCastle = whiteQueenCastle = false;
+        blackKingCastle = blackQueenCastle = false;
+        enPassant = Board.MAX_SQUARE;
 
         // compute the new hash code
         computeHashCode();
@@ -361,84 +385,33 @@ public final class Board implements Cloneable {
         final Piece fromPiece = board[fromSquare];
 
         if(fromPiece == null) {
+            LOG.error("There is no piece on square: 0x{}", Integer.toHexString(fromSquare));
             throw new IllegalMoveException("There is no piece on square: 0x" + Integer.toHexString(fromSquare));
         }
         
         // check to see if we're castling
-        if(fromSquare == whiteKing) {
-            if(whiteKingCastle &&
-               toSquare == 0x06 &&
-               board[0x05] == null &&
-               board[0x06] == null) {
-                // move the king
-                board[toSquare] = board[fromSquare];
-                board[fromSquare] = null;
-                whiteKing = toSquare;
-                
-                // move the rook
-                board[0x05] = board[0x07];
-                board[0x07] = null;
-                
-                // disable castling
-                whiteKingCastle = whiteQueenCastle = false;
-                
-            } else if(whiteQueenCastle &&
-                      toSquare == 0x02 &&
-                      board[0x01] == null &&
-                      board[0x02] == null &&
-                      board[0x03] == null) {
-                // move the king
-                board[toSquare] = board[fromSquare];
-                board[fromSquare] = null;
-                whiteKing = toSquare;
-                
-                // move the rook
-                board[0x03] = board[0x00];
-                board[0x00] = null;
-                
-                // disable castling
-                whiteKingCastle = whiteQueenCastle = false;
-            }
-        } else if(fromSquare == blackKing) {
-            if(blackKingCastle &&
-               toSquare == 0x76 &&
-               board[0x75] == null &&
-               board[0x76] == null) {
-                 // move the king
-                 board[toSquare] = board[fromSquare];
-                 board[fromSquare] = null;
-                 blackKing = toSquare;
-                 
-                 // move the rook
-                 board[0x75] = board[0x77];
-                 board[0x77] = null;
-                 
-                 // disable castling
-                 blackKingCastle = blackQueenCastle = false;
-                 
-             } else if(blackQueenCastle &&
-                       toSquare == 0x72 &&
-                       board[0x71] == null &&
-                       board[0x72] == null &&
-                       board[0x73] == null) {
-                 // move the king
-                 board[toSquare] = board[fromSquare];
-                 board[fromSquare] = null;
-                 blackKing = toSquare;
-                 
-                 // move the rook
-                 board[0x73] = board[0x70];
-                 board[0x70] = null;
-                 
-                 // disable castling
-                 blackKingCastle = blackQueenCastle = false;
-             }
+        if(fromSquare == whiteKing && toSquare == 0x06 && canKingCastle(Color.WHITE)) {
+            makeKingCastle(Color.WHITE, kingCheck);
+            computeHashCode();
+            return;
+        } else if(fromSquare == blackKing && toSquare == 0x76 && canKingCastle(Color.BLACK)) {
+            makeKingCastle(Color.BLACK, kingCheck);
+            computeHashCode();
+            return;
+        } else if(fromSquare == whiteKing && toSquare == 0x02 && canQueenCastle(Color.WHITE)) {
+            makeQueenCastle(Color.WHITE, kingCheck);
+            computeHashCode();
+            return;
+        } else if(fromSquare == blackKing && toSquare == 0x72 && canQueenCastle(Color.BLACK)) {
+            makeQueenCastle(Color.BLACK, kingCheck);
+            computeHashCode();
+            return;
         }
         
         // check to see if the move is legal or not (this covers en passe, but not castling)
         if(Arrays.binarySearch(fromPiece.generateAllMoves(this, fromSquare), toSquare) < 0) {
-            LOG.error("Illegal move {} - > {} for {}", new String[] { Integer.toHexString(fromSquare), Integer.toHexString(toSquare), fromPiece.toString() } );
-            LOG.error("CURRENT BOARD: {}", this.toString());
+            LOG.error("Illegal move 0x{} - > 0x{} for {}", new String[] { Integer.toHexString(fromSquare), Integer.toHexString(toSquare), fromPiece.toString() } );
+            LOG.error("CURRENT BOARD: {}{}", LINE_BREAK, this.toString());
             throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
         }
 
@@ -458,12 +431,18 @@ public final class Board implements Cloneable {
             Arrays.sort(whitePieces);
             if(fromPiece instanceof King) {
                 whiteKing = toSquare;
+                whiteKingCastle = whiteQueenCastle = false;
+            } else if(fromPiece instanceof Rook) {
+                whiteKingCastle = whiteQueenCastle = false;
             }
         } else {
             blackPieces[Arrays.binarySearch(blackPieces, fromSquare)] = toSquare;
             Arrays.sort(blackPieces);
             if(fromPiece instanceof King) {
                 blackKing = toSquare;
+                blackKingCastle = blackQueenCastle = false;
+            } else if(fromPiece instanceof Rook) {
+                blackKingCastle = blackQueenCastle = false;
             }
         }
 
@@ -498,66 +477,100 @@ public final class Board implements Cloneable {
         }
     }
 
-    public void castel(Color color, boolean kingSide, boolean kingCheck) throws IllegalMoveException {
-        int[] pieces = color.equals(Color.WHITE) ? whitePieces : blackPieces;
-        int kingPos = color.equals(Color.WHITE) ? whiteKing : blackKing;
-        int rookPos;
-
-        if(kingCheck && board[kingPos] != null && board[kingPos].hasMoved()) {
-            throw new IllegalMoveException("King has already moved, cannot castle");
-        }
-
-        if(kingSide) {
-            rookPos = color.equals(Color.WHITE) ? 0x07 : 0x77;
+    public void makeKingCastle(Color color, boolean kingCheck) throws IllegalMoveException {
+        final int fromSquare = color.equals(Color.WHITE) ? 0x04 : 0x74;
+        final int toSquare = color.equals(Color.WHITE) ? 0x06 : 0x76;
+        
+        // move the king
+        board[toSquare] = board[fromSquare];
+        board[fromSquare] = null;
+        
+        if(color.equals(Color.WHITE)) {
+            whiteKing = toSquare;
         } else {
-            rookPos = color.equals(Color.WHITE) ? 0x00 : 0x70;
+            blackKing = toSquare;
         }
+        
+        // move the rook
+        board[toSquare - 1] = board[fromSquare + 3];
+        board[fromSquare + 3] = null;
+        
+        if(kingCheck && isInCheck(color.equals(Color.WHITE) ? whiteKing : blackKing)) {
+            // undo the king move
+            board[fromSquare] = board[toSquare];
+            board[toSquare] = null;
 
-        if(kingCheck && board[rookPos] != null && board[rookPos].hasMoved()) {
-            throw new IllegalMoveException("Rook has already moved, cannot castle");
-        }
-
-        // make sure the spaces between are clear
-        if(kingCheck) {
-            for(int i=Math.min(kingPos, rookPos) + 1; i < Math.max(kingPos, rookPos); ++i) {
-                if(board[i] != null) {
-                    throw new IllegalMoveException("Pieces between king and rook, cannot castle");
-                }
+            if(color.equals(Color.WHITE)) {
+                whiteKing = fromSquare;
+            } else {
+                blackKing = fromSquare;
             }
+            
+            // undo the rook move
+            board[fromSquare + 3] = board[toSquare - 1];
+            board[toSquare - 1] = null;
+
+            final String from = Integer.toHexString(fromSquare);
+            final String to = Integer.toHexString(toSquare);
+
+            throw new IllegalMoveException("The move 0x" + from + " -> 0x" + to + " would put the king into check", true);
         }
 
-        board[kingPos].pieceMoved();
-        board[rookPos].pieceMoved();
-
-        if(kingSide) {
-            // move the king
-            pieces[Arrays.binarySearch(pieces, kingPos)] = kingPos + 2;
-            board[kingPos + 2] = board[kingPos];
-            board[kingPos] = null;
-            kingPos += 2;
-            Arrays.sort(pieces);
-
-            // move the rook
-            pieces[Arrays.binarySearch(pieces, rookPos)] =  kingPos - 1;
-            board[kingPos - 1] = board[rookPos];
-            board[rookPos] = null;
-            Arrays.sort(pieces);
+            
+        // disable castling
+        if(color.equals(Color.WHITE)) {
+            whiteKingCastle = whiteQueenCastle = false;
         } else {
-            // move the king
-            pieces[Arrays.binarySearch(pieces, kingPos)] = kingPos - 2;
-            board[kingPos - 2] = board[kingPos];
-            board[kingPos] = null;
-            kingPos -= 2;
-            Arrays.sort(pieces);
+            blackKingCastle = blackQueenCastle = false;
+        }
+    }
 
-            // move the rook
-            pieces[Arrays.binarySearch(pieces, rookPos)] =  kingPos + 1;
-            board[kingPos + 1] = board[rookPos];
-            board[rookPos] = null;
-            Arrays.sort(pieces);
+    public void makeQueenCastle(Color color, boolean kingCheck) throws IllegalMoveException {
+        final int fromSquare = color.equals(Color.WHITE) ? 0x04 : 0x74;
+        final int toSquare = color.equals(Color.WHITE) ? 0x02 : 0x72;
+        
+        // move the king
+        board[toSquare] = board[fromSquare];
+        board[fromSquare] = null;
+        
+        if(color.equals(Color.WHITE)) {
+            whiteKing = toSquare;
+        } else {
+            blackKing = toSquare;
+        }
+        
+        // move the rook
+        board[toSquare + 1] = board[fromSquare - 4];
+        board[fromSquare - 4] = null;
+        
+        if(kingCheck && isInCheck(color.equals(Color.WHITE) ? whiteKing : blackKing)) {
+            // undo the king move
+            board[fromSquare] = board[toSquare];
+            board[toSquare] = null;
+
+            if(color.equals(Color.WHITE)) {
+                whiteKing = fromSquare;
+            } else {
+                blackKing = fromSquare;
+            }
+            
+            // undo the rook move
+            board[fromSquare - 4] = board[toSquare + 1];
+            board[toSquare + 1] = null;
+
+            final String from = Integer.toHexString(fromSquare);
+            final String to = Integer.toHexString(toSquare);
+
+            throw new IllegalMoveException("The move 0x" + from + " -> 0x" + to + " would put the king into check", true);
         }
 
-        computeHashCode(); // re-compute the hash code
+            
+        // disable castling
+        if(color.equals(Color.WHITE)) {
+            whiteKingCastle = whiteQueenCastle = false;
+        } else {
+            blackKingCastle = blackQueenCastle = false;
+        }
     }
 
     /**

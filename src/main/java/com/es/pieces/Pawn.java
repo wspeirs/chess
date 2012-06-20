@@ -41,7 +41,7 @@ public class Pawn extends AbstractPiece {
     public int[] generateAllMoves(Board board, int curPos) {
         int[] ret = new int[4]; // can only move in 4 positions
         int retIndex = 0;
-        final int enPasse = board.getEnPasse();
+        final int enPasse = board.getEnPassant();
 
         if(getColor().equals(Color.BLACK)) {
             // straight forward moves
