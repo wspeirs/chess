@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import jcpi.data.GenericBoard;
+import jcpi.data.GenericCastling;
 import jcpi.data.GenericColor;
 import jcpi.data.GenericFile;
 import jcpi.data.GenericPiece;
@@ -65,15 +66,21 @@ public final class Board implements Cloneable {
     public static final int MAX_SQUARE = 0x78;
 
 
-    private Piece[] board;
-    private int[] blackPieces;
+    private final Piece[] board;
 
-    private int[] whitePieces;
+    private final int[] blackPieces;
+    private final int[] whitePieces;
 
     private int blackKing;
     private int whiteKing;
+    
+    private boolean whiteKingCastle = false;
+    private boolean whiteQueenCastle = false;
+    private boolean blackKingCastle = false;
+    private boolean blackQueenCastle = false;
+    
+    private int enPasse = Board.MAX_SQUARE;
 
-	// Do encode the active color into the board!
 	private Color activeColor = Color.WHITE;
 
 	private int hashCode;
@@ -82,7 +89,6 @@ public final class Board implements Cloneable {
         board = new Piece[MAX_SQUARE];
 
         blackPieces = new int[16];
-
         whitePieces = new int[16];
 
         // fill in black's pieces
@@ -135,60 +141,15 @@ public final class Board implements Cloneable {
         // set the kings
         blackKing = 0x74;
         whiteKing = 0x04;
+        
+        // set the castles
+        whiteKingCastle = whiteQueenCastle = blackKingCastle = blackQueenCastle = true;
+        
+        // set the en passe
+        enPasse = Board.MAX_SQUARE;
 
         // compute the hash code
         computeHashCode();
-    }
-
-    public Board(String layout) throws IllegalMoveException {
-        if(layout.length() != 64) {
-            throw new IllegalMoveException("Not enough values for the starting board");
-        }
-
-        for(int i=0; i < layout.length(); ++i) {
-            if(i < 8) {
-                board[i + 0x70] = AbstractPiece.makePiece(layout.charAt(i));
-            } else if(i < 16) {
-                board[i + 0x60] = AbstractPiece.makePiece(layout.charAt(i));
-            } else if(i < 24) {
-                board[i + 0x50] = AbstractPiece.makePiece(layout.charAt(i));
-            } else if(i < 32) {
-                board[i + 0x40] = AbstractPiece.makePiece(layout.charAt(i));
-            } else if(i < 40) {
-                board[i + 0x30] = AbstractPiece.makePiece(layout.charAt(i));
-            } else if(i < 48) {
-                board[i + 0x20] = AbstractPiece.makePiece(layout.charAt(i));
-            } else if(i < 56) {
-                board[i + 0x10] = AbstractPiece.makePiece(layout.charAt(i));
-            } else {
-                board[i] = AbstractPiece.makePiece(layout.charAt(i));
-            }
-        }
-
-        Arrays.fill(whitePieces, Board.MAX_SQUARE);
-        Arrays.fill(blackPieces, Board.MAX_SQUARE);
-
-        int wIndex = 0;
-        int bIndex = 0;
-
-        for(int i=0; i < Board.MAX_SQUARE; ++i) {
-            if(board[i].getColor().equals(Color.WHITE)) {
-                whitePieces[wIndex++] = i;
-                if(board[i] instanceof King) {
-                    whiteKing = i;
-                }
-            } else {
-                blackPieces[bIndex++] = i;
-                if(board[i] instanceof King) {
-                    blackKing = i;
-                }
-            }
-        }
-
-        Arrays.sort(whitePieces);
-        Arrays.sort(blackPieces);
-
-        hashCode = 0;
     }
 
     // copy constructor
@@ -202,10 +163,16 @@ public final class Board implements Cloneable {
         this.blackKing = board.blackKing;
 
         this.hashCode = board.hashCode;
+        
+        this.whiteKingCastle = board.whiteKingCastle;
+        this.whiteQueenCastle = board.whiteQueenCastle;
+        this.blackKingCastle = board.blackKingCastle;
+        this.blackQueenCastle = board.blackQueenCastle;
+        
+        this.enPasse = board.enPasse;
     }
 
-	// Mirror the GenericBoard on our internal board!
-	// Please review!
+	// construct from a GenericBoard
     public Board(GenericBoard genericBoard) {
         board = new Piece[MAX_SQUARE];
 
@@ -242,12 +209,35 @@ public final class Board implements Cloneable {
         Arrays.sort(whitePieces);
         Arrays.sort(blackPieces);
 
-        if (genericBoard.getActiveColor() == GenericColor.WHITE) {
+        if (genericBoard.getActiveColor().equals(GenericColor.WHITE)) {
         	activeColor = Color.WHITE;
         } else {
-        	assert genericBoard.getActiveColor() == GenericColor.BLACK;
+        	assert genericBoard.getActiveColor().equals(GenericColor.BLACK);
         	activeColor = Color.BLACK;
         }
+        
+        // set the castling
+        if(genericBoard.getCastling(GenericColor.WHITE, GenericCastling.KINGSIDE).equals(GenericFile.Fh)) {
+            whiteKingCastle = true;
+        }
+        
+        if(genericBoard.getCastling(GenericColor.WHITE, GenericCastling.QUEENSIDE).equals(GenericFile.Fa)) {
+            whiteQueenCastle = true;
+        }
+        
+        if(genericBoard.getCastling(GenericColor.BLACK, GenericCastling.KINGSIDE).equals(GenericFile.Fh)) {
+            blackKingCastle = true;
+        }
+        
+        if(genericBoard.getCastling(GenericColor.BLACK, GenericCastling.QUEENSIDE).equals(GenericFile.Fa)) {
+            blackQueenCastle = true;
+        }
+        
+        // set the en passe
+        int file = Arrays.asList(GenericFile.values()).indexOf(genericBoard.getEnPassant().file);
+        int rank = Arrays.asList(GenericFile.values()).indexOf(genericBoard.getEnPassant().rank);
+        
+        this.enPasse = rank * 16 + file;
         
         // compute the hash code
         computeHashCode();
@@ -300,6 +290,13 @@ public final class Board implements Cloneable {
 
     public Piece[] getBoard() {
         return board;
+    }
+
+    /**
+     * @return the enPasse
+     */
+    public int getEnPasse() {
+        return enPasse;
     }
 
     public Color getActiveColor() {
@@ -361,28 +358,91 @@ public final class Board implements Cloneable {
      * @throws IllegalMoveException
      */
     public void makeMove(int fromSquare, int toSquare, boolean kingCheck) throws IllegalMoveException {
-        if(fromSquare == -1) {
-            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, true, kingCheck);
-            return;
-        } else if(fromSquare == -2){
-            this.castel(toSquare == 1 ? Color.WHITE : Color.BLACK, false, kingCheck);
-            return;
-        }
-
-        Piece fromPiece = board[fromSquare];
+        final Piece fromPiece = board[fromSquare];
 
         if(fromPiece == null) {
             throw new IllegalMoveException("There is no piece on square: 0x" + Integer.toHexString(fromSquare));
         }
-
-        // check to see if the move is legal or not
+        
+        // check to see if we're castling
+        if(fromSquare == whiteKing) {
+            if(whiteKingCastle &&
+               toSquare == 0x06 &&
+               board[0x05] == null &&
+               board[0x06] == null) {
+                // move the king
+                board[toSquare] = board[fromSquare];
+                board[fromSquare] = null;
+                whiteKing = toSquare;
+                
+                // move the rook
+                board[0x05] = board[0x07];
+                board[0x07] = null;
+                
+                // disable castling
+                whiteKingCastle = whiteQueenCastle = false;
+                
+            } else if(whiteQueenCastle &&
+                      toSquare == 0x02 &&
+                      board[0x01] == null &&
+                      board[0x02] == null &&
+                      board[0x03] == null) {
+                // move the king
+                board[toSquare] = board[fromSquare];
+                board[fromSquare] = null;
+                whiteKing = toSquare;
+                
+                // move the rook
+                board[0x03] = board[0x00];
+                board[0x00] = null;
+                
+                // disable castling
+                whiteKingCastle = whiteQueenCastle = false;
+            }
+        } else if(fromSquare == blackKing) {
+            if(blackKingCastle &&
+               toSquare == 0x76 &&
+               board[0x75] == null &&
+               board[0x76] == null) {
+                 // move the king
+                 board[toSquare] = board[fromSquare];
+                 board[fromSquare] = null;
+                 blackKing = toSquare;
+                 
+                 // move the rook
+                 board[0x75] = board[0x77];
+                 board[0x77] = null;
+                 
+                 // disable castling
+                 blackKingCastle = blackQueenCastle = false;
+                 
+             } else if(blackQueenCastle &&
+                       toSquare == 0x72 &&
+                       board[0x71] == null &&
+                       board[0x72] == null &&
+                       board[0x73] == null) {
+                 // move the king
+                 board[toSquare] = board[fromSquare];
+                 board[fromSquare] = null;
+                 blackKing = toSquare;
+                 
+                 // move the rook
+                 board[0x73] = board[0x70];
+                 board[0x70] = null;
+                 
+                 // disable castling
+                 blackKingCastle = blackQueenCastle = false;
+             }
+        }
+        
+        // check to see if the move is legal or not (this covers en passe, but not castling)
         if(Arrays.binarySearch(fromPiece.generateAllMoves(this, fromSquare), toSquare) < 0) {
             LOG.error("Illegal move {} - > {} for {}", new String[] { Integer.toHexString(fromSquare), Integer.toHexString(toSquare), fromPiece.toString() } );
             LOG.error("CURRENT BOARD: {}", this.toString());
             throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
         }
 
-        Piece toPiece = board[toSquare];
+        final Piece toPiece = board[toSquare];
 
         if(toPiece != null) {
             capturePiece(toSquare);

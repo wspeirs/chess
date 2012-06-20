@@ -41,6 +41,7 @@ public class Pawn extends AbstractPiece {
     public int[] generateAllMoves(Board board, int curPos) {
         int[] ret = new int[4]; // can only move in 4 positions
         int retIndex = 0;
+        final int enPasse = board.getEnPasse();
 
         if(getColor().equals(Color.BLACK)) {
             // straight forward moves
@@ -69,6 +70,11 @@ public class Pawn extends AbstractPiece {
                     ret[retIndex++] = move;
                 }
             }
+            
+            // en passe
+            if(enPasse != Board.MAX_SQUARE && (curPos - 0x11 == enPasse || curPos - 0x0F == enPasse)) {
+                ret[retIndex++] = enPasse;
+            }
         } else {
             // straight forward moves
             if((curPos >> 4) == 1 && board.getPiece(curPos + 0x10) == null && board.getPiece(curPos + 0x20) == null) {
@@ -96,9 +102,14 @@ public class Pawn extends AbstractPiece {
                     ret[retIndex++] = move;
                 }
             }
+
+            // en passe
+            if(enPasse != Board.MAX_SQUARE && (curPos + 0x11 == enPasse || curPos + 0x0F == enPasse)) {
+                ret[retIndex++] = enPasse;
+            }
         }
 
-        Arrays.fill(ret, retIndex, ret.length, Board.MAX_SQUARE);   // fill the rest with -1
+        Arrays.fill(ret, retIndex, ret.length, Board.MAX_SQUARE);   // fill the rest with MAX_SQUARE
         Arrays.sort(ret);   // sort the array
 
         return ret;
