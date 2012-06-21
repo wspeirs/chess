@@ -180,6 +180,9 @@ public final class Board implements Cloneable {
         whitePieces = new int[16];
         int w = 0;
         int b = 0;
+        
+        Arrays.fill(whitePieces, Board.MAX_SQUARE);
+        Arrays.fill(blackPieces, Board.MAX_SQUARE);
 
 		// Initialize the board
         for (GenericPosition position : GenericPosition.values()) {

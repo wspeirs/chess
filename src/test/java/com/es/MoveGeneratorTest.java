@@ -69,12 +69,7 @@ public class MoveGeneratorTest {
                     long startTime = System.currentTimeMillis();
 
                     // Count all moves
-                    int result = 0;
-                    try {
-                        result = miniMax( currentNode, board.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, depth);
-                    } catch (IllegalMoveException e) {
-                        fail("Illegal Move: " + e.getMessage());
-                    }
+                    int result = miniMax( currentNode, board.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, depth);
 
                     long endTime = System.currentTimeMillis();
                     System.out.println(endTime - startTime);
@@ -92,7 +87,7 @@ public class MoveGeneratorTest {
         }
     }
 
-    private int miniMax(MoveNode node, Color color, int depth) throws IllegalMoveException {
+    private int miniMax(MoveNode node, Color color, int depth) {
         if (depth == 0) {
             return 1;
         }
@@ -106,7 +101,16 @@ public class MoveGeneratorTest {
 
         for (int i = 0; i < allMoves.length && allMoves[i] != Board.MAX_SQUARE; i += 2) {
             Board moveBoard = new Board(node.getBoard());
-            moveBoard.makeMove(allMoves[i], allMoves[i + 1]);
+            try {
+                moveBoard.makeMove(allMoves[i], allMoves[i + 1]);
+            } catch (IllegalMoveException e) {
+                if(e.isKingInCheck()) {
+                    continue;
+                }
+                System.err.println(moveBoard);
+                e.printStackTrace();
+                fail("Illegal Move: " + e.getMessage());
+            }
             MoveNode childNode = new MoveNode(moveBoard, node, new int[] { allMoves[i], allMoves[i + 1] });
             nodes = miniMax(childNode, color == Color.WHITE ? Color.BLACK : Color.WHITE, depth - 1);
 
