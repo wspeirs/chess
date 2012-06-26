@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.es.Board.State;
 import com.es.ai.AlphaBetaAI;
 import com.es.ai.MoveNode;
 import com.es.pieces.Bishop;
@@ -58,5 +59,16 @@ public class BoardTest {
         AlphaBetaAI ai = new AlphaBetaAI(Color.BLACK);
 
         System.out.println("SCORE: " + ai.computeScore(new MoveNode(board, null, new int[] { })));
+    }
+    
+    @Test
+    public void testUnmakeMove() throws IllegalMoveException {
+        State boardState = board.makeMove(0x01, 0x22);
+        
+        System.out.println(board.toString());
+        
+        board.unmakeMove(0x01, 0x22, boardState);
+        
+        System.out.println(board.toString());
     }
 }

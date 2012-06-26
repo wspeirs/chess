@@ -1,5 +1,6 @@
 package com.es;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
@@ -13,6 +14,7 @@ import jcpi.data.IllegalNotationException;
 
 import org.junit.Test;
 
+import com.es.Board.State;
 import com.es.ai.AlphaBetaAI;
 import com.es.ai.MoveNode;
 import com.es.pieces.Piece.Color;
@@ -100,24 +102,65 @@ public class MoveGeneratorTest {
         int[] allMoves = ai.generateAllMoves(board, board.getPieces(color));
 
         for (int i = 0; i < allMoves.length && allMoves[i] != Board.MAX_SQUARE; i += 2) {
-            Board moveBoard = new Board(node.getBoard());
+            State boardState = null;
+            
             try {
-                moveBoard.makeMove(allMoves[i], allMoves[i + 1]);
+                boardState = board.makeMove(allMoves[i], allMoves[i + 1], false);
             } catch (IllegalMoveException e) {
                 if(e.isKingInCheck()) {
                     continue;
                 }
-                System.err.println(moveBoard);
+                
+                System.err.println(board);
                 e.printStackTrace();
                 fail("Illegal Move: " + e.getMessage());
             }
-            MoveNode childNode = new MoveNode(moveBoard, node, new int[] { allMoves[i], allMoves[i + 1] });
+            
+            // check to see if we move ourself into check
+            if(board.isInCheck(color)) {
+                try {
+                    board.unmakeMove(allMoves[i], allMoves[i + 1], boardState);
+                    continue;
+                } catch (IllegalMoveException e) {
+                    System.err.println(board);
+                    e.printStackTrace();
+                    fail("Illegal Move: " + e.getMessage());
+                }
+            }
+            
+            MoveNode childNode = new MoveNode(board, node, new int[] { allMoves[i], allMoves[i + 1] });
+            
             nodes = miniMax(childNode, color == Color.WHITE ? Color.BLACK : Color.WHITE, depth - 1);
+            
+            try {
+                board.unmakeMove(allMoves[i], allMoves[i + 1], boardState);
+            } catch (IllegalMoveException e) {
+                System.err.println(board);
+                e.printStackTrace();
+                fail("Illegal Move: " + e.getMessage());
+            }
 
             totalNodes += nodes;
         }
 
         return totalNodes;
+    }
+    
+
+    public void testBoardSetup() throws Exception {
+        int depth = 1;
+        int res = 12;
+        GenericBoard board = new GenericBoard("8/8/8/8/8/8/6k1/4K2R w K - 0 1");
+        Board testBoard = new Board(board);
+        MoveNode currentNode = new MoveNode(testBoard, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+
+        System.out.println("BOARD: ");
+        System.out.println(testBoard.toString());
+
+        // Count all moves
+        int result = miniMax( currentNode, board.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, depth);
+
+        assertEquals(res, result);
     }
 
 }

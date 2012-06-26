@@ -298,6 +298,14 @@ public final class Board implements Cloneable {
     public Piece[] getBoard() {
         return board;
     }
+    
+    public void setState(State boardState) {
+        this.whiteKingCastle = boardState.whiteKingCastle;
+        this.whiteQueenCastle = boardState.whiteQueenCastle;
+        this.blackKingCastle = boardState.blackKingCastle;
+        this.blackQueenCastle = boardState.blackQueenCastle;
+        this.enPassant = boardState.enPassant;
+    }
 
     /**
      * @return the enPassant
@@ -374,7 +382,7 @@ public final class Board implements Cloneable {
         return sb.toString();
     }
 
-    public Piece makeMove(int fromSquare, int toSquare) throws IllegalMoveException {
+    public State makeMove(int fromSquare, int toSquare) throws IllegalMoveException {
         return makeMove(fromSquare, toSquare, true);
     }
 
@@ -385,7 +393,7 @@ public final class Board implements Cloneable {
      * @return The piece which was captured, or null if nothing was captured.
      * @throws IllegalMoveException
      */
-    public Piece makeMove(int fromSquare, int toSquare, boolean kingCheck) throws IllegalMoveException {
+    public State makeMove(int fromSquare, int toSquare, boolean kingCheck) throws IllegalMoveException {
         final Piece fromPiece = board[fromSquare];
 
         if(fromPiece == null) {
@@ -393,23 +401,25 @@ public final class Board implements Cloneable {
             throw new IllegalMoveException("There is no piece on square: 0x" + Integer.toHexString(fromSquare));
         }
 
+        final State boardState = new State(this);
+
         // check to see if we're castling
         if(fromSquare == whiteKing && toSquare == 0x06 && canKingCastle(Color.WHITE)) {
             makeKingCastle(Color.WHITE, kingCheck);
             computeHashCode();
-            return null;
+            return boardState;
         } else if(fromSquare == blackKing && toSquare == 0x76 && canKingCastle(Color.BLACK)) {
             makeKingCastle(Color.BLACK, kingCheck);
             computeHashCode();
-            return null;
+            return boardState;
         } else if(fromSquare == whiteKing && toSquare == 0x02 && canQueenCastle(Color.WHITE)) {
             makeQueenCastle(Color.WHITE, kingCheck);
             computeHashCode();
-            return null;
+            return boardState;
         } else if(fromSquare == blackKing && toSquare == 0x72 && canQueenCastle(Color.BLACK)) {
             makeQueenCastle(Color.BLACK, kingCheck);
             computeHashCode();
-            return null;
+            return boardState;
         }
 
         // check to see if the move is legal or not (this covers en passe, but not castling)
@@ -423,6 +433,8 @@ public final class Board implements Cloneable {
 
         // capture the piece
         if(toPiece != null) {
+            // set the captured piece in the board's state
+            boardState.setCapturedPiece(toPiece);
 
             // remove the piece on the board
             if(toPiece.getColor().equals(Color.BLACK)) {
@@ -467,6 +479,12 @@ public final class Board implements Cloneable {
             if(inCheck) {
                 board[fromSquare] = fromPiece;
                 board[toSquare] = toPiece;
+                
+                if(toSquare == whiteKing) {
+                    whiteKing = fromSquare;
+                } else if(toSquare == blackKing) {
+                    blackKing = fromSquare;
+                }
 
                 if(toPiece != null) {
                     // add the piece (it recomputes the hash for us)
@@ -490,10 +508,10 @@ public final class Board implements Cloneable {
             LOG.trace(this.toString());
         }
 
-        return toPiece;
+        return boardState;
     }
 
-    public void unmakeMove(int fromSquare, int toSquare, Piece capturedPiece, boolean enPassant) throws IllegalMoveException {
+    public void unmakeMove(int fromSquare, int toSquare, State boardState) throws IllegalMoveException {
         final Piece toPiece = board[toSquare];
 
         if(toPiece == null) {
@@ -507,6 +525,7 @@ public final class Board implements Cloneable {
             board[0x07] = board[0x05];  // move the rook back
             whiteKing = 0x04;
             board[0x06] = board[0x05] = null;   // null these squares
+            setState(boardState);
             computeHashCode();
             return;
         } else if(fromSquare == 0x74 && toSquare == 0x76 && blackKing == 0x76) {
@@ -514,6 +533,7 @@ public final class Board implements Cloneable {
             board[0x77] = board[0x75];  // move the rook back
             whiteKing = 0x74;
             board[0x76] = board[0x75] = null;   // null these squares
+            setState(boardState);
             computeHashCode();
             return;
         } else if(fromSquare == 0x04 && toSquare == 0x02 && whiteKing == 0x02) {
@@ -521,6 +541,7 @@ public final class Board implements Cloneable {
             board[0x00] = board[0x03];  // move the rook back
             whiteKing = 0x04;
             board[0x02] = board[0x03] = null;   // null these squares
+            setState(boardState);
             computeHashCode();
             return;
         } else if(fromSquare == 0x74 && toSquare == 0x72 && blackKing == 0x72) {
@@ -528,9 +549,13 @@ public final class Board implements Cloneable {
             board[0x70] = board[0x73];  // move the rook back
             whiteKing = 0x74;
             board[0x72] = board[0x73] = null;   // null these squares
+            setState(boardState);
             computeHashCode();
             return;
         }
+        
+        // make the unmove
+        board[fromSquare] = board[toSquare];
 
         if(toPiece.getColor().equals(Color.WHITE)) {
             whitePieces[Arrays.binarySearch(whitePieces, toSquare)] = fromSquare;
@@ -541,14 +566,17 @@ public final class Board implements Cloneable {
                 whiteKing = fromSquare;
             }
 
+            final Piece capturedPiece = boardState.getCapturedPiece();
+            
             // if we captured a piece, add it back to the board
             if(capturedPiece != null) {
                 ArraySet.addNumber(blackPieces, toSquare);
-                if(enPassant) {
-                    board[toSquare - 0x10] = capturedPiece;
-                } else {
-                    board[toSquare] = capturedPiece;
-                }
+            }
+            
+            if(boardState.getEnPassant() != Board.MAX_SQUARE) {
+                board[toSquare - 0x10] = capturedPiece;
+            } else {
+                board[toSquare] = capturedPiece;
             }
         } else {
             blackPieces[Arrays.binarySearch(blackPieces, toSquare)] = fromSquare;
@@ -559,19 +587,22 @@ public final class Board implements Cloneable {
                 blackKing = fromSquare;
             }
 
+            final Piece capturedPiece = boardState.getCapturedPiece();
+            
             // if we captured a piece, add it back to the board
             if(capturedPiece != null) {
                 ArraySet.addNumber(whitePieces, toSquare);
-                if(enPassant) {
-                    board[toSquare + 0x10] = capturedPiece;
-                } else {
-                    board[toSquare] = capturedPiece;
-                }
+            }
+
+            if(boardState.getEnPassant() != Board.MAX_SQUARE) {
+                board[toSquare + 0x10] = capturedPiece;
+            } else {
+                board[toSquare] = capturedPiece;
             }
         }
 
-        // finish the unmove
-        board[fromSquare] = board[toSquare];
+        // reset the board's state
+        setState(boardState);
     }
 
     public void makeKingCastle(Color color, boolean kingCheck) throws IllegalMoveException {
@@ -669,6 +700,10 @@ public final class Board implements Cloneable {
             blackKingCastle = blackQueenCastle = false;
         }
     }
+    
+    public boolean isInCheck(Color color) {
+        return isInCheck(color.equals(Color.WHITE) ? whiteKing : blackKing);
+    }
 
     /**
      * Given a king, checks to see if it is in check.
@@ -679,6 +714,10 @@ public final class Board implements Cloneable {
         final King king = (King) board[kingPos];
         final int[] pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
 
+        if(king.getColor().equals(Color.WHITE) && kingPos == 0x06) {
+            System.out.println("IN HERE");
+        }
+        
         for(int p:pieces) {
             if(p != Board.MAX_SQUARE && Arrays.binarySearch(board[p].generateAllMoves(this, p), kingPos) >= 0) {
                 return true;
@@ -750,5 +789,72 @@ public final class Board implements Cloneable {
         }
 
         return ret;
+    }
+    
+    public static final class State {
+        private boolean whiteKingCastle = false;
+        private boolean whiteQueenCastle = false;
+        private boolean blackKingCastle = false;
+        private boolean blackQueenCastle = false;
+
+        private int enPassant = Board.MAX_SQUARE;
+        private Piece capturedPiece;
+
+        public State(Board board) {
+            this.whiteKingCastle = board.whiteKingCastle;
+            this.whiteQueenCastle = board.whiteQueenCastle;
+            this.blackKingCastle = board.blackKingCastle;
+            this.blackQueenCastle = board.blackQueenCastle;
+            this.enPassant = board.enPassant;
+        }
+
+        /**
+         * @return the capturedPiece
+         */
+        public Piece getCapturedPiece() {
+            return capturedPiece;
+        }
+
+        /**
+         * @param capturedPiece the capturedPiece to set
+         */
+        public void setCapturedPiece(Piece capturedPiece) {
+            this.capturedPiece = capturedPiece;
+        }
+
+        /**
+         * @return the whiteKingCastle
+         */
+        public boolean isWhiteKingCastle() {
+            return whiteKingCastle;
+        }
+
+        /**
+         * @return the whiteQueenCastle
+         */
+        public boolean isWhiteQueenCastle() {
+            return whiteQueenCastle;
+        }
+
+        /**
+         * @return the blackKingCastle
+         */
+        public boolean isBlackKingCastle() {
+            return blackKingCastle;
+        }
+
+        /**
+         * @return the blackQueenCastle
+         */
+        public boolean isBlackQueenCastle() {
+            return blackQueenCastle;
+        }
+
+        /**
+         * @return the enPassant
+         */
+        public int getEnPassant() {
+            return enPassant;
+        }
     }
 }
