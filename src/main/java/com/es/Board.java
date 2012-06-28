@@ -71,8 +71,9 @@ public final class Board implements Cloneable {
     private final int[] blackPieces;
     private final int[] whitePieces;
 
-    private int blackKing;
-    private int whiteKing;
+    // TODO: CHANGE BACK TO PRIVATE
+    public int blackKing;
+    public int whiteKing;
 
     private boolean whiteKingCastle = false;
     private boolean whiteQueenCastle = false;
@@ -531,7 +532,7 @@ public final class Board implements Cloneable {
         } else if(fromSquare == 0x74 && toSquare == 0x76 && blackKing == 0x76) {
             board[0x74] = board[0x76];  // move the king back
             board[0x77] = board[0x75];  // move the rook back
-            whiteKing = 0x74;
+            blackKing = 0x74;
             board[0x76] = board[0x75] = null;   // null these squares
             setState(boardState);
             computeHashCode();
@@ -547,7 +548,7 @@ public final class Board implements Cloneable {
         } else if(fromSquare == 0x74 && toSquare == 0x72 && blackKing == 0x72) {
             board[0x74] = board[0x72];  // move the king back
             board[0x70] = board[0x73];  // move the rook back
-            whiteKing = 0x74;
+            blackKing = 0x74;
             board[0x72] = board[0x73] = null;   // null these squares
             setState(boardState);
             computeHashCode();
@@ -573,7 +574,7 @@ public final class Board implements Cloneable {
                 ArraySet.addNumber(blackPieces, toSquare);
             }
             
-            if(boardState.getEnPassant() != Board.MAX_SQUARE) {
+            if(boardState.getEnPassant() == toSquare) {
                 board[toSquare - 0x10] = capturedPiece;
             } else {
                 board[toSquare] = capturedPiece;
@@ -594,7 +595,7 @@ public final class Board implements Cloneable {
                 ArraySet.addNumber(whitePieces, toSquare);
             }
 
-            if(boardState.getEnPassant() != Board.MAX_SQUARE) {
+            if(boardState.getEnPassant() == toSquare) {
                 board[toSquare + 0x10] = capturedPiece;
             } else {
                 board[toSquare] = capturedPiece;
@@ -712,6 +713,11 @@ public final class Board implements Cloneable {
      */
     public boolean isInCheck(int kingPos) {
         final King king = (King) board[kingPos];
+        
+        if(king == null) {
+            System.out.println(this.toString());
+        }
+        
         final int[] pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
 
         if(king.getColor().equals(Color.WHITE) && kingPos == 0x06) {

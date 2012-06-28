@@ -105,12 +105,10 @@ public class MoveGeneratorTest {
             State boardState = null;
             
             try {
+                System.out.println("MOVE: " + Integer.toHexString(allMoves[i]) + " -> " + Integer.toHexString(allMoves[i + 1]));
                 boardState = board.makeMove(allMoves[i], allMoves[i + 1], false);
+                System.out.println(board);
             } catch (IllegalMoveException e) {
-                if(e.isKingInCheck()) {
-                    continue;
-                }
-                
                 System.err.println(board);
                 e.printStackTrace();
                 fail("Illegal Move: " + e.getMessage());
@@ -118,8 +116,12 @@ public class MoveGeneratorTest {
             
             // check to see if we move ourself into check
             if(board.isInCheck(color)) {
+                System.out.println("KING IN CHECK");
+                System.out.println(board.toString());
+
                 try {
                     board.unmakeMove(allMoves[i], allMoves[i + 1], boardState);
+                    System.out.println(board.toString());
                     continue;
                 } catch (IllegalMoveException e) {
                     System.err.println(board);
@@ -147,10 +149,11 @@ public class MoveGeneratorTest {
     }
     
 
+    @Test
     public void testBoardSetup() throws Exception {
         int depth = 1;
-        int res = 12;
-        GenericBoard board = new GenericBoard("8/8/8/8/8/8/6k1/4K2R w K - 0 1");
+        int res = 10;
+        GenericBoard board = new GenericBoard("1k6/8/8/5pP1/4K1P1/8/8/8 w - f6 0 1");
         Board testBoard = new Board(board);
         MoveNode currentNode = new MoveNode(testBoard, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
 
