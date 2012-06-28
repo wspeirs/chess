@@ -242,7 +242,7 @@ public final class Board implements Cloneable {
 
         if(ep != null) {
             int file = Arrays.asList(GenericFile.values()).indexOf(ep.file);
-            int rank = Arrays.asList(GenericFile.values()).indexOf(ep.rank);
+            int rank = Arrays.asList(GenericRank.values()).indexOf(ep.rank);
 
             this.enPassant = rank * 16 + file;
         }
