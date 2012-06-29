@@ -430,8 +430,8 @@ public final class Board implements Cloneable {
             throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
         }
 
-        final Piece toPiece = board[toSquare];
-
+        Piece toPiece = board[toSquare];
+        
         // capture the piece
         if(toPiece != null) {
             // set the captured piece in the board's state
@@ -445,8 +445,22 @@ public final class Board implements Cloneable {
             }
 
             board[toSquare] = null; // remove the piece from the board
-        }
+        } else if(toSquare == enPassant) {
+            if(fromPiece.getColor().equals(Color.BLACK)) {
+                boardState.setCapturedPiece(board[toSquare + 0x10]);
+                ArraySet.removeNumber(whitePieces, toSquare + 0x10, Board.MAX_SQUARE);
+                board[toSquare + 0x10] = null;
+            } else {
+                boardState.setCapturedPiece(board[toSquare - 0x10]);
+                ArraySet.removeNumber(blackPieces, toSquare - 0x10, Board.MAX_SQUARE);
+                board[toSquare - 0x10] = null;
+            }
 
+            System.out.println("AFTER EN PASSANT");
+            System.out.println(this);
+            enPassant = Board.MAX_SQUARE;
+        }
+        
         // set the piece on the board
         board[toSquare] = fromPiece;
         board[fromSquare] = null;
@@ -725,7 +739,11 @@ public final class Board implements Cloneable {
         }
         
         for(int p:pieces) {
-            if(p != Board.MAX_SQUARE && Arrays.binarySearch(board[p].generateAllMoves(this, p), kingPos) >= 0) {
+            if(p == Board.MAX_SQUARE) {
+                break;
+            }
+            
+            if(Arrays.binarySearch(board[p].generateAllMoves(this, p), kingPos) >= 0) {
                 return true;
             }
         }
