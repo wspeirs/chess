@@ -456,8 +456,6 @@ public final class Board implements Cloneable {
                 board[toSquare - 0x10] = null;
             }
 
-            System.out.println("AFTER EN PASSANT");
-            System.out.println(this);
             enPassant = Board.MAX_SQUARE;
         }
         
@@ -590,6 +588,8 @@ public final class Board implements Cloneable {
             
             if(boardState.getEnPassant() == toSquare) {
                 board[toSquare - 0x10] = capturedPiece;
+                ArraySet.addNumber(blackPieces, toSquare - 0x10);
+                board[toSquare] = null;
             } else {
                 board[toSquare] = capturedPiece;
             }
@@ -611,6 +611,8 @@ public final class Board implements Cloneable {
 
             if(boardState.getEnPassant() == toSquare) {
                 board[toSquare + 0x10] = capturedPiece;
+                ArraySet.addNumber(whitePieces, toSquare + 0x10);
+                board[toSquare] = null;
             } else {
                 board[toSquare] = capturedPiece;
             }
