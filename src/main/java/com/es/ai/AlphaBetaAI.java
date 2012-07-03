@@ -11,8 +11,10 @@ import com.es.ArraySet;
 import com.es.Board;
 import com.es.CmdConfiguration;
 import com.es.IllegalMoveException;
+import com.es.pieces.Pawn;
 import com.es.pieces.Piece;
 import com.es.pieces.Piece.Color;
+import com.es.pieces.Queen;
 
 public class AlphaBetaAI {
     private static final Logger LOG = LoggerFactory.getLogger(AlphaBetaAI.class);
@@ -43,7 +45,7 @@ public class AlphaBetaAI {
         return color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
     }
 
-    public int[] computeNextMove(MoveNode node, Color color) {
+    public int computeNextMove(MoveNode node, Color color) {
         for(int d=2; d <= 4; d++) {
             transHit = 0;
             long start = System.currentTimeMillis();
@@ -112,12 +114,9 @@ public class AlphaBetaAI {
         int[] allMoves = this.generateAllMoves(board, boardPieces);
         int[] ret = { 0, alpha, beta };
 
-        for(int i = 0; i < allMoves.length; i += 2) {
+        for(int i = 0; i < allMoves.length && Board.getFromSquare(allMoves[i]) != Board.MAX_SQUARE; ++i) {
 
-            if(allMoves[i] == Board.MAX_SQUARE)
-                break;
-
-            MoveNode child = node.findChild(allMoves[i], allMoves[i+1]);
+            MoveNode child = node.findChild(allMoves[i]);
 
             if(child != null) {
                 int score = alphabeta(child, depth - 1, alpha, beta, swapColor(color));
@@ -131,7 +130,7 @@ public class AlphaBetaAI {
 
             } else {
                 // compute alpha-beta for the move
-                ret = alphabeta(node, depth, allMoves[i], allMoves[i+1], alpha, beta, color);
+                ret = alphabeta(node, depth, allMoves[i], alpha, beta, color);
 
                 // update the values of alpha and beta
                 alpha = ret[0];
@@ -161,15 +160,15 @@ public class AlphaBetaAI {
     }
 
 
-    public int[] alphabeta(MoveNode node, int depth, int from, int to, int alpha, int beta, Color color) {
+    public int[] alphabeta(MoveNode node, int depth, int move, int alpha, int beta, Color color) {
         final Board moveBoard = new Board(node.getBoard());
 
         try {
             // just make sure the first move is legal
             if(depth == this.depth) {
-                moveBoard.makeMove(from, to, true);
+                moveBoard.makeMove(move);
             } else {
-                moveBoard.makeMove(from, to, false);
+                moveBoard.makeMove(move);
             }
         } catch (IllegalMoveException e) {
             if(!e.isKingInCheck()) {
@@ -186,7 +185,7 @@ public class AlphaBetaAI {
 
         // check to see if we need to create a new node, or if we can use the one from the table
         if(childNode == null || childNode.getDepth() <= depth) {
-            childNode = new MoveNode(moveBoard, node, new int[] { from, to });
+            childNode = new MoveNode(moveBoard, node, move);
 
             final int score = alphabeta(childNode, depth - 1, alpha, beta, swapColor(color));
 
@@ -232,7 +231,7 @@ public class AlphaBetaAI {
     }
 
     public int[] generateAllMoves(Board board, int[] pieces) {
-        int[] allMoves = new int[161 * 2];
+        int[] allMoves = new int[161];
         int i = 0;
 
         for(int p:pieces) {
@@ -240,19 +239,27 @@ public class AlphaBetaAI {
                 break;  // in sorted order, so we can break early
             }
 
-            int[] moves = board.getPiece(p).generateAllMoves(board, p);
+            final Piece piece = board.getPiece(p);
+            int[] moves = piece.generateAllMoves(board, p);
 
             for(int m:moves) {
                 if(m == Board.MAX_SQUARE) {
                     break;  // always in sorted order, so we're done here
                 }
-
-                allMoves[i++] = p;
-                allMoves[i++] = m;
+                
+                // check to see if we have a pawn promoting
+                if(piece instanceof Pawn && ( (m & 0xf0) == 0x70 || (m & 0xf0) == 0x00) ) {
+                    allMoves[i++] = Board.createMoveValue(p, m, 'q');
+                    allMoves[i++] = Board.createMoveValue(p, m, 'b');
+                    allMoves[i++] = Board.createMoveValue(p, m, 'n');
+                    allMoves[i++] = Board.createMoveValue(p, m, 'r');
+                } else {
+                    allMoves[i++] = Board.createMoveValue(p, m, '-');
+                }
             }
         }
 
-        Arrays.fill(allMoves, i, allMoves.length, Board.MAX_SQUARE);
+        Arrays.fill(allMoves, i, allMoves.length, Board.createMoveValue(Board.MAX_SQUARE, Board.MAX_SQUARE, '-'));
         return allMoves;
     }
 

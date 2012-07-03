@@ -25,7 +25,7 @@ public final class MoveNode {
     private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
     private final Board board;
-    private final int[] move;
+    private final int move;
     private int score;
     private int retVal;
     private int depth;
@@ -33,7 +33,7 @@ public final class MoveNode {
     private List<MoveNode> children = new ArrayList<MoveNode>();
     private boolean isSorted = false;
 
-    public MoveNode(Board board, MoveNode parent, int[] move) {
+    public MoveNode(Board board, MoveNode parent, int move) {
         this.board = board;
         this.move = move;
         this.parent = parent;
@@ -71,7 +71,7 @@ public final class MoveNode {
         this.depth = depth;
     }
 
-    public int[] getMove() {
+    public int getMove() {
         return move;
     }
 
@@ -123,11 +123,11 @@ public final class MoveNode {
         }
     }
 
-    public MoveNode findChild(int from, int to) {
+    public MoveNode findChild(int move) {
         for(MoveNode child:children) {
-            int[] move = child.getMove();
+            int m = child.getMove();
 
-            if(move[0] == from && move[1] == to) {
+            if(move == m) {
                 return child;
             }
         }
@@ -191,7 +191,7 @@ public final class MoveNode {
 
         int i = 0;
         for(final MoveNode child:children) {
-            final int piece = child.getMove()[0];
+            final int piece = Board.getFromSquare(child.getMove());
 
             // add the piece to ret only if we haven't already added it
             if(ArraySet.addNumber(set, piece)) {
@@ -209,12 +209,12 @@ public final class MoveNode {
 
         while(it.hasNext()) {
             MoveNode curNode = it.next();
-            int[] move = curNode.getMove();
+            int move = curNode.getMove();
 
             sb.append(curNode.getScore());
             sb.append(": ");
 
-            sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move[0], move[1]));
+            sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move));
 
             sb.append(" (");
             sb.append(ai.computeScore(curNode));
@@ -229,7 +229,7 @@ public final class MoveNode {
                 if(curNode == null || curNode.parent == null) {
                     continue;
                 }
-                sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move[0], move[1]));
+                sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move));
 
                 sb.append(" (");
                 sb.append(ai.computeScore(curNode));

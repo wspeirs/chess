@@ -35,6 +35,30 @@ public abstract class AbstractPiece implements Piece {
         default: return null;
         }
     }
+    
+    public static int pieceToPromoteValue(char piece) {
+        if(piece == 'q') {
+            return 1;
+        } else if(piece == 'b') {
+            return 2;
+        } else if(piece == 'n') {
+            return 3;
+        } else if(piece == 'r') {
+            return 4;
+        } else {
+            return 0;
+        }
+    }
+    
+    public static Piece promoteValueToPiece(int value, Color color) {
+        switch(value) {
+        case 1: return new Queen(color);
+        case 2: return new Bishop(color);
+        case 3: return new Knight(color);
+        case 4: return new Rook(color);
+        default: return null;
+        }
+    }
 
     public Color getColor() {
         return color;

@@ -46,10 +46,10 @@ public class AlphaBetaAITest {
     @Test
     public void test() throws Exception {
         setupBoard();
-        MoveNode alphaBetaNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        MoveNode alphaBetaNode = new MoveNode(board, null, Board.MAX_SQUARE);
 
         long start = System.currentTimeMillis();
-        int[] ret = alphaBeta.computeNextMove(alphaBetaNode, Color.WHITE);
+        int ret = alphaBeta.computeNextMove(alphaBetaNode, Color.WHITE);
         alphaBetaNode.getBestChild();
         long time = System.currentTimeMillis() - start;
         

@@ -101,7 +101,7 @@ public class KingTest extends BasePieceTest {
 
         System.out.println(board.toString());
 
-        board.makeKingCastle(Color.WHITE, true);
+        board.makeKingCastle(Color.WHITE);
 
         System.out.println(board.toString());
         if(! (board.getPiece(0x05) instanceof Rook) || ! (board.getPiece(0x06) instanceof King)) {
@@ -118,7 +118,7 @@ public class KingTest extends BasePieceTest {
 
         System.out.println(board.toString());
 
-        board.makeKingCastle(Color.BLACK, true);
+        board.makeKingCastle(Color.BLACK);
 
         System.out.println(board.toString());
         if(! (board.getPiece(0x75) instanceof Rook) || ! (board.getPiece(0x76) instanceof King)) {
@@ -136,7 +136,7 @@ public class KingTest extends BasePieceTest {
 
         System.out.println(board.toString());
 
-        board.makeQueenCastle(Color.WHITE, true);
+        board.makeQueenCastle(Color.WHITE);
 
         System.out.println(board.toString());
         if(! (board.getPiece(0x02) instanceof King) || ! (board.getPiece(0x03) instanceof Rook)) {
@@ -154,7 +154,7 @@ public class KingTest extends BasePieceTest {
 
         System.out.println(board.toString());
 
-        board.makeQueenCastle(Color.BLACK, true);
+        board.makeQueenCastle(Color.BLACK);
 
         System.out.println(board.toString());
         if(! (board.getPiece(0x72) instanceof King) || ! (board.getPiece(0x73) instanceof Rook)) {

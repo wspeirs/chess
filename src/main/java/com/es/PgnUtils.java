@@ -1,13 +1,8 @@
 package com.es;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,29 +22,6 @@ public class PgnUtils {
 
     public PgnUtils(Board board) {
         this.board = board;
-    }
-
-    public void parseGame(InputStream pgnStream) throws IllegalMoveException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(pgnStream));
-        String line;
-
-        try {
-            while((line = reader.readLine()) != null) {
-                String[] moves = StringUtils.split(line, " ");
-
-                LOG.debug("PARSED: {} ({})", line, moves.length);
-
-                // make white's move
-                int[] move = parseSingleMove(Color.WHITE, moves[1]);
-                board.makeMove(move[0], move[1]);
-
-                // make black's move
-                move = parseSingleMove(Color.BLACK, moves[2]);
-                board.makeMove(move[0], move[1]);
-            }
-        } catch(IOException e) {
-            LOG.error("Error reading pgn file: {}", e.getMessage());
-        }
     }
 
     public int[] parseSingleMove(Color color, String move) throws IllegalMoveException {
@@ -154,7 +126,9 @@ public class PgnUtils {
         return ret;
     }
 
-    public String computePgnMove(int fromSquare, int toSquare) {
+    public String computePgnMove(int move) {
+        final int fromSquare = Board.getFromSquare(move);
+        final int toSquare = Board.getToSquare(move);
         String ret = board.getPiece(fromSquare).toString().toUpperCase();
 
         ret += (char) ((fromSquare & 0x0f) + 97);

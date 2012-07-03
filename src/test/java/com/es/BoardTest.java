@@ -58,16 +58,16 @@ public class BoardTest {
 
         AlphaBetaAI ai = new AlphaBetaAI(Color.BLACK);
 
-        System.out.println("SCORE: " + ai.computeScore(new MoveNode(board, null, new int[] { })));
+        System.out.println("SCORE: " + ai.computeScore(new MoveNode(board, null, Board.MAX_SQUARE)));
     }
     
     @Test
     public void testUnmakeMove() throws IllegalMoveException {
-        State boardState = board.makeMove(0x01, 0x22);
+        State boardState = board.makeMove(Board.createMoveValue(0x01, 0x22, '-'));
         
         System.out.println(board.toString());
         
-        board.unmakeMove(0x01, 0x22, boardState);
+        board.unmakeMove(Board.createMoveValue(0x01, 0x22, '-'), boardState);
         
         System.out.println(board.toString());
     }

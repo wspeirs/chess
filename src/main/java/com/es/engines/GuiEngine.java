@@ -34,7 +34,7 @@ public class GuiEngine implements Engine {
 
     @Override
     public void play() {
-        MoveNode currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        MoveNode currentNode = new MoveNode(board, null, Board.MAX_SQUARE);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line = "go";
 
@@ -55,7 +55,7 @@ public class GuiEngine implements Engine {
             try {
                 userMove = utils.parseSingleMove(Color.WHITE, line);
 
-                board.makeMove(userMove[0], userMove[1]);
+                board.makeMove(Board.createMoveValue(userMove[0], userMove[1], '-'));
             } catch(IllegalMoveException e) {
                 System.err.println("Illegal user move: " + e.getMessage());
                 continue;
@@ -67,19 +67,19 @@ public class GuiEngine implements Engine {
             if(currentNode.getChildCount() > 0) {
                 MoveNode tmpNode = currentNode.getBestChild();
                 currentNode.clearChildren();    // so these can be GCed
-                currentNode = tmpNode.findChild(userMove[0], userMove[1]);
+                currentNode = tmpNode.findChild(Board.createMoveValue(userMove[0], userMove[1], '-'));
                 tmpNode.clearChildren();    // so these can be GCed
             }
 
             if(currentNode == null) {
                 LOG.info("COULDN'T FIND USER MOVE {} -> {}", Integer.toHexString(userMove[0]), Integer.toHexString(userMove[1]));
-                currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+                currentNode = new MoveNode(board, null, Board.MAX_SQUARE);
             } else {
                 LOG.info("FOUND NODE FOR {} -> {}", Integer.toHexString(userMove[0]), Integer.toHexString(userMove[1]));
             }
 
             long start = System.currentTimeMillis();
-            int[] aiMove = ai.computeNextMove(currentNode, Color.BLACK);
+            int aiMove = ai.computeNextMove(currentNode, Color.BLACK);
             long time = System.currentTimeMillis() - start;
 
             System.out.println(currentNode.childrenToString());
@@ -93,12 +93,12 @@ public class GuiEngine implements Engine {
             System.out.format("TOTAL MEM: %,d FREE MEM: %,d%n%n", rt.totalMemory(), rt.freeMemory());
 
             // print out the PGN move
-            final String pgnMove = utils.computePgnMove(aiMove[0], aiMove[1]);
+            final String pgnMove = utils.computePgnMove(aiMove);
 
             System.out.println("MOVE: " + pgnMove);
 
             try {
-                board.makeMove(aiMove[0], aiMove[1]);
+                board.makeMove(aiMove);
             } catch (IllegalMoveException e) {
                 System.err.println("Illegal computer move: " + e.getMessage());
                 System.exit(-1);

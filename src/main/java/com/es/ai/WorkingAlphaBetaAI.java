@@ -24,7 +24,7 @@ public class WorkingAlphaBetaAI {
         return transHit;
     }
 
-    public int[] computeNextMove(MoveNode node, Color color) {
+    public int computeNextMove(MoveNode node, Color color) {
         alphabeta(node, 6, -1000000, 1000000, color);
 
         return node.getBestChild().getMove();
@@ -62,11 +62,11 @@ public class WorkingAlphaBetaAI {
                 Board moveBoard = new Board(node.getBoard());
 
                 try {
-                    moveBoard.makeMove(p, m, false);
+                    moveBoard.makeMove(Board.createMoveValue(p, m, '-'));
                     MoveNode childNode = transpositionTable.get(moveBoard);
                     boolean addToTable = false;
                     if(childNode == null || childNode.getDepth() <= depth) {
-                        childNode = new MoveNode(moveBoard, node, new int[] { p, m });
+                        childNode = new MoveNode(moveBoard, node, Board.createMoveValue(p, m, '-'));
                         addToTable = true;
                         if(colorPlaying.equals(color)) {
                             alpha = Math.max(alpha, alphabeta(childNode, depth - 1, alpha, beta, color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE));

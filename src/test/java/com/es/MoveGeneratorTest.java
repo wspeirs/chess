@@ -32,7 +32,7 @@ public class MoveGeneratorTest {
 
         String line = null;
 
-        for (int i = 1; i < 4; i++) {
+        for (int i = 2; i < 4; i++) {
             while (true) {
                 try {
                   line = file.readLine();
@@ -61,7 +61,7 @@ public class MoveGeneratorTest {
 
                     // Create a new board
                     Board testBoard = new Board(board);
-                    MoveNode currentNode = new MoveNode(testBoard, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+                    MoveNode currentNode = new MoveNode(testBoard, null, Board.MAX_SQUARE);
 
                     System.out.println("BOARD: ");
                     System.out.println(testBoard.toString());
@@ -80,7 +80,8 @@ public class MoveGeneratorTest {
 //                        assertEquals(tokens[0].trim(), nodesNumber, result);
 
                     if(nodesNumber != result) {
-                        System.out.println("FAILED FOUND: " + result);
+                        System.out.println("FAILED FOUND: " + result + " NEEDED: " + nodesNumber);
+                        fail("FAILED");
                     } else {
                         System.out.println("PASSED!");
                     }
@@ -101,13 +102,13 @@ public class MoveGeneratorTest {
         int nodes = 0;
         int[] allMoves = ai.generateAllMoves(board, board.getPieces(color));
 
-        for (int i = 0; i < allMoves.length && allMoves[i] != Board.MAX_SQUARE; i += 2) {
+        for (int i = 0; i < allMoves.length && Board.getFromSquare(allMoves[i]) != Board.MAX_SQUARE; ++i) {
             State boardState = null;
             
             try {
-                System.out.println("MOVE: " + Integer.toHexString(allMoves[i]) + " -> " + Integer.toHexString(allMoves[i + 1]));
-                boardState = board.makeMove(allMoves[i], allMoves[i + 1], false);
-                System.out.println(board);
+//                System.out.println("MOVE: " + Integer.toHexString(Board.getFromSquare(allMoves[i])) + " -> " + Integer.toHexString(Board.getToSquare(allMoves[i])));
+                boardState = board.makeMove(allMoves[i]);
+//                System.out.println(board);
             } catch (IllegalMoveException e) {
                 System.err.println(board);
                 e.printStackTrace();
@@ -120,7 +121,7 @@ public class MoveGeneratorTest {
                 System.out.println(board.toString());
 
                 try {
-                    board.unmakeMove(allMoves[i], allMoves[i + 1], boardState);
+                    board.unmakeMove(allMoves[i], boardState);
                     System.out.println(board.toString());
                     continue;
                 } catch (IllegalMoveException e) {
@@ -130,12 +131,12 @@ public class MoveGeneratorTest {
                 }
             }
             
-            MoveNode childNode = new MoveNode(board, node, new int[] { allMoves[i], allMoves[i + 1] });
+            MoveNode childNode = new MoveNode(board, node, allMoves[i]);
             
             nodes = miniMax(childNode, color == Color.WHITE ? Color.BLACK : Color.WHITE, depth - 1);
             
             try {
-                board.unmakeMove(allMoves[i], allMoves[i + 1], boardState);
+                board.unmakeMove(allMoves[i], boardState);
             } catch (IllegalMoveException e) {
                 System.err.println(board);
                 e.printStackTrace();
@@ -152,10 +153,10 @@ public class MoveGeneratorTest {
     @Test
     public void testBoardSetup() throws Exception {
         int depth = 1;
-        int res = 10;
-        GenericBoard board = new GenericBoard("1k6/8/8/5pP1/4K1P1/8/8/8 w - f6 0 1");
+        int res = 11;
+        GenericBoard board = new GenericBoard("8/Pk6/8/8/8/8/6Kp/8 w - - 0 1");
         Board testBoard = new Board(board);
-        MoveNode currentNode = new MoveNode(testBoard, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        MoveNode currentNode = new MoveNode(testBoard, null, Board.MAX_SQUARE);
 
         System.out.println("BOARD: ");
         System.out.println(testBoard.toString());

@@ -291,6 +291,24 @@ public final class Board implements Cloneable {
     public static int rowColToSquare(int row, int col) {
         return (row << 4) + col;
     }
+    
+    public static int createMoveValue(int fromSquare, int toSquare, char promotePiece) {
+        final int pieceValue = AbstractPiece.pieceToPromoteValue(promotePiece);
+        
+        return fromSquare + (toSquare << 8) + (pieceValue << 16);  
+    }
+    
+    public static int getFromSquare(int move) {
+        return move & 0xFF;
+    }
+
+    public static int getToSquare(int move) {
+        return (move >> 8) & 0xFF;
+    }
+
+    public static int getPromoteValue(int move) {
+        return move >> 16;
+    }
 
     public Piece getPiece(int square) {
         return this.board[square];
@@ -383,18 +401,15 @@ public final class Board implements Cloneable {
         return sb.toString();
     }
 
-    public State makeMove(int fromSquare, int toSquare) throws IllegalMoveException {
-        return makeMove(fromSquare, toSquare, true);
-    }
-
     /**
      * Moves the piece from one square to another.
-     * @param fromSquare The starting square.
-     * @param toSquare The ending square.
+     * @param move The move encoded as an integer.
      * @return The piece which was captured, or null if nothing was captured.
      * @throws IllegalMoveException
      */
-    public State makeMove(int fromSquare, int toSquare, boolean kingCheck) throws IllegalMoveException {
+    public State makeMove(int move) throws IllegalMoveException {
+        final int fromSquare = Board.getFromSquare(move);
+        final int toSquare = Board.getToSquare(move);
         final Piece fromPiece = board[fromSquare];
 
         if(fromPiece == null) {
@@ -406,19 +421,19 @@ public final class Board implements Cloneable {
 
         // check to see if we're castling
         if(fromSquare == whiteKing && toSquare == 0x06 && canKingCastle(Color.WHITE)) {
-            makeKingCastle(Color.WHITE, kingCheck);
+            makeKingCastle(Color.WHITE);
             computeHashCode();
             return boardState;
         } else if(fromSquare == blackKing && toSquare == 0x76 && canKingCastle(Color.BLACK)) {
-            makeKingCastle(Color.BLACK, kingCheck);
+            makeKingCastle(Color.BLACK);
             computeHashCode();
             return boardState;
         } else if(fromSquare == whiteKing && toSquare == 0x02 && canQueenCastle(Color.WHITE)) {
-            makeQueenCastle(Color.WHITE, kingCheck);
+            makeQueenCastle(Color.WHITE);
             computeHashCode();
             return boardState;
         } else if(fromSquare == blackKing && toSquare == 0x72 && canQueenCastle(Color.BLACK)) {
-            makeQueenCastle(Color.BLACK, kingCheck);
+            makeQueenCastle(Color.BLACK);
             computeHashCode();
             return boardState;
         }
@@ -460,7 +475,14 @@ public final class Board implements Cloneable {
         }
         
         // set the piece on the board
-        board[toSquare] = fromPiece;
+        final int promoteValue = Board.getPromoteValue(move);
+        
+        if(promoteValue != 0) {
+            board[toSquare] = AbstractPiece.promoteValueToPiece(promoteValue, activeColor);
+        } else {
+            board[toSquare] = fromPiece;
+        }
+        
         board[fromSquare] = null;
 
         // update the piece's location
@@ -484,32 +506,6 @@ public final class Board implements Cloneable {
             }
         }
 
-        if(kingCheck) {
-            // make sure that this color's king is not in check
-            boolean inCheck = fromPiece.getColor().equals(Color.WHITE) ? isInCheck(whiteKing) : isInCheck(blackKing);
-
-            // need to undo the move
-            if(inCheck) {
-                board[fromSquare] = fromPiece;
-                board[toSquare] = toPiece;
-                
-                if(toSquare == whiteKing) {
-                    whiteKing = fromSquare;
-                } else if(toSquare == blackKing) {
-                    blackKing = fromSquare;
-                }
-
-                if(toPiece != null) {
-                    // add the piece (it recomputes the hash for us)
-                    addPiece(toPiece, toSquare);
-                }
-                final String from = Integer.toHexString(fromSquare);
-                final String to = Integer.toHexString(toSquare);
-
-                throw new IllegalMoveException("The move 0x" + from + " -> 0x" + to + " would put the king into check", true);
-            }
-        }
-
         fromPiece.pieceMoved(); // mark the piece has having moved
 
         // Switch the active color if we make a move on the board.
@@ -524,7 +520,9 @@ public final class Board implements Cloneable {
         return boardState;
     }
 
-    public void unmakeMove(int fromSquare, int toSquare, State boardState) throws IllegalMoveException {
+    public void unmakeMove(int move, State boardState) throws IllegalMoveException {
+        final int fromSquare = Board.getFromSquare(move);
+        final int toSquare = Board.getToSquare(move);
         final Piece toPiece = board[toSquare];
 
         if(toPiece == null) {
@@ -567,8 +565,15 @@ public final class Board implements Cloneable {
             return;
         }
         
-        // make the unmove
-        board[fromSquare] = board[toSquare];
+        final int promoteValue = Board.getPromoteValue(move);
+
+        // check to see if we have a promotion, and swap the piece
+        if(promoteValue != 0) {
+            board[fromSquare] = new Pawn(toPiece.getColor());
+        } else {
+            // unmake the move
+            board[fromSquare] = board[toSquare];
+        }
 
         if(toPiece.getColor().equals(Color.WHITE)) {
             whitePieces[Arrays.binarySearch(whitePieces, toSquare)] = fromSquare;
@@ -617,12 +622,15 @@ public final class Board implements Cloneable {
                 board[toSquare] = capturedPiece;
             }
         }
+        
+        // Switch the active color if we make a move on the board.
+        activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
 
         // reset the board's state
         setState(boardState);
     }
 
-    public void makeKingCastle(Color color, boolean kingCheck) throws IllegalMoveException {
+    public void makeKingCastle(Color color) throws IllegalMoveException {
         final int fromSquare = color.equals(Color.WHITE) ? 0x04 : 0x74;
         final int toSquare = color.equals(Color.WHITE) ? 0x06 : 0x76;
 
@@ -640,28 +648,6 @@ public final class Board implements Cloneable {
         board[toSquare - 1] = board[fromSquare + 3];
         board[fromSquare + 3] = null;
 
-        if(kingCheck && isInCheck(color.equals(Color.WHITE) ? whiteKing : blackKing)) {
-            // undo the king move
-            board[fromSquare] = board[toSquare];
-            board[toSquare] = null;
-
-            if(color.equals(Color.WHITE)) {
-                whiteKing = fromSquare;
-            } else {
-                blackKing = fromSquare;
-            }
-
-            // undo the rook move
-            board[fromSquare + 3] = board[toSquare - 1];
-            board[toSquare - 1] = null;
-
-            final String from = Integer.toHexString(fromSquare);
-            final String to = Integer.toHexString(toSquare);
-
-            throw new IllegalMoveException("The move 0x" + from + " -> 0x" + to + " would put the king into check", true);
-        }
-
-
         // disable castling
         if(color.equals(Color.WHITE)) {
             whiteKingCastle = whiteQueenCastle = false;
@@ -670,7 +656,7 @@ public final class Board implements Cloneable {
         }
     }
 
-    public void makeQueenCastle(Color color, boolean kingCheck) throws IllegalMoveException {
+    public void makeQueenCastle(Color color) throws IllegalMoveException {
         final int fromSquare = color.equals(Color.WHITE) ? 0x04 : 0x74;
         final int toSquare = color.equals(Color.WHITE) ? 0x02 : 0x72;
 
@@ -687,28 +673,6 @@ public final class Board implements Cloneable {
         // move the rook
         board[toSquare + 1] = board[fromSquare - 4];
         board[fromSquare - 4] = null;
-
-        if(kingCheck && isInCheck(color.equals(Color.WHITE) ? whiteKing : blackKing)) {
-            // undo the king move
-            board[fromSquare] = board[toSquare];
-            board[toSquare] = null;
-
-            if(color.equals(Color.WHITE)) {
-                whiteKing = fromSquare;
-            } else {
-                blackKing = fromSquare;
-            }
-
-            // undo the rook move
-            board[fromSquare - 4] = board[toSquare + 1];
-            board[toSquare + 1] = null;
-
-            final String from = Integer.toHexString(fromSquare);
-            final String to = Integer.toHexString(toSquare);
-
-            throw new IllegalMoveException("The move 0x" + from + " -> 0x" + to + " would put the king into check", true);
-        }
-
 
         // disable castling
         if(color.equals(Color.WHITE)) {

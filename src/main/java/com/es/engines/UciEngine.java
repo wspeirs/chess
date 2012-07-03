@@ -113,14 +113,16 @@ public class UciEngine extends AbstractEngine implements Engine {
         // Setup the new game
         // We can receive any board here! So mirror the GenericBoard on our internal board.
         board = new Board(command.board);
-        currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        currentNode = new MoveNode(board, null, Board.MAX_SQUARE);
 
 		// Make all moves here! UCI is not stateful! So we have to setup the board as the protocol says.
 		// Don't just take the last move!
 		List<GenericMove> moveList = command.moveList;
 		for (GenericMove move : moveList) {
 			try {
-				this.board.makeMove(positions.get(move.from), positions.get(move.to), false);
+			    // TODO: Add in piece promotion here
+			    final int moveValue = Board.createMoveValue(positions.get(move.from), positions.get(move.to), '-');
+				this.board.makeMove(moveValue);
 			} catch (IllegalMoveException e) {
                 LOG.error("Illegal move: {}", e.getMessage(), e);
                 new EngineQuitCommand().accept(this);
@@ -137,22 +139,25 @@ public class UciEngine extends AbstractEngine implements Engine {
 
         LOG.debug("CUR NODE CHILD COUNT: {}", currentNode.getChildCount());
 
-        currentNode = new MoveNode(board, null, new int[] { Board.MAX_SQUARE, Board.MAX_SQUARE });
+        currentNode = new MoveNode(board, null, Board.MAX_SQUARE);
 
         LOG.debug("COMPUTING NEXT MOVE FOR: {}", board.getActiveColor());
 
         long start = System.currentTimeMillis();
-        int[] aiMove = ai.computeNextMove(currentNode, board.getActiveColor());
+        int aiMove = ai.computeNextMove(currentNode, board.getActiveColor());
         long time = System.currentTimeMillis() - start;
+        
+        final int aiFrom = Board.getFromSquare(aiMove);
+        final int aiTo = Board.getToSquare(aiMove);
 
-        LOG.debug("FOUND MOVE: {} -> {}", Integer.toHexString(aiMove[0]), Integer.toHexString(aiMove[1]));
+        LOG.debug("FOUND MOVE: {} -> {}", Integer.toHexString(aiFrom), Integer.toHexString(aiTo));
 
-        GenericFile file = GenericFile.values()[aiMove[0] % 16];
-        GenericRank rank = GenericRank.values()[aiMove[0] >>> 4];
+        GenericFile file = GenericFile.values()[aiFrom % 16];
+        GenericRank rank = GenericRank.values()[aiFrom >>> 4];
         GenericPosition from = GenericPosition.valueOf(file, rank);
 
-        file = GenericFile.values()[aiMove[1] % 16];
-        rank = GenericRank.values()[aiMove[1] >>> 4];
+        file = GenericFile.values()[aiTo % 16];
+        rank = GenericRank.values()[aiTo >>> 4];
         GenericPosition to = GenericPosition.valueOf(file, rank);
 
         if(LOG.isInfoEnabled()) {
@@ -163,7 +168,7 @@ public class UciEngine extends AbstractEngine implements Engine {
 
         try {
             // make the move on the board
-            board.makeMove(aiMove[0], aiMove[1]);
+            board.makeMove(aiMove);
         } catch (IllegalMoveException e) {
             LOG.error("AI MADE AN ILLEGAL MOVE: {}", e.getMessage());
             new EngineQuitCommand().accept(this);
