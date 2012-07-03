@@ -638,21 +638,25 @@ public final class Board implements Cloneable {
         board[toSquare] = board[fromSquare];
         board[fromSquare] = null;
 
-        if(color.equals(Color.WHITE)) {
-            whiteKing = toSquare;
-        } else {
-            blackKing = toSquare;
-        }
-
         // move the rook
         board[toSquare - 1] = board[fromSquare + 3];
         board[fromSquare + 3] = null;
 
-        // disable castling
+        // update the king, castling and pieces
         if(color.equals(Color.WHITE)) {
+            whiteKing = toSquare;
             whiteKingCastle = whiteQueenCastle = false;
+            ArraySet.removeNumber(whitePieces, 0x04, Board.MAX_SQUARE);
+            ArraySet.removeNumber(whitePieces, 0x07, Board.MAX_SQUARE);
+            ArraySet.addNumber(whitePieces, 0x06);
+            ArraySet.addNumber(whitePieces, 0x05);
         } else {
+            blackKing = toSquare;
             blackKingCastle = blackQueenCastle = false;
+            ArraySet.removeNumber(blackPieces, 0x74, Board.MAX_SQUARE);
+            ArraySet.removeNumber(blackPieces, 0x77, Board.MAX_SQUARE);
+            ArraySet.addNumber(blackPieces, 0x76);
+            ArraySet.addNumber(blackPieces, 0x75);
         }
     }
 
@@ -664,21 +668,25 @@ public final class Board implements Cloneable {
         board[toSquare] = board[fromSquare];
         board[fromSquare] = null;
 
-        if(color.equals(Color.WHITE)) {
-            whiteKing = toSquare;
-        } else {
-            blackKing = toSquare;
-        }
-
         // move the rook
         board[toSquare + 1] = board[fromSquare - 4];
         board[fromSquare - 4] = null;
 
-        // disable castling
+        // update the king, castling and pieces
         if(color.equals(Color.WHITE)) {
+            whiteKing = toSquare;
             whiteKingCastle = whiteQueenCastle = false;
+            ArraySet.removeNumber(whitePieces, 0x04, Board.MAX_SQUARE);
+            ArraySet.removeNumber(whitePieces, 0x00, Board.MAX_SQUARE);
+            ArraySet.addNumber(whitePieces, 0x02);
+            ArraySet.addNumber(whitePieces, 0x03);
         } else {
+            blackKing = toSquare;
             blackKingCastle = blackQueenCastle = false;
+            ArraySet.removeNumber(blackPieces, 0x74, Board.MAX_SQUARE);
+            ArraySet.removeNumber(blackPieces, 0x70, Board.MAX_SQUARE);
+            ArraySet.addNumber(blackPieces, 0x72);
+            ArraySet.addNumber(blackPieces, 0x73);
         }
     }
     
@@ -707,6 +715,11 @@ public final class Board implements Cloneable {
         for(int p:pieces) {
             if(p == Board.MAX_SQUARE) {
                 break;
+            }
+            
+            if(board[p] == null) {
+                System.out.println("IN HERE");
+                System.out.println(this.toString());
             }
             
             if(Arrays.binarySearch(board[p].generateAllMoves(this, p), kingPos) >= 0) {
