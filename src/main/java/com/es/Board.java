@@ -495,6 +495,9 @@ public final class Board implements Cloneable {
         }
         
         board[fromSquare] = null;
+        
+        // we'll check below to see if this value should be set
+        enPassant = Board.MAX_SQUARE;
 
         // update the piece's location
         if(fromPiece.getColor().equals(Color.WHITE)) {
@@ -505,6 +508,8 @@ public final class Board implements Cloneable {
                 whiteKingCastle = whiteQueenCastle = false;
             } else if(fromPiece instanceof Rook) {
                 whiteKingCastle = whiteQueenCastle = false;
+            } else if(fromPiece instanceof Pawn && (fromSquare & 0xF0) == 0x10 && (toSquare & 0xF0) == 0x30) {
+            	enPassant = fromSquare + 0x10;
             }
         } else {
             blackPieces[Arrays.binarySearch(blackPieces, fromSquare)] = toSquare;
@@ -514,6 +519,8 @@ public final class Board implements Cloneable {
                 blackKingCastle = blackQueenCastle = false;
             } else if(fromPiece instanceof Rook) {
                 blackKingCastle = blackQueenCastle = false;
+            } else if(fromPiece instanceof Pawn && (fromSquare & 0xF0) == 0x60 && (toSquare & 0xF0) == 0x40) {
+            	enPassant = fromSquare - 0x10;
             }
         }
 
@@ -524,10 +531,6 @@ public final class Board implements Cloneable {
 
         computeHashCode();  // re-compute the hash code
 
-        if(LOG.isTraceEnabled()) {
-            LOG.trace(this.toString());
-        }
-
         return boardState;
     }
 
@@ -537,8 +540,11 @@ public final class Board implements Cloneable {
         final Piece toPiece = board[toSquare];
 
         if(toPiece == null) {
-            LOG.error("Cannot unmake move, no piece on square: 0x{}", Integer.toHexString(fromSquare));
-            throw new IllegalMoveException("There is no piece on square: 0x" + Integer.toHexString(fromSquare));
+        	String from = Integer.toHexString(fromSquare);
+        	String to = Integer.toHexString(toSquare);
+        	
+            LOG.error("Cannot unmake move {} -> {}, no piece on to square", from, to);
+            throw new IllegalMoveException("There is no piece on square: 0x" + Integer.toHexString(toSquare));
         }
 
         // check to see if we're castling
@@ -618,7 +624,7 @@ public final class Board implements Cloneable {
                 ArraySet.addNumber(blackPieces, toSquare);
             }
             
-            if(boardState.getEnPassant() == toSquare) {
+            if(boardState.getEnPassant() == toSquare && toPiece instanceof Pawn) {
                 board[toSquare - 0x10] = capturedPiece;
                 ArraySet.addNumber(blackPieces, toSquare - 0x10);
                 board[toSquare] = null;
@@ -641,7 +647,7 @@ public final class Board implements Cloneable {
                 ArraySet.addNumber(whitePieces, toSquare);
             }
 
-            if(boardState.getEnPassant() == toSquare) {
+            if(boardState.getEnPassant() == toSquare && toPiece instanceof Pawn) {
                 board[toSquare + 0x10] = capturedPiece;
                 ArraySet.addNumber(whitePieces, toSquare + 0x10);
                 board[toSquare] = null;
@@ -715,6 +721,55 @@ public final class Board implements Cloneable {
             ArraySet.addNumber(blackPieces, 0x72);
             ArraySet.addNumber(blackPieces, 0x73);
         }
+    }
+    
+    // TODO: DEBUG ONLY
+    public void checkBoard() throws IllegalMoveException {
+    	for(int p:whitePieces) {
+    		if(p == Board.MAX_SQUARE) {
+    			break;
+    		}
+    		
+    		if(board[p] == null) {
+                System.out.println("BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
+                System.out.println(this.toString());
+                throw new IllegalMoveException("BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
+    		}
+    		
+    		if(!board[p].getColor().equals(Color.WHITE)) {
+                System.out.println("BOARD PIECE IS NOT WHITE: 0x" + Integer.toHexString(p));
+                System.out.println(this.toString());
+                throw new IllegalMoveException("BOARD PIECE IS NOT WHITE: 0x" + Integer.toHexString(p));
+    		}
+    	}
+
+    	for(int p:blackPieces) {
+    		if(p == Board.MAX_SQUARE) {
+    			break;
+    		}
+    		
+    		if(board[p] == null) {
+                System.out.println("BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
+                System.out.println(this.toString());
+                throw new IllegalMoveException("BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
+    		}
+    		
+    		if(!board[p].getColor().equals(Color.BLACK)) {
+                System.out.println("BOARD PIECE IS NOT BLACK: 0x" + Integer.toHexString(p));
+                System.out.println(this.toString());
+                throw new IllegalMoveException("BOARD PIECE IS NOT BLACK: 0x" + Integer.toHexString(p));
+    		}
+    	}
+    	
+    	for(int i=0; i < Board.MAX_SQUARE; ++i) {
+    		if(board[i] == null) {
+    			continue;
+    		}
+    		
+    		if(Arrays.binarySearch(whitePieces, i) < 0 && Arrays.binarySearch(blackPieces, i) < 0) {
+                throw new IllegalMoveException("BOARD PIECE NOT FOUND: 0x" + Integer.toHexString(i));
+    		}
+    	}
     }
     
     public boolean isInCheck(Color color) {

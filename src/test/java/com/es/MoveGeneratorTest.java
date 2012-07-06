@@ -32,7 +32,7 @@ public class MoveGeneratorTest {
 
         String line = null;
 
-        for (int i = 2; i < 4; i++) {
+        for (int i = 3; i < 4; i++) {
             while (true) {
                 try {
                   line = file.readLine();
@@ -109,8 +109,14 @@ public class MoveGeneratorTest {
                 final String from = Integer.toHexString(Board.getFromSquare(allMoves[i]));
                 final String to = Integer.toHexString(Board.getToSquare(allMoves[i]));
                 
-                System.out.println("MOVE: " + color + " " + from + " -> " + to + " (" + depth + ")");
+                System.out.println("MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
                 boardState = board.makeMove(allMoves[i]);
+                board.checkBoard();
+                if(board.getPiece(Board.getToSquare(allMoves[i])) == null) {
+                	System.out.println("Never made move");
+                	System.out.println(board);
+                	fail("NEVER MADE MOVE");
+                }
 //                System.out.println(board);
             } catch (IllegalMoveException e) {
                 System.err.println(board);
@@ -120,11 +126,12 @@ public class MoveGeneratorTest {
             
             // check to see if we move ourself into check
             if(board.isInCheck(color)) {
-                //System.out.println("KING IN CHECK");
+                System.out.println("KING IN CHECK");
                 //System.out.println(board.toString());
 
                 try {
                     board.unmakeMove(allMoves[i], boardState);
+                    board.checkBoard();
 //                    System.out.println(board.toString());
                     continue;
                 } catch (IllegalMoveException e) {
@@ -140,6 +147,7 @@ public class MoveGeneratorTest {
             
             try {
                 board.unmakeMove(allMoves[i], boardState);
+                board.checkBoard();
             } catch (IllegalMoveException e) {
                 System.err.println(board);
                 e.printStackTrace();
@@ -155,9 +163,9 @@ public class MoveGeneratorTest {
 
     @Test
     public void testBoardSetup() throws Exception {
-        int depth = 2;
-        int res = 32;
-        GenericBoard board = new GenericBoard("4k2r/6K1/8/8/8/8/8/8 w k - 0 1");
+        int depth = 3;
+        int res = 533;
+        GenericBoard board = new GenericBoard("1k6/8/8/5pP1/4K1P1/8/8/8 w - f6 0 1");
         Board testBoard = new Board(board);
         MoveNode currentNode = new MoveNode(testBoard, null, Board.MAX_SQUARE);
 
