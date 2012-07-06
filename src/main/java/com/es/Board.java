@@ -534,6 +534,10 @@ public final class Board implements Cloneable {
         if(fromSquare == 0x04 && toSquare == 0x06 && whiteKing == 0x06) {
             board[0x04] = board[0x06];  // move the king back
             board[0x07] = board[0x05];  // move the rook back
+            ArraySet.removeNumber(whitePieces, 0x06, Board.MAX_SQUARE);
+            ArraySet.removeNumber(whitePieces, 0x05, Board.MAX_SQUARE);
+            ArraySet.addNumber(whitePieces, 0x04);
+            ArraySet.addNumber(whitePieces, 0x07);
             whiteKing = 0x04;
             board[0x06] = board[0x05] = null;   // null these squares
             setState(boardState);
@@ -542,6 +546,10 @@ public final class Board implements Cloneable {
         } else if(fromSquare == 0x74 && toSquare == 0x76 && blackKing == 0x76) {
             board[0x74] = board[0x76];  // move the king back
             board[0x77] = board[0x75];  // move the rook back
+            ArraySet.removeNumber(blackPieces, 0x76, Board.MAX_SQUARE);
+            ArraySet.removeNumber(blackPieces, 0x75, Board.MAX_SQUARE);
+            ArraySet.addNumber(blackPieces, 0x74);
+            ArraySet.addNumber(blackPieces, 0x77);
             blackKing = 0x74;
             board[0x76] = board[0x75] = null;   // null these squares
             setState(boardState);
@@ -550,6 +558,10 @@ public final class Board implements Cloneable {
         } else if(fromSquare == 0x04 && toSquare == 0x02 && whiteKing == 0x02) {
             board[0x04] = board[0x02];  // move the king back
             board[0x00] = board[0x03];  // move the rook back
+            ArraySet.removeNumber(whitePieces, 0x03, Board.MAX_SQUARE);
+            ArraySet.removeNumber(whitePieces, 0x02, Board.MAX_SQUARE);
+            ArraySet.addNumber(whitePieces, 0x04);
+            ArraySet.addNumber(whitePieces, 0x00);
             whiteKing = 0x04;
             board[0x02] = board[0x03] = null;   // null these squares
             setState(boardState);
@@ -558,6 +570,10 @@ public final class Board implements Cloneable {
         } else if(fromSquare == 0x74 && toSquare == 0x72 && blackKing == 0x72) {
             board[0x74] = board[0x72];  // move the king back
             board[0x70] = board[0x73];  // move the rook back
+            ArraySet.removeNumber(blackPieces, 0x72, Board.MAX_SQUARE);
+            ArraySet.removeNumber(blackPieces, 0x74, Board.MAX_SQUARE);
+            ArraySet.addNumber(blackPieces, 0x74);
+            ArraySet.addNumber(blackPieces, 0x70);
             blackKing = 0x74;
             board[0x72] = board[0x73] = null;   // null these squares
             setState(boardState);
