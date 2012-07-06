@@ -445,14 +445,25 @@ public final class Board implements Cloneable {
             throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
         }
 
-        Piece toPiece = board[toSquare];
+        final Piece toPiece = board[toSquare];
         
         // capture the piece
         if(toPiece != null) {
             // set the captured piece in the board's state
             boardState.setCapturedPiece(toPiece);
 
-            // remove the piece on the board
+            // remove castling possibilities if it's a rook being captured
+            if(toSquare == 0x00 && toPiece instanceof Rook) {
+            	this.whiteQueenCastle = false;
+            } else if(toSquare == 0x70 && toPiece instanceof Rook) {
+            	this.blackQueenCastle = false;
+            } else if(toSquare == 0x07 && toPiece instanceof Rook) {
+            	this.whiteKingCastle = false;
+            } else if(toSquare == 0x77 && toPiece instanceof Rook) {
+            	this.blackKingCastle = false;
+            }
+
+            // remove the piece from the color's list
             if(toPiece.getColor().equals(Color.BLACK)) {
                 ArraySet.removeNumber(blackPieces, toSquare, Board.MAX_SQUARE);
             } else {
@@ -719,22 +730,19 @@ public final class Board implements Cloneable {
         final King king = (King) board[kingPos];
         
         if(king == null) {
+        	System.out.println("KING IS NULL");
             System.out.println(this.toString());
         }
         
         final int[] pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
 
-        if(king.getColor().equals(Color.WHITE) && kingPos == 0x06) {
-            System.out.println("IN HERE");
-        }
-        
         for(int p:pieces) {
             if(p == Board.MAX_SQUARE) {
                 break;
             }
             
             if(board[p] == null) {
-                System.out.println("IN HERE");
+                System.out.println("BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
                 System.out.println(this.toString());
             }
             
@@ -744,53 +752,6 @@ public final class Board implements Cloneable {
         }
 
         return false;
-    }
-
-    /**
-     * Removes a piece from the board, adding it to the captured pieces set.
-     * @param piece The piece to remove from the board.
-     */
-    public void capturePiece(int pos) {
-        Color c = board[pos].getColor();
-
-        // remove it from the pieces on the board and add it to the captured pieces
-        if(c.equals(Color.BLACK)) {
-            blackPieces[Arrays.binarySearch(blackPieces, pos)] = Board.MAX_SQUARE;
-            Arrays.sort(blackPieces);
-        } else {
-            whitePieces[Arrays.binarySearch(whitePieces, pos)] = Board.MAX_SQUARE;
-            Arrays.sort(whitePieces);
-        }
-
-        board[pos] = null; // remove the piece from the board
-        computeHashCode(); // re-compute the hash code
-    }
-
-    /**
-     * Adds a piece to the board removing it from the captured pieces if captured.
-     * @param piece The piece to add to the board.
-     * @param square The square to add the piece to.
-     */
-    public void addPiece(Piece piece, int square) {
-        Color c = piece.getColor();
-
-        // remove it from the captured pieces and add it to the pieces on the board
-        if(c.equals(Color.BLACK)) {
-            ArraySet.addNumber(blackPieces, square);
-
-            if(piece instanceof King) {
-                blackKing = square;
-            }
-        } else {
-            ArraySet.addNumber(whitePieces, square);
-
-            if(piece instanceof King) {
-                whiteKing = square;
-            }
-        }
-
-        board[square] = piece; // add the piece to the board
-        computeHashCode(); // re-compute the hash code
     }
 
     public int[] getPieces(Color color) {

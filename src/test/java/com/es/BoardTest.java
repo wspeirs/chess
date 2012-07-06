@@ -7,12 +7,6 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.es.Board.State;
-import com.es.ai.AlphaBetaAI;
-import com.es.ai.MoveNode;
-import com.es.pieces.Bishop;
-import com.es.pieces.Knight;
-import com.es.pieces.Pawn;
-import com.es.pieces.Piece.Color;
 
 public class BoardTest {
 
@@ -41,26 +35,6 @@ public class BoardTest {
         map.put(board2, 2);
     }
 
-    @Test
-    public void testComputesScore() {
-        board.clearBoard();
-
-        board.addPiece(new Pawn(Color.WHITE), 0x13);
-        board.addPiece(new Pawn(Color.WHITE), 0x34);
-        board.addPiece(new Bishop(Color.WHITE), 0x63);
-        board.addPiece(new Pawn(Color.BLACK), 0x64);
-        board.addPiece(new Bishop(Color.BLACK), 0x75);
-
-        board.addPiece(new Knight(Color.BLACK), 0x33);
-        board.addPiece(new Knight(Color.WHITE), 0x01);
-
-        System.out.println(board.toString());
-
-        AlphaBetaAI ai = new AlphaBetaAI(Color.BLACK);
-
-        System.out.println("SCORE: " + ai.computeScore(new MoveNode(board, null, Board.MAX_SQUARE)));
-    }
-    
     @Test
     public void testUnmakeMove() throws IllegalMoveException {
         State boardState = board.makeMove(Board.createMoveValue(0x01, 0x22, '-'));
