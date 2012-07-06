@@ -109,7 +109,7 @@ public class MoveGeneratorTest {
                 final String from = Integer.toHexString(Board.getFromSquare(allMoves[i]));
                 final String to = Integer.toHexString(Board.getToSquare(allMoves[i]));
                 
-                System.out.println("MOVE: " + color + " " + from + " -> " + to + " (" + Board.getPromoteValue(allMoves[i]) + ")");
+//                System.out.println("MOVE: " + color + " " + from + " -> " + to + " (" + Board.getPromoteValue(allMoves[i]) + ")");
                 boardState = board.makeMove(allMoves[i]);
 //                System.out.println(board);
             } catch (IllegalMoveException e) {

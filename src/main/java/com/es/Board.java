@@ -570,8 +570,8 @@ public final class Board implements Cloneable {
         } else if(fromSquare == 0x74 && toSquare == 0x72 && blackKing == 0x72) {
             board[0x74] = board[0x72];  // move the king back
             board[0x70] = board[0x73];  // move the rook back
+            ArraySet.removeNumber(blackPieces, 0x73, Board.MAX_SQUARE);
             ArraySet.removeNumber(blackPieces, 0x72, Board.MAX_SQUARE);
-            ArraySet.removeNumber(blackPieces, 0x74, Board.MAX_SQUARE);
             ArraySet.addNumber(blackPieces, 0x74);
             ArraySet.addNumber(blackPieces, 0x70);
             blackKing = 0x74;
