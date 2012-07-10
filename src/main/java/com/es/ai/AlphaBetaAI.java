@@ -238,7 +238,7 @@ public class AlphaBetaAI {
             if(p == Board.MAX_SQUARE) {
                 break;  // in sorted order, so we can break early
             }
-
+            
             final Piece piece = board.getPiece(p);
             int[] moves = piece.generateAllMoves(board, p);
 

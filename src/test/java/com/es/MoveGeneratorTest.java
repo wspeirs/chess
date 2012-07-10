@@ -98,18 +98,26 @@ public class MoveGeneratorTest {
         int totalNodes = 0;
         AlphaBetaAI ai = new AlphaBetaAI(color);
         Board board = node.getBoard();
-
+        
         int nodes = 0;
         int[] allMoves = ai.generateAllMoves(board, board.getPieces(color));
 
+        try {
+            board.checkBoard();
+        } catch (IllegalMoveException e) {
+            System.out.println(board);
+            e.printStackTrace();
+            fail("Illegal Move: " + e.getMessage());
+        }
+
         for (int i = 0; i < allMoves.length && Board.getFromSquare(allMoves[i]) != Board.MAX_SQUARE; ++i) {
             State boardState = null;
+            final String from = Integer.toHexString(Board.getFromSquare(allMoves[i]));
+            final String to = Integer.toHexString(Board.getToSquare(allMoves[i]));
             
             try {
-                final String from = Integer.toHexString(Board.getFromSquare(allMoves[i]));
-                final String to = Integer.toHexString(Board.getToSquare(allMoves[i]));
-                
                 System.out.println("MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
+                board.checkBoard();
                 boardState = board.makeMove(allMoves[i]);
                 board.checkBoard();
                 if(board.getPiece(Board.getToSquare(allMoves[i])) == null) {
@@ -146,6 +154,7 @@ public class MoveGeneratorTest {
             nodes = miniMax(childNode, color == Color.WHITE ? Color.BLACK : Color.WHITE, depth - 1);
             
             try {
+                System.out.println("UN-MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
                 board.unmakeMove(allMoves[i], boardState);
                 board.checkBoard();
             } catch (IllegalMoveException e) {

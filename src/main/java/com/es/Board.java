@@ -619,17 +619,17 @@ public final class Board implements Cloneable {
 
             final Piece capturedPiece = boardState.getCapturedPiece();
             
-            // if we captured a piece, add it back to the board
-            if(capturedPiece != null) {
-                ArraySet.addNumber(blackPieces, toSquare);
-            }
-            
             if(boardState.getEnPassant() == toSquare && toPiece instanceof Pawn) {
                 board[toSquare - 0x10] = capturedPiece;
                 ArraySet.addNumber(blackPieces, toSquare - 0x10);
                 board[toSquare] = null;
             } else {
                 board[toSquare] = capturedPiece;
+
+                // if we captured a piece, add it back to the board
+                if(capturedPiece != null) {
+                    ArraySet.addNumber(blackPieces, toSquare);
+                }
             }
         } else {
             blackPieces[Arrays.binarySearch(blackPieces, toSquare)] = fromSquare;
@@ -641,11 +641,6 @@ public final class Board implements Cloneable {
             }
 
             final Piece capturedPiece = boardState.getCapturedPiece();
-            
-            // if we captured a piece, add it back to the board
-            if(capturedPiece != null) {
-                ArraySet.addNumber(whitePieces, toSquare);
-            }
 
             if(boardState.getEnPassant() == toSquare && toPiece instanceof Pawn) {
                 board[toSquare + 0x10] = capturedPiece;
@@ -653,6 +648,11 @@ public final class Board implements Cloneable {
                 board[toSquare] = null;
             } else {
                 board[toSquare] = capturedPiece;
+                
+                // if we captured a piece, add it back to the board
+                if(capturedPiece != null) {
+                    ArraySet.addNumber(whitePieces, toSquare);
+                }
             }
         }
         
@@ -725,9 +725,16 @@ public final class Board implements Cloneable {
     
     // TODO: DEBUG ONLY
     public void checkBoard() throws IllegalMoveException {
+        int last = -1;
     	for(int p:whitePieces) {
+            if(last > p) {
+                throw new IllegalMoveException("WHITE PIECES OUT OF ORDER");
+            }
+            
+            last = p;
+            
     		if(p == Board.MAX_SQUARE) {
-    			break;
+    			continue;
     		}
     		
     		if(board[p] == null) {
@@ -742,16 +749,24 @@ public final class Board implements Cloneable {
                 throw new IllegalMoveException("BOARD PIECE IS NOT WHITE: 0x" + Integer.toHexString(p));
     		}
     	}
+    	
+    	last = -1;
 
     	for(int p:blackPieces) {
+            if(last > p) {
+                throw new IllegalMoveException("BLACK PIECES OUT OF ORDER: " + last + " " + p);
+            }
+            
+            last = p;
+            
     		if(p == Board.MAX_SQUARE) {
-    			break;
+    			continue;
     		}
     		
     		if(board[p] == null) {
-                System.out.println("BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
+                System.out.println("BLACK BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
                 System.out.println(this.toString());
-                throw new IllegalMoveException("BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
+                throw new IllegalMoveException("BLACK BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
     		}
     		
     		if(!board[p].getColor().equals(Color.BLACK)) {
