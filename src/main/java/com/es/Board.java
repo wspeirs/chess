@@ -417,6 +417,7 @@ public final class Board implements Cloneable {
             throw new IllegalMoveException("There is no piece on square: 0x" + Integer.toHexString(fromSquare));
         }
 
+        // we want to return the state of the board before the move was made
         final State boardState = new State(this);
 
         // check to see if we're castling
@@ -471,7 +472,7 @@ public final class Board implements Cloneable {
             }
 
             board[toSquare] = null; // remove the piece from the board
-        } else if(toSquare == enPassant) {
+        } else if(toSquare == enPassant && fromPiece instanceof Pawn) {
             if(fromPiece.getColor().equals(Color.BLACK)) {
                 boardState.setCapturedPiece(board[toSquare + 0x10]);
                 ArraySet.removeNumber(whitePieces, toSquare + 0x10, Board.MAX_SQUARE);
@@ -485,15 +486,16 @@ public final class Board implements Cloneable {
             enPassant = Board.MAX_SQUARE;
         }
         
-        // set the piece on the board
         final int promoteValue = Board.getPromoteValue(move);
-        
+
+        // make the move or the promotion
         if(promoteValue != 0) {
             board[toSquare] = AbstractPiece.promoteValueToPiece(promoteValue, activeColor);
         } else {
             board[toSquare] = fromPiece;
         }
         
+        // remove the piece from the square where it started
         board[fromSquare] = null;
         
         // we'll check below to see if this value should be set
@@ -503,6 +505,7 @@ public final class Board implements Cloneable {
         if(fromPiece.getColor().equals(Color.WHITE)) {
             whitePieces[Arrays.binarySearch(whitePieces, fromSquare)] = toSquare;
             Arrays.sort(whitePieces);
+            
             if(fromPiece instanceof King) {
                 whiteKing = toSquare;
                 whiteKingCastle = whiteQueenCastle = false;
@@ -514,6 +517,7 @@ public final class Board implements Cloneable {
         } else {
             blackPieces[Arrays.binarySearch(blackPieces, fromSquare)] = toSquare;
             Arrays.sort(blackPieces);
+            
             if(fromPiece instanceof King) {
                 blackKing = toSquare;
                 blackKingCastle = blackQueenCastle = false;

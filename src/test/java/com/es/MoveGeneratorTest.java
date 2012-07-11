@@ -120,11 +120,17 @@ public class MoveGeneratorTest {
                 board.checkBoard();
                 boardState = board.makeMove(allMoves[i]);
                 board.checkBoard();
+                
                 if(board.getPiece(Board.getToSquare(allMoves[i])) == null) {
                 	System.out.println("Never made move");
                 	System.out.println(board);
                 	fail("NEVER MADE MOVE");
                 }
+                
+                if(Board.getToSquare(allMoves[i]) == 0x47) {
+                    System.out.println(board);
+                }
+                
 //                System.out.println(board);
             } catch (IllegalMoveException e) {
                 System.err.println(board);
