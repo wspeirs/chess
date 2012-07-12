@@ -491,6 +491,10 @@ public final class Board implements Cloneable {
         // make the move or the promotion
         if(promoteValue != 0) {
             board[toSquare] = AbstractPiece.promoteValueToPiece(promoteValue, activeColor);
+            
+            if(board[toSquare].getColor().equals(Color.WHITE)) {
+            	System.out.println("GOT HERE");
+            }
         } else {
             board[toSquare] = fromPiece;
         }
@@ -562,6 +566,7 @@ public final class Board implements Cloneable {
             whiteKing = 0x04;
             board[0x06] = board[0x05] = null;   // null these squares
             setState(boardState);
+            activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
             computeHashCode();
             return;
         } else if(fromSquare == 0x74 && toSquare == 0x76 && blackKing == 0x76) {
@@ -574,6 +579,7 @@ public final class Board implements Cloneable {
             blackKing = 0x74;
             board[0x76] = board[0x75] = null;   // null these squares
             setState(boardState);
+            activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
             computeHashCode();
             return;
         } else if(fromSquare == 0x04 && toSquare == 0x02 && whiteKing == 0x02) {
@@ -586,6 +592,7 @@ public final class Board implements Cloneable {
             whiteKing = 0x04;
             board[0x02] = board[0x03] = null;   // null these squares
             setState(boardState);
+            activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
             computeHashCode();
             return;
         } else if(fromSquare == 0x74 && toSquare == 0x72 && blackKing == 0x72) {
@@ -598,6 +605,7 @@ public final class Board implements Cloneable {
             blackKing = 0x74;
             board[0x72] = board[0x73] = null;   // null these squares
             setState(boardState);
+            activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
             computeHashCode();
             return;
         }
@@ -695,6 +703,8 @@ public final class Board implements Cloneable {
             ArraySet.addNumber(blackPieces, 0x76);
             ArraySet.addNumber(blackPieces, 0x75);
         }
+        
+        activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
     }
 
     public void makeQueenCastle(Color color) throws IllegalMoveException {
@@ -725,6 +735,8 @@ public final class Board implements Cloneable {
             ArraySet.addNumber(blackPieces, 0x72);
             ArraySet.addNumber(blackPieces, 0x73);
         }
+        
+        activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
     }
     
     // TODO: DEBUG ONLY

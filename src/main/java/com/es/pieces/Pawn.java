@@ -72,7 +72,7 @@ public class Pawn extends AbstractPiece {
             }
             
             // en passant
-            if(enPassant != Board.MAX_SQUARE && (curPos - 0x11 == enPassant || curPos - 0x0F == enPassant)) {
+            if(enPassant != Board.MAX_SQUARE && (enPassant & 0xF0) != 0x60 && (curPos - 0x11 == enPassant || curPos - 0x0F == enPassant)) {
                 ret[retIndex++] = enPassant;
             }
         } else {
@@ -104,7 +104,7 @@ public class Pawn extends AbstractPiece {
             }
 
             // en passant
-            if(enPassant != Board.MAX_SQUARE && (curPos + 0x11 == enPassant || curPos + 0x0F == enPassant)) {
+            if(enPassant != Board.MAX_SQUARE && (enPassant & 0xF0) != 0x20 && (curPos + 0x11 == enPassant || curPos + 0x0F == enPassant)) {
                 ret[retIndex++] = enPassant;
             }
         }

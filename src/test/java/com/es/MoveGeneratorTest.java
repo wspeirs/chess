@@ -32,7 +32,7 @@ public class MoveGeneratorTest {
 
         String line = null;
 
-        for (int i = 3; i < 4; i++) {
+        for (int i = 4; i < 5; i++) {
             while (true) {
                 try {
                   line = file.readLine();
@@ -118,6 +118,11 @@ public class MoveGeneratorTest {
             try {
                 System.out.println("MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
                 board.checkBoard();
+                
+                if(Board.getFromSquare(allMoves[i]) == 0x16 && color.equals(Color.BLACK)) {
+                	System.out.println(board);
+                }
+                
                 boardState = board.makeMove(allMoves[i]);
                 board.checkBoard();
                 
@@ -125,10 +130,6 @@ public class MoveGeneratorTest {
                 	System.out.println("Never made move");
                 	System.out.println(board);
                 	fail("NEVER MADE MOVE");
-                }
-                
-                if(Board.getToSquare(allMoves[i]) == 0x47) {
-                    System.out.println(board);
                 }
                 
 //                System.out.println(board);
@@ -178,9 +179,9 @@ public class MoveGeneratorTest {
 
     @Test
     public void testBoardSetup() throws Exception {
-        int depth = 3;
+        int depth = 4;
         int res = 533;
-        GenericBoard board = new GenericBoard("1k6/8/8/5pP1/4K1P1/8/8/8 w - f6 0 1");
+        GenericBoard board = new GenericBoard("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
         Board testBoard = new Board(board);
         MoveNode currentNode = new MoveNode(testBoard, null, Board.MAX_SQUARE);
 
