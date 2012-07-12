@@ -704,6 +704,7 @@ public final class Board implements Cloneable {
             ArraySet.addNumber(blackPieces, 0x75);
         }
         
+        this.enPassant = Board.MAX_SQUARE;
         activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
     }
 
@@ -736,6 +737,7 @@ public final class Board implements Cloneable {
             ArraySet.addNumber(blackPieces, 0x73);
         }
         
+        this.enPassant = Board.MAX_SQUARE;
         activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
     }
     
