@@ -32,7 +32,7 @@ public class MoveGeneratorTest {
 
         String line = null;
 
-        for (int i = 4; i < 5; i++) {
+        for (int i = 1; i < 2; i++) {
             while (true) {
                 try {
                   line = file.readLine();
