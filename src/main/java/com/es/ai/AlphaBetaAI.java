@@ -9,12 +9,12 @@ import org.slf4j.LoggerFactory;
 
 import com.es.ArraySet;
 import com.es.Board;
+import com.es.Board.State;
 import com.es.CmdConfiguration;
 import com.es.IllegalMoveException;
 import com.es.pieces.Pawn;
 import com.es.pieces.Piece;
 import com.es.pieces.Piece.Color;
-import com.es.pieces.Queen;
 
 public class AlphaBetaAI {
     private static final Logger LOG = LoggerFactory.getLogger(AlphaBetaAI.class);
@@ -24,15 +24,18 @@ public class AlphaBetaAI {
     private final Color colorPlaying;
     private final Configuration configuration;
     private final int depth;
+    private final Board board;
 
-    public AlphaBetaAI(Color colorPlaying, Configuration configuration) {
+    public AlphaBetaAI(Color colorPlaying, Board board, Configuration configuration) {
         this.colorPlaying = colorPlaying;
+        this.board = board;
         this.configuration = configuration;
         this.depth = configuration.getInt(CmdConfiguration.DEPTH);
     }
 
-    public AlphaBetaAI(Color colorPlaying) {
+    public AlphaBetaAI(Color colorPlaying, Board board) {;
         this.colorPlaying = colorPlaying;
+        this.board = board;
         this.configuration = null;
         this.depth = 4;
     }
@@ -61,14 +64,13 @@ public class AlphaBetaAI {
 
     public int alphabeta(MoveNode node, int depth, int alpha, int beta, Color color) {
         if(depth == 0) {
-            int score = computeScore(node);
+            int score = computeScore();
             node.setScore(score);
             node.setDepth(depth);
             node.setRetVal(score);
             return score;
         }
 
-        final Board board = node.getBoard();
         int[] boardPieces = board.getPieces(color);
         final int[] childrenPieces = node.getChildrenPieces();
 
@@ -161,19 +163,14 @@ public class AlphaBetaAI {
 
 
     public int[] alphabeta(MoveNode node, int depth, int move, int alpha, int beta, Color color) {
-        final Board moveBoard = new Board(node.getBoard());
-
+        State state;
+        
         try {
-            // just make sure the first move is legal
-            if(depth == this.depth) {
-                moveBoard.makeMove(move);
-            } else {
-                moveBoard.makeMove(move);
-            }
+            state = board.makeMove(move);
         } catch (IllegalMoveException e) {
             if(!e.isKingInCheck()) {
                 LOG.error("Illegal move during compute: {}", e.getMessage());
-                System.out.println(moveBoard.toString());
+                System.out.println(board.toString());
                 System.exit(-1);
             }
 
@@ -181,11 +178,11 @@ public class AlphaBetaAI {
             return new int[] { alpha, beta };
         }
 
-        MoveNode childNode = transpositionTable.get(moveBoard);
+        MoveNode childNode = transpositionTable.get(board);
 
         // check to see if we need to create a new node, or if we can use the one from the table
         if(childNode == null || childNode.getDepth() <= depth) {
-            childNode = new MoveNode(moveBoard, node, move);
+            childNode = new MoveNode(node, move);
 
             final int score = alphabeta(childNode, depth - 1, alpha, beta, swapColor(color));
 
@@ -200,7 +197,7 @@ public class AlphaBetaAI {
             node.addChild(childNode);
 
             // add it to the transposition table
-            transpositionTable.put(moveBoard, childNode);
+            transpositionTable.put(board, childNode);
         } else {
             if(colorPlaying.equals(color)) {
                 alpha = Math.max(alpha, childNode.getRetVal());
@@ -212,6 +209,15 @@ public class AlphaBetaAI {
 
             // add the child node's children to the current node's children
             node.addChildren(childNode);
+        }
+        
+        // unmake the move
+        try {
+            board.unmakeMove(move, state);
+        } catch (IllegalMoveException e) {
+            LOG.error("Illegal move during compute: {}", e.getMessage());
+            System.out.println(board.toString());
+            System.exit(-1);
         }
 
         // see if we have a cut-off
@@ -263,8 +269,7 @@ public class AlphaBetaAI {
         return allMoves;
     }
 
-    public int computeScore(MoveNode node) {
-        final Board board = node.getBoard();
+    public int computeScore() {
         final int[] whitePieces = board.getPieces(Color.WHITE);
         final int[] blackPieces = board.getPieces(Color.BLACK);
         int whiteScore = 0;

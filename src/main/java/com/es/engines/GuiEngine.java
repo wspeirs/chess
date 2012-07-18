@@ -28,13 +28,13 @@ public class GuiEngine implements Engine {
     public GuiEngine(Configuration config) {
         this.config = config;
         this.board = new Board();
-        this.ai = new AlphaBetaAI(Color.BLACK, config);
+        this.ai = new AlphaBetaAI(Color.BLACK, board, config);
         this.utils = new PgnUtils(this.board);
     }
 
     @Override
     public void play() {
-        MoveNode currentNode = new MoveNode(board, null, Board.MAX_SQUARE);
+        MoveNode currentNode = new MoveNode(null, Board.MAX_SQUARE);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line = "go";
 
@@ -73,7 +73,7 @@ public class GuiEngine implements Engine {
 
             if(currentNode == null) {
                 LOG.info("COULDN'T FIND USER MOVE {} -> {}", Integer.toHexString(userMove[0]), Integer.toHexString(userMove[1]));
-                currentNode = new MoveNode(board, null, Board.MAX_SQUARE);
+                currentNode = new MoveNode(null, Board.MAX_SQUARE);
             } else {
                 LOG.info("FOUND NODE FOR {} -> {}", Integer.toHexString(userMove[0]), Integer.toHexString(userMove[1]));
             }

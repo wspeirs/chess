@@ -14,9 +14,9 @@ import com.es.pieces.Piece.Color;
 public class AlphaBetaAITest {
 
     Board board = new Board();
-    WorkingAlphaBetaAI workingAB = new WorkingAlphaBetaAI(Color.WHITE);
+    WorkingAlphaBetaAI workingAB = new WorkingAlphaBetaAI(Color.WHITE, board);
     BaseConfiguration defaults = new BaseConfiguration();
-    AlphaBetaAI alphaBeta = new AlphaBetaAI(Color.WHITE);
+    AlphaBetaAI alphaBeta = new AlphaBetaAI(Color.WHITE, board);
 
     static final int DEPTH = 4;
     
@@ -46,7 +46,7 @@ public class AlphaBetaAITest {
     @Test
     public void test() throws Exception {
         setupBoard();
-        MoveNode alphaBetaNode = new MoveNode(board, null, Board.MAX_SQUARE);
+        MoveNode alphaBetaNode = new MoveNode(null, Board.MAX_SQUARE);
 
         long start = System.currentTimeMillis();
         int ret = alphaBeta.computeNextMove(alphaBetaNode, Color.WHITE);

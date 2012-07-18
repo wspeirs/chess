@@ -20,6 +20,9 @@ import com.es.ai.MoveNode;
 import com.es.pieces.Piece.Color;
 
 public class MoveGeneratorTest {
+    
+    private AlphaBetaAI ai;
+    private Board board;
 
     @Test
     public void testPerft() throws FileNotFoundException {
@@ -47,9 +50,9 @@ public class MoveGeneratorTest {
                 String[] tokens = line.split(";");
 
                 // Setup a new board from fen
-                GenericBoard board = null;
+                GenericBoard genericBoard = null;
                 try {
-                    board = new GenericBoard(tokens[0].trim());
+                    genericBoard = new GenericBoard(tokens[0].trim());
                 } catch (IllegalNotationException e) {
                     fail("Illegal Notation: " + e.getMessage());
                 }
@@ -60,18 +63,19 @@ public class MoveGeneratorTest {
                     int nodesNumber = Integer.parseInt(data[1]);
 
                     // Create a new board
-                    Board testBoard = new Board(board);
-                    MoveNode currentNode = new MoveNode(testBoard, null, Board.MAX_SQUARE);
+                    board = new Board(genericBoard);
+                    ai = new AlphaBetaAI(genericBoard.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, board);
+                    MoveNode currentNode = new MoveNode(null, Board.MAX_SQUARE);
 
                     System.out.println("BOARD: ");
-                    System.out.println(testBoard.toString());
+                    System.out.println(board.toString());
                     System.out.print("Testing " + tokens[0].trim()
                             + " depth " + depth + " with nodes number "
                             + nodesNumber + ": ");
                     long startTime = System.currentTimeMillis();
 
                     // Count all moves
-                    int result = miniMax( currentNode, board.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, depth);
+                    int result = miniMax( currentNode, genericBoard.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, depth);
 
                     long endTime = System.currentTimeMillis();
                     System.out.println(endTime - startTime);
@@ -96,8 +100,6 @@ public class MoveGeneratorTest {
         }
 
         int totalNodes = 0;
-        AlphaBetaAI ai = new AlphaBetaAI(color);
-        Board board = node.getBoard();
         
         int nodes = 0;
         int[] allMoves = ai.generateAllMoves(board, board.getPieces(color));
@@ -156,7 +158,7 @@ public class MoveGeneratorTest {
                 }
             }
             
-            MoveNode childNode = new MoveNode(board, node, allMoves[i]);
+            MoveNode childNode = new MoveNode(node, allMoves[i]);
             
             nodes = miniMax(childNode, color == Color.WHITE ? Color.BLACK : Color.WHITE, depth - 1);
             
@@ -179,14 +181,15 @@ public class MoveGeneratorTest {
 
     @Test
     public void testBoardSetup() throws Exception {
-        int depth = 4;
-        int res = 533;
+        int depth = 2;
+        int res = 2042;
         GenericBoard board = new GenericBoard("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-        Board testBoard = new Board(board);
-        MoveNode currentNode = new MoveNode(testBoard, null, Board.MAX_SQUARE);
+        this.board = new Board(board);
+        this.ai = new AlphaBetaAI(Color.WHITE, this.board);
+        MoveNode currentNode = new MoveNode(null, Board.MAX_SQUARE);
 
         System.out.println("BOARD: ");
-        System.out.println(testBoard.toString());
+        System.out.println(this.board.toString());
 
         // Count all moves
         int result = miniMax( currentNode, board.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, depth);

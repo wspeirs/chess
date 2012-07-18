@@ -24,7 +24,6 @@ public final class MoveNode {
     private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
     private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
-    private final Board board;
     private final int move;
     private int score;
     private int retVal;
@@ -33,18 +32,13 @@ public final class MoveNode {
     private List<MoveNode> children = new ArrayList<MoveNode>();
     private boolean isSorted = false;
 
-    public MoveNode(Board board, MoveNode parent, int move) {
-        this.board = board;
+    public MoveNode(MoveNode parent, int move) {
         this.move = move;
         this.parent = parent;
     }
 
     public MoveNode getParent() {
         return parent;
-    }
-
-    public Board getBoard() {
-        return board;
     }
 
     public int getScore() {
@@ -205,37 +199,40 @@ public final class MoveNode {
     public String childrenToString() {
         final StringBuilder sb = new StringBuilder();
         final Iterator<MoveNode> it = children.iterator();
-        final AlphaBetaAI ai = new AlphaBetaAI(Color.BLACK);
 
         while(it.hasNext()) {
             MoveNode curNode = it.next();
             int move = curNode.getMove();
 
             sb.append(curNode.getScore());
-            sb.append(": ");
+            sb.append(") ");
 
-            sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move));
-
-            sb.append(" (");
-            sb.append(ai.computeScore(curNode));
-            sb.append(" ");
+            String from = "0x" + Integer.toHexString(Board.getFromSquare(move));
+            String to = "0x" + Integer.toHexString(Board.getToSquare(move));
+            
             sb.append(curNode.depth);
-            sb.append(")");
-
+            sb.append(": ");
+            sb.append(from);
+            sb.append(" -> ");
+            sb.append(to);
+            
             while(curNode.getChildCount() != 0) {
                 curNode = curNode.getFirstChild();
                 move = curNode.getMove();
                 sb.append(" ");
+
                 if(curNode == null || curNode.parent == null) {
                     continue;
                 }
-                sb.append(new PgnUtils(curNode.parent.board).computePgnMove(move));
 
-                sb.append(" (");
-                sb.append(ai.computeScore(curNode));
-                sb.append(" ");
+                from = "0x" + Integer.toHexString(Board.getFromSquare(move));
+                to = "0x" + Integer.toHexString(Board.getToSquare(move));
+                
                 sb.append(curNode.depth);
-                sb.append(")");
+                sb.append(": ");
+                sb.append(from);
+                sb.append(" -> ");
+                sb.append(to);
             }
 
             sb.append(LINE_BREAK);
