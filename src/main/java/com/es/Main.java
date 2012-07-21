@@ -60,7 +60,7 @@ public class Main {
         } catch(Exception e) {
             LOG.error("Caught exception in play()", e);
             if("GUI".equalsIgnoreCase(mode)) {
-                System.err.println("Caught exception in play()");
+                System.err.println("Caught exception in play(): " + e.getMessage());
             }
         }
     }

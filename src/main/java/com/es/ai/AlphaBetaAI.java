@@ -49,10 +49,17 @@ public class AlphaBetaAI {
     }
 
     public int computeNextMove(MoveNode node, Color color) {
-        for(int d=2; d <= 4; d++) {
+        for(int d=2; d <= 2; d++) {
             transHit = 0;
             long start = System.currentTimeMillis();
             alphabeta(node, d, -1000000, 1000000, color);
+            
+            try {
+                board.checkBoard();
+            } catch (IllegalMoveException e) {
+                LOG.error("Error with board: {}", e.getMessage());
+            }
+            
             long time = System.currentTimeMillis() - start;
 
 //            System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount() + " CHILD: " + node.getChildCount());
@@ -74,6 +81,7 @@ public class AlphaBetaAI {
         int[] boardPieces = board.getPieces(color);
         final int[] childrenPieces = node.getChildrenPieces();
 
+/*        
         // we want to make sure we walk through the pieces in the same order as any children
         if(childrenPieces.length < boardPieces.length && childrenPieces.length != 0) {
             final int[] boardNoChildrenPieces = Arrays.copyOf(boardPieces, boardPieces.length);
@@ -105,15 +113,16 @@ public class AlphaBetaAI {
                 boardPieces[i] = Board.MAX_SQUARE;
             }
         }
+*/
 
-        // DEBUG: Check to make sure all the pieces are really in the board
-        for(int p:boardPieces) {
-            if(Arrays.binarySearch(board.getPieces(color), p) < 0) {
-                System.out.println("GOT HERE");
-            }
+        // TODO: Remove this check
+        try {
+            board.checkBoard();
+        } catch (IllegalMoveException e) {
+            LOG.error("Error with board: " + e.getMessage());
         }
 
-        int[] allMoves = this.generateAllMoves(board, boardPieces);
+        int[] allMoves = this.generateAllMoves(boardPieces);
         int[] ret = { 0, alpha, beta };
 
         for(int i = 0; i < allMoves.length && Board.getFromSquare(allMoves[i]) != Board.MAX_SQUARE; ++i) {
@@ -236,7 +245,7 @@ public class AlphaBetaAI {
         return new int[] { alpha, beta };
     }
 
-    public int[] generateAllMoves(Board board, int[] pieces) {
+    public int[] generateAllMoves(int[] pieces) {
         int[] allMoves = new int[161];
         int i = 0;
 

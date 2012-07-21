@@ -102,7 +102,7 @@ public class MoveGeneratorTest {
         int totalNodes = 0;
         
         int nodes = 0;
-        int[] allMoves = ai.generateAllMoves(board, board.getPieces(color));
+        int[] allMoves = ai.generateAllMoves(board.getPieces(color));
 
         try {
             board.checkBoard();
