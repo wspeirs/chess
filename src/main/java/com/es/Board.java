@@ -251,19 +251,11 @@ public final class Board implements Cloneable {
     @Override
     public boolean equals(Object obj) {
 
-        if(obj instanceof Board) {
-            Board board = (Board) obj;
-
-            for(int i=0; i < Board.MAX_SQUARE; ++i) {
-                if(this.board[i] != board.board[i]) {
-                    return false;
-                }
-            }
-
-            return true;
+        if(!(obj instanceof Board)) {
+            return false;
         }
-
-        return false;
+        
+        return Arrays.equals(((Board) obj).board, this.board);
     }
 
     public int hashCode() {
