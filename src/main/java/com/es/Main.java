@@ -1,17 +1,17 @@
 package com.es;
 
-import jcpi.standardio.StandardIoCommunication;
-
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.es.engines.Engine;
 import com.es.engines.GuiEngine;
 import com.es.engines.UciEngine;
+import com.fluxchess.jcpi.commands.IEngine;
+import com.fluxchess.jcpi.protocols.UciProtocol;
 
 public class Main {
 
@@ -44,19 +44,19 @@ public class Main {
         // get the mode for the program to run in
         final String mode = config.getString(CmdConfiguration.MODE);
 
-        Engine engine = null;
+        Runnable engine = null;
 
         if("GUI".equalsIgnoreCase(mode)) {
             engine = new GuiEngine(config);
         } else if("UCI".equalsIgnoreCase(mode)) {
-            engine = new UciEngine(config, new StandardIoCommunication());
+            engine = new UciEngine(config, new UciProtocol(new BufferedReader(new InputStreamReader(System.in)), System.out));
         } else {
             cmdConfig.printHelp();
             throw new ConfigurationException("A mode of " + mode + " is not supported");
         }
 
         try {
-            engine.play();  // start the game
+            engine.run();  // start the game
         } catch(Exception e) {
             LOG.error("Caught exception in play()", e);
             if("GUI".equalsIgnoreCase(mode)) {

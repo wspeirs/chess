@@ -16,7 +16,7 @@ import com.es.ai.AlphaBetaAI;
 import com.es.ai.MoveNode;
 import com.es.pieces.Piece.Color;
 
-public class GuiEngine implements Engine {
+public class GuiEngine implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(GuiEngine.class);
 
@@ -33,7 +33,7 @@ public class GuiEngine implements Engine {
     }
 
     @Override
-    public void play() {
+    public void run() {
         MoveNode currentNode = new MoveNode(null, Board.MAX_SQUARE);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line = "go";

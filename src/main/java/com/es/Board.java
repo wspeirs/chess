@@ -3,18 +3,8 @@ package com.es;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import jcpi.data.GenericBoard;
-import jcpi.data.GenericCastling;
-import jcpi.data.GenericColor;
-import jcpi.data.GenericFile;
-import jcpi.data.GenericPiece;
-import jcpi.data.GenericPosition;
-import jcpi.data.GenericRank;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.es.pieces.AbstractPiece;
 import com.es.pieces.Bishop;
 import com.es.pieces.King;
@@ -24,6 +14,13 @@ import com.es.pieces.Piece;
 import com.es.pieces.Piece.Color;
 import com.es.pieces.Queen;
 import com.es.pieces.Rook;
+import com.fluxchess.jcpi.models.GenericBoard;
+import com.fluxchess.jcpi.models.GenericCastling;
+import com.fluxchess.jcpi.models.GenericColor;
+import com.fluxchess.jcpi.models.GenericFile;
+import com.fluxchess.jcpi.models.GenericPiece;
+import com.fluxchess.jcpi.models.GenericPosition;
+import com.fluxchess.jcpi.models.GenericRank;
 
 /**
  * A representation of a chess board.
