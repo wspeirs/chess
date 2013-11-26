@@ -12,21 +12,29 @@ public class ArraySet {
      * @return True if the number was found and removed, false otherwise.
      */
     public static boolean removeNumber(int[] numbers, int number, int sentinalNumber) {
+        if(number == sentinalNumber) {
+            return false;
+        }
+        
         final int loc = Arrays.binarySearch(numbers, number);
 
-        if(loc < 0 || number == sentinalNumber) {
+        if(loc < 0) {
             return false;
         }
 
-        for(int i = loc; i < numbers.length - 1; ++i) {
-            numbers[i] = numbers[i+1];
-        }
+        System.arraycopy(numbers, loc+1, numbers, loc, numbers.length-loc-1);
 
         numbers[numbers.length-1] = sentinalNumber;
 
         return true;
     }
 
+    /**
+     * Adds a number to a given "set" of numbers.
+     * @param numbers the set of numbers
+     * @param number the number to add
+     * @return true if the number was added, false otherwise.
+     */
     public static boolean addNumber(int[] numbers, int number) {
         final int loc = (Arrays.binarySearch(numbers, number) + 1) * -1;
 
@@ -36,9 +44,7 @@ public class ArraySet {
         }
 
         // shift everything down to make room
-        for(int i=numbers.length-1; i > loc; --i) {
-            numbers[i] = numbers[i-1];
-        }
+        System.arraycopy(numbers, loc, numbers, loc+1, numbers.length-loc-1);
 
         // insert the number
         numbers[loc] = number;
@@ -46,6 +52,12 @@ public class ArraySet {
         return true;
     }
 
+    /**
+     * Union two sets together to get the resulting merged set.
+     * @param set1 one of the sets to union.
+     * @param set2 one of the sets to union.
+     * @return the union of the two sets.
+     */
     public static int[] unionSets(int[] set1, int[] set2) {
         int[] ret = new int[Math.max(set1.length, set2.length)];
         int i = 0, j = 0, k = 0;
