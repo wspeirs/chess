@@ -2,22 +2,18 @@ package com.es;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-
-import jcpi.data.GenericBoard;
-import jcpi.data.GenericColor;
-import jcpi.data.IllegalNotationException;
-
 import org.junit.Test;
-
 import com.es.Board.State;
 import com.es.ai.AlphaBetaAI;
 import com.es.ai.MoveNode;
 import com.es.pieces.Piece.Color;
+import com.fluxchess.jcpi.models.GenericBoard;
+import com.fluxchess.jcpi.models.GenericColor;
+import com.fluxchess.jcpi.models.IllegalNotationException;
 
 public class MoveGeneratorTest {
     

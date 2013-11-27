@@ -6,14 +6,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.es.ArraySet;
 import com.es.Board;
-import com.es.PgnUtils;
-import com.es.pieces.Piece.Color;
 
 public final class MoveNode {
 
