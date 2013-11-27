@@ -49,7 +49,7 @@ public class AlphaBetaAI {
     }
 
     public int computeNextMove(MoveNode node, Color color) {
-        for(int d=2; d <= 2; d++) {
+        for(int d=6; d <= 6; d++) {
             transHit = 0;
             long start = System.currentTimeMillis();
             alphabeta(node, d, -1000000, 1000000, color);
@@ -62,8 +62,8 @@ public class AlphaBetaAI {
             
             long time = System.currentTimeMillis() - start;
 
-//            System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount() + " CHILD: " + node.getChildCount());
-//            System.out.println(node.childrenToString());
+            System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount() + " CHILD: " + node.getChildCount());
+            System.out.println(node.childrenToString());
         }
 
         return node.getBestChild().getMove();
@@ -114,13 +114,6 @@ public class AlphaBetaAI {
             }
         }
 */
-
-        // TODO: Remove this check
-        try {
-            board.checkBoard();
-        } catch (IllegalMoveException e) {
-            LOG.error("Error with board: " + e.getMessage());
-        }
 
         int[] allMoves = this.generateAllMoves(boardPieces);
         int[] ret = { 0, alpha, beta };
