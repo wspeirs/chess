@@ -2,11 +2,15 @@ package com.es;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+
 import com.es.Board.State;
 import com.es.ai.AlphaBetaAI;
 import com.es.ai.MoveNode;
@@ -16,33 +20,28 @@ import com.fluxchess.jcpi.models.GenericColor;
 import com.fluxchess.jcpi.models.IllegalNotationException;
 
 public class MoveGeneratorTest {
-    
+
     private AlphaBetaAI ai;
     private Board board;
 
     @Test
-    public void testPerft() throws FileNotFoundException {
-        BufferedReader file;
-        try {
-            file = new BufferedReader(new FileReader("perftsuite.epd"));
-        } catch (FileNotFoundException e1) {
-            file = new BufferedReader(new FileReader("src/test/resources/perftsuite.epd"));
+    public void testPerft() throws IOException {
+        File file= new File("perftsuite.epd");
+
+        if(! file.exists()) {
+            file = new File("src/test/resources/perftsuite.epd");
         }
 
-        String line = null;
+        // read in all the lines of the test file
+        final List<String> lines = FileUtils.readLines(file);
 
-        for (int i = 1; i < 2; i++) {
-            while (true) {
-                try {
-                  line = file.readLine();
-                } catch (IOException e) {
-                    fail("Error reading from file: " + e.getMessage());
-                }
+        //final List<String> lines = Arrays.asList("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ;D1 48 ;D2 2039 ;D3 97862 ;D4 4085603 ;D5 193690690");
 
-                if(line == null) {
-                    break;
-                }
+        final List<String> failedBoards = new ArrayList<String>();
 
+        // i = the depth we're searching
+        for (int i = 1; i < 3; i++) {
+            for(String line:lines) {
                 String[] tokens = line.split(";");
 
                 // Setup a new board from fen
@@ -53,40 +52,48 @@ public class MoveGeneratorTest {
                     fail("Illegal Notation: " + e.getMessage());
                 }
 
-                if (tokens.length > i) {
-                    String[] data = tokens[i].trim().split(" ");
-                    int depth = Integer.parseInt(data[0].substring(1));
-                    int nodesNumber = Integer.parseInt(data[1]);
+                // make sure we have enough tokens/depth for this run
+                if(tokens.length <= i) {
+                    continue;
+                }
 
-                    // Create a new board
-                    board = new Board(genericBoard);
-                    ai = new AlphaBetaAI(genericBoard.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, board);
-                    MoveNode currentNode = new MoveNode(null, Board.MAX_SQUARE);
+                String[] data = tokens[i].trim().split(" ");
+                int depth = Integer.parseInt(data[0].substring(1));
+                int nodesNumber = Integer.parseInt(data[1]);
+                Color activeColor = genericBoard.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK;
 
-                    System.out.println("BOARD: ");
-                    System.out.println(board.toString());
-                    System.out.print("Testing " + tokens[0].trim()
-                            + " depth " + depth + " with nodes number "
-                            + nodesNumber + ": ");
-                    long startTime = System.currentTimeMillis();
+                // Create a new board
+                board = new Board(genericBoard);
+                ai = new AlphaBetaAI(activeColor, board);
+                MoveNode currentNode = new MoveNode(null, Board.MAX_SQUARE);
 
-                    // Count all moves
-                    int result = miniMax( currentNode, genericBoard.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, depth);
+                System.out.println("BOARD: ");
+                System.out.println(board.toString());
+                System.out.print("Testing " + tokens[0].trim() + " depth " + depth + " with nodes number "
+                        + nodesNumber + " ");
+                long startTime = System.currentTimeMillis();
 
-                    long endTime = System.currentTimeMillis();
-                    System.out.println(endTime - startTime);
+                // Count all moves
+                int result = miniMax(currentNode, activeColor, depth);
 
-                    // Check total moves against database
-//                        assertEquals(tokens[0].trim(), nodesNumber, result);
+                long endTime = System.currentTimeMillis();
+                System.out.println("TIME: " + (endTime - startTime));
 
-                    if(nodesNumber != result) {
-                        System.out.println("FAILED FOUND: " + result + " NEEDED: " + nodesNumber);
-                        // fail("FAILED");
-                    } else {
-                        System.out.println("PASSED!");
-                    }
+                // Check total moves against database
+                // assertEquals(tokens[0].trim(), nodesNumber, result);
+
+                if (nodesNumber != result) {
+                    System.out.println("FAILED FOUND: " + result + " NEEDED: " + nodesNumber);
+                    failedBoards.add(line + " @ depth " + depth + " FOUND: " + result);
+                    //fail("FAILED");
+                } else {
+                    System.out.println("PASSED!");
                 }
             }
+        }
+
+        for(String failed:failedBoards) {
+            System.out.println("FAILED: " + failed);
         }
     }
 
@@ -96,7 +103,7 @@ public class MoveGeneratorTest {
         }
 
         int totalNodes = 0;
-        
+
         int nodes = 0;
         int[] allMoves = ai.generateAllMoves(board.getPieces(color));
 
@@ -112,40 +119,36 @@ public class MoveGeneratorTest {
             State boardState = null;
             final String from = Integer.toHexString(Board.getFromSquare(allMoves[i]));
             final String to = Integer.toHexString(Board.getToSquare(allMoves[i]));
-            
+
             try {
-                System.out.println("MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
+                //System.out.println("MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
                 board.checkBoard();
-                
-                if(Board.getFromSquare(allMoves[i]) == 0x16 && color.equals(Color.BLACK)) {
-                	System.out.println(board);
-                }
-                
+
                 boardState = board.makeMove(allMoves[i]);
                 board.checkBoard();
-                
-                if(board.getPiece(Board.getToSquare(allMoves[i])) == null) {
-                	System.out.println("Never made move");
-                	System.out.println(board);
-                	fail("NEVER MADE MOVE");
+
+                if (board.getPiece(Board.getToSquare(allMoves[i])) == null) {
+                    System.out.println("Never made move");
+                    System.out.println(board);
+                    fail("NEVER MADE MOVE");
                 }
-                
-//                System.out.println(board);
+
+                // System.out.println(board);
             } catch (IllegalMoveException e) {
                 System.err.println(board);
                 e.printStackTrace();
                 fail("Illegal Move: " + e.getMessage());
             }
-            
+
             // check to see if we move ourself into check
-            if(board.isInCheck(color)) {
-                System.out.println("KING IN CHECK");
-                //System.out.println(board.toString());
+            if (board.isInCheck(color)) {
+                // System.out.println("KING IN CHECK");
+                // System.out.println(board.toString());
 
                 try {
                     board.unmakeMove(allMoves[i], boardState);
                     board.checkBoard();
-//                    System.out.println(board.toString());
+                    // System.out.println(board.toString());
                     continue;
                 } catch (IllegalMoveException e) {
                     System.err.println(board);
@@ -153,13 +156,14 @@ public class MoveGeneratorTest {
                     fail("Illegal Move: " + e.getMessage());
                 }
             }
-            
+
             MoveNode childNode = new MoveNode(node, allMoves[i]);
-            
+
             nodes = miniMax(childNode, color == Color.WHITE ? Color.BLACK : Color.WHITE, depth - 1);
-            
+
             try {
-                System.out.println("UN-MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
+                // System.out.println("UN-MOVE: " + color + " " + from + " -> "
+                // + to + " (" + board.getEnPassant() + ")");
                 board.unmakeMove(allMoves[i], boardState);
                 board.checkBoard();
             } catch (IllegalMoveException e) {
@@ -173,7 +177,6 @@ public class MoveGeneratorTest {
 
         return totalNodes;
     }
-    
 
     @Test
     public void testBoardSetup() throws Exception {
@@ -188,7 +191,8 @@ public class MoveGeneratorTest {
         System.out.println(this.board.toString());
 
         // Count all moves
-        int result = miniMax( currentNode, board.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK, depth);
+        int result = miniMax(currentNode, board.getActiveColor() == GenericColor.WHITE ? Color.WHITE : Color.BLACK,
+                depth);
 
         assertEquals(res, result);
     }

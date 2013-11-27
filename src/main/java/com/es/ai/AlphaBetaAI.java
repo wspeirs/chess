@@ -7,7 +7,6 @@ import org.apache.commons.configuration.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.es.ArraySet;
 import com.es.Board;
 import com.es.Board.State;
 import com.es.CmdConfiguration;
@@ -49,17 +48,17 @@ public class AlphaBetaAI {
     }
 
     public int computeNextMove(MoveNode node, Color color) {
-        for(int d=6; d <= 6; d++) {
+        for(int d=2; d <= 2; d++) {
             transHit = 0;
             long start = System.currentTimeMillis();
             alphabeta(node, d, -1000000, 1000000, color);
-            
+
             try {
                 board.checkBoard();
             } catch (IllegalMoveException e) {
                 LOG.error("Error with board: {}", e.getMessage());
             }
-            
+
             long time = System.currentTimeMillis() - start;
 
             System.out.println("DEPTH: " + d + " TT HITS: " + transHit + " TIME: " + time + " NODES: " + node.getNodeCount() + " CHILD: " + node.getChildCount());
@@ -81,7 +80,7 @@ public class AlphaBetaAI {
         int[] boardPieces = board.getPieces(color);
         final int[] childrenPieces = node.getChildrenPieces();
 
-/*        
+/*
         // we want to make sure we walk through the pieces in the same order as any children
         if(childrenPieces.length < boardPieces.length && childrenPieces.length != 0) {
             final int[] boardNoChildrenPieces = Arrays.copyOf(boardPieces, boardPieces.length);
@@ -120,7 +119,7 @@ public class AlphaBetaAI {
 
         for(int i = 0; i < allMoves.length && Board.getFromSquare(allMoves[i]) != Board.MAX_SQUARE; ++i) {
 
-            MoveNode child = node.findChild(allMoves[i]);
+            final MoveNode child = node.findChild(allMoves[i]);
 
             if(child != null) {
                 int score = alphabeta(child, depth - 1, alpha, beta, swapColor(color));
@@ -166,7 +165,7 @@ public class AlphaBetaAI {
 
     public int[] alphabeta(MoveNode node, int depth, int move, int alpha, int beta, Color color) {
         State state;
-        
+
         try {
             state = board.makeMove(move);
         } catch (IllegalMoveException e) {
@@ -212,7 +211,7 @@ public class AlphaBetaAI {
             // add the child node's children to the current node's children
             node.addChildren(childNode);
         }
-        
+
         // unmake the move
         try {
             board.unmakeMove(move, state);
@@ -246,7 +245,7 @@ public class AlphaBetaAI {
             if(p == Board.MAX_SQUARE) {
                 break;  // in sorted order, so we can break early
             }
-            
+
             final Piece piece = board.getPiece(p);
             int[] moves = piece.generateAllMoves(board, p);
 
@@ -254,7 +253,7 @@ public class AlphaBetaAI {
                 if(m == Board.MAX_SQUARE) {
                     break;  // always in sorted order, so we're done here
                 }
-                
+
                 // check to see if we have a pawn promoting
                 if(piece instanceof Pawn && ( (m & 0xf0) == 0x70 || (m & 0xf0) == 0x00) ) {
                     allMoves[i++] = Board.createMoveValue(p, m, 'q');
