@@ -258,7 +258,12 @@ public final class Board implements Cloneable {
         return Arrays.equals(((Board) obj).board, this.board);
     }
 
+    @Override
     public int hashCode() {
+        if(hashCode == 0) {
+            computeHashCode();
+        }
+        
         return hashCode;
     }
 
@@ -389,6 +394,46 @@ public final class Board implements Cloneable {
 
         return sb.toString();
     }
+    
+    /**
+     * Given the current board's state, generate all of the possible moves.
+     * @return an array containing all possible moves for the board.
+     */
+    public int[] generateAllMoves() {
+        final int[] pieces = activeColor.equals(Color.BLACK) ? blackPieces : whitePieces;
+        final int[] allMoves = new int[161]; // make space for all possible moves
+        int i = 0;
+
+        for(int p:pieces) {
+            if(p == Board.MAX_SQUARE) {
+                break;  // in sorted order, so we can break early
+            }
+            
+            final Piece piece = getPiece(p);
+            final int[] moves = piece.generateAllMoves(this, p);
+
+            for(int m:moves) {
+                if(m == Board.MAX_SQUARE) {
+                    break;  // always in sorted order, so we're done here
+                }
+                
+                // check to see if we have a pawn promoting
+                if(piece instanceof Pawn && ( (m & 0xf0) == 0x70 || (m & 0xf0) == 0x00) ) {
+                    allMoves[i++] = Board.createMoveValue(p, m, 'q');
+                    allMoves[i++] = Board.createMoveValue(p, m, 'b');
+                    allMoves[i++] = Board.createMoveValue(p, m, 'n');
+                    allMoves[i++] = Board.createMoveValue(p, m, 'r');
+                } else {
+                    allMoves[i++] = Board.createMoveValue(p, m, '-');
+                }
+            }
+        }
+
+        Arrays.fill(allMoves, i, allMoves.length, Board.createMoveValue(Board.MAX_SQUARE, Board.MAX_SQUARE, '-'));
+        return allMoves;
+    }
+
+
 
     /**
      * Moves the piece from one square to another.
