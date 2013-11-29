@@ -424,6 +424,24 @@ public final class Board implements Cloneable {
                 } else {
                     allMoves[i++] = Board.createMoveValue(p, m, '-');
                 }
+                
+                // if the king is in check, then only move that put the king out of check can be made
+                if(this.isInCheck(activeColor)) {
+                    final int move = allMoves[i-1];
+                    
+                    try {
+                        State state = this.makeMove(move);
+
+                        // if it's still in check, then we cannot make this move
+                        if(isInCheck(activeColor)) {
+                            i--;
+                        }
+                        
+                        this.unmakeMove(move, state);
+                    } catch(IllegalMoveException e) {
+                        i--; // remove this move
+                    }
+                }
             }
         }
 
@@ -472,12 +490,9 @@ public final class Board implements Cloneable {
             return boardState;
         }
 
-        // check to see if the move is legal or not (this covers en passe, but
-        // not castling)
+        // check to see if the move is legal or not (this covers en passe, but not castling)
         if (Arrays.binarySearch(fromPiece.generateAllMoves(this, fromSquare), toSquare) < 0) {
-            LOG.error(
-                    "Illegal move 0x{} - > 0x{} for {}",
-                    new String[] { Integer.toHexString(fromSquare), Integer.toHexString(toSquare), fromPiece.toString() });
+            LOG.error("Illegal move 0x{} - > 0x{} for {}", new String[] { Integer.toHexString(fromSquare), Integer.toHexString(toSquare), fromPiece.toString() });
             LOG.error("CURRENT BOARD: {}{}", LINE_BREAK, this.toString());
             throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
         }
@@ -809,15 +824,8 @@ public final class Board implements Cloneable {
                 throw new IllegalMoveException("BOARD PIECE IS NOT WHITE: 0x" + Integer.toHexString(p));
             }
         }
-<<<<<<< HEAD
 
         last = -1;
-
-=======
-
-        last = -1;
-
->>>>>>> a75ed8825fb75a9d423d7627c88a0e0d6362a8a0
         // check the black pieces
         for (int p : blackPieces) {
             if (last > p) {
@@ -861,8 +869,7 @@ public final class Board implements Cloneable {
     /**
      * Given a king, checks to see if it is in check.
      *
-     * @param king
-     *            The king to check.
+     * @param king The king to check.
      * @return True if the king is in check, false otherwise.
      */
     public boolean isInCheck(int kingPos) {
