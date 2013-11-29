@@ -809,9 +809,15 @@ public final class Board implements Cloneable {
                 throw new IllegalMoveException("BOARD PIECE IS NOT WHITE: 0x" + Integer.toHexString(p));
             }
         }
+<<<<<<< HEAD
 
         last = -1;
 
+=======
+
+        last = -1;
+
+>>>>>>> a75ed8825fb75a9d423d7627c88a0e0d6362a8a0
         // check the black pieces
         for (int p : blackPieces) {
             if (last > p) {
