@@ -21,14 +21,18 @@ public class Knight extends AbstractPiece {
       { -50,-40,-30,-30,-30,-30,-40,-50 }
     };
 
+    public static final int[] KNIGHT_MOVES = new int[] { 0x21, 0x1f, 0x12, 0x0e };
+
     public Knight(Color color) {
         super(color, POSITION_VALUES);
     }
 
+    @Override
     public int getValue() {
         return 300;
     }
 
+    @Override
     public String toString() {
         if(getColor().equals(Color.BLACK)) {
             return "n";
@@ -37,6 +41,7 @@ public class Knight extends AbstractPiece {
         }
     }
 
+    @Override
     public int[] generateAllMoves(Board board, int curPos) {
         int[] ret = new int[8]; // can only ever move in 8 positions
         int retIndex = 0;

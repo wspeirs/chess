@@ -25,10 +25,12 @@ public class King extends AbstractPiece {
         super(color, POSITION_VALUES);
     }
 
+    @Override
     public int getValue() {
         return 100000;
     }
 
+    @Override
     public String toString() {
         if(getColor().equals(Color.BLACK)) {
             return "k";
@@ -37,6 +39,7 @@ public class King extends AbstractPiece {
         }
     }
 
+    @Override
     public int[] generateAllMoves(Board board, int curPos) {
         int[] ret = new int[10]; // can only ever move 8 positions
         int retIndex = 0;
@@ -50,11 +53,11 @@ public class King extends AbstractPiece {
         addPos(board, ret, retIndex++, curPos - 0x10); // move to back
         addPos(board, ret, retIndex++, curPos + 0x01); // move to right
         addPos(board, ret, retIndex++, curPos - 0x01); // move to left
-        
+
         if(board.canKingCastle(getColor())) {
-            ret[retIndex++] = getColor().equals(Color.WHITE) ? 0x06 : 0x76; 
+            ret[retIndex++] = getColor().equals(Color.WHITE) ? 0x06 : 0x76;
         }
-        
+
         if(board.canQueenCastle(getColor())) {
             ret[retIndex++] = getColor().equals(Color.WHITE) ? 0x02 : 0x72;
         }

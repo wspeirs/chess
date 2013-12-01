@@ -262,8 +262,21 @@ public final class Board implements Cloneable {
         if(hashCode == 0) {
             computeHashCode();
         }
-        
+
         return hashCode;
+    }
+
+    /**
+     * Given an integer, returns true if it's a valid position on the board.
+     * @param pos the potential position.
+     * @return true if the position is valid, false otherwise.
+     */
+    public static boolean isValidPosition(int pos) {
+        if(pos < 0) return false;
+        if(pos >= Board.MAX_SQUARE) return false;
+        if((pos & 0x08) != 0) return false;
+
+        return true;
     }
 
     private void computeHashCode() {
@@ -327,6 +340,11 @@ public final class Board implements Cloneable {
     }
 
     public boolean canKingCastle(Color color) {
+        // cannot castle out of check
+        if(this.isInCheck(color)) {
+            return false;
+        }
+
         if (color.equals(Color.WHITE)) {
             return whiteKingCastle && board[0x05] == null && board[0x06] == null;
         } else {
@@ -335,6 +353,11 @@ public final class Board implements Cloneable {
     }
 
     public boolean canQueenCastle(Color color) {
+        // cannot castle out of check
+        if(this.isInCheck(color)) {
+            return false;
+        }
+
         if (color.equals(Color.WHITE)) {
             return whiteQueenCastle && board[0x01] == null && board[0x02] == null && board[0x03] == null;
         } else {
@@ -392,7 +415,7 @@ public final class Board implements Cloneable {
 
         return sb.toString();
     }
-    
+
     /**
      * Given the current board's state, generate all of the possible moves.
      * @return an array containing all possible moves for the board.
@@ -406,7 +429,7 @@ public final class Board implements Cloneable {
             if(p == Board.MAX_SQUARE) {
                 break;  // in sorted order, so we can break early
             }
-            
+
             final Piece piece = getPiece(p);
             final int[] moves = piece.generateAllMoves(this, p);
 
@@ -414,32 +437,26 @@ public final class Board implements Cloneable {
                 if(m == Board.MAX_SQUARE) {
                     break;  // always in sorted order, so we're done here
                 }
-                
+
                 // check to see if we have a pawn promoting
                 if(piece instanceof Pawn && ( (m & 0xf0) == 0x70 || (m & 0xf0) == 0x00) ) {
-                    allMoves[i++] = Board.createMoveValue(p, m, 'q');
+                    final int move = Board.createMoveValue(p, m, 'q');
+
+                    // if we don't have a valid move, then none of them will be valid
+                    if(!isValidMove(activeColor, move)) {
+                        break;
+                    }
+
+                    // otherwise, they'll all be valid
+                    allMoves[i++] = move;
                     allMoves[i++] = Board.createMoveValue(p, m, 'b');
                     allMoves[i++] = Board.createMoveValue(p, m, 'n');
                     allMoves[i++] = Board.createMoveValue(p, m, 'r');
                 } else {
-                    allMoves[i++] = Board.createMoveValue(p, m, '-');
-                }
-                
-                // if the king is in check, then only move that put the king out of check can be made
-                if(this.isInCheck(activeColor)) {
-                    final int move = allMoves[i-1];
-                    
-                    try {
-                        State state = this.makeMove(move);
+                    final int move = Board.createMoveValue(p, m, '-');
 
-                        // if it's still in check, then we cannot make this move
-                        if(isInCheck(activeColor)) {
-                            i--;
-                        }
-                        
-                        this.unmakeMove(move, state);
-                    } catch(IllegalMoveException e) {
-                        i--; // remove this move
+                    if(isValidMove(activeColor, move)) {
+                        allMoves[i++] = move;
                     }
                 }
             }
@@ -449,16 +466,53 @@ public final class Board implements Cloneable {
         return allMoves;
     }
 
+    /**
+     * Checks to see if a move if valid by seeing if the King will be in check after the move.
+     * @param kingColor the color of the king that just moved
+     * @param move the move to test
+     * @return true if the move won't leave the king in check, false if it will.
+     */
+    private boolean isValidMove(Color kingColor, int move) {
+        boolean ret = true;
+
+        try {
+            final State state = makeMove(move, false);
+
+            // we moved into check, so remove this position from the possible ones
+            if(isInCheck(kingColor)) {
+                ret = false;
+            }
+
+            this.unmakeMove(move, state);
+        } catch (IllegalMoveException e) {
+            LOG.error("Error making move that should be possible: {}", e.getMessage());
+            LOG.error(board.toString());
+        }
+
+        return ret;
+    }
 
 
     /**
-     * Moves the piece from one square to another.
+     * Moves the piece from one square to another performing checks.
      *
      * @param move The move encoded as an integer.
      * @return The piece which was captured, or null if nothing was captured.
      * @throws IllegalMoveException
      */
     public State makeMove(int move) throws IllegalMoveException {
+        return makeMove(move, true);
+    }
+
+    /**
+     * Moves the piece from one square to another.
+     *
+     * @param move The move encoded as an integer.
+     * @param checkMove Check to see if the move is legal or not.
+     * @return The piece which was captured, or null if nothing was captured.
+     * @throws IllegalMoveException
+     */
+    public State makeMove(int move, boolean checkMove) throws IllegalMoveException {
         final int fromSquare = Board.getFromSquare(move);
         final int toSquare = Board.getToSquare(move);
         final Piece fromPiece = board[fromSquare];
@@ -491,7 +545,7 @@ public final class Board implements Cloneable {
         }
 
         // check to see if the move is legal or not (this covers en passe, but not castling)
-        if (Arrays.binarySearch(fromPiece.generateAllMoves(this, fromSquare), toSquare) < 0) {
+        if (checkMove && Arrays.binarySearch(fromPiece.generateAllMoves(this, fromSquare), toSquare) < 0) {
             LOG.error("Illegal move 0x{} - > 0x{} for {}", new String[] { Integer.toHexString(fromSquare), Integer.toHexString(toSquare), fromPiece.toString() });
             LOG.error("CURRENT BOARD: {}{}", LINE_BREAK, this.toString());
             throw new IllegalMoveException("That move is not legal for " + fromPiece.toString());
@@ -582,7 +636,7 @@ public final class Board implements Cloneable {
         fromPiece.pieceMoved(); // mark the piece has having moved
 
         // Switch the active color if we make a move on the board.
-        activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
+        activeColor = activeColor.inverse();
 
         computeHashCode(); // re-compute the hash code
 
@@ -880,20 +934,236 @@ public final class Board implements Cloneable {
             System.out.println(this.toString());
         }
 
-        final int[] pieces = king.getColor().equals(Color.WHITE) ? blackPieces : whitePieces;
+        final Color kingColor = king.getColor();
 
-        for (int p : pieces) {
-            if (p == Board.MAX_SQUARE) {
-                break;
-            }
+        // "look" to the left
+        for(int pos=kingPos-0x01; Board.isValidPosition(pos); pos -= 0x01) {
+            final Piece piece = board[pos];
 
-            if (board[p] == null) {
-                System.out.println("BOARD PIECE IS NULL: 0x" + Integer.toHexString(p));
-                System.out.println(this.toString());
-            }
+            // no piece, keep moving
+            if(piece == null) continue;
 
-            if (Arrays.binarySearch(board[p].generateAllMoves(this, p), kingPos) >= 0) {
+            // our own color, so done looking
+            if(piece.getColor().equals(kingColor)) break;
+
+            // one away is a king
+            if(pos == kingPos-0x01 && piece instanceof King) return true;
+
+            // we found a rook or queen of the other color, we're in check
+            if(piece instanceof Rook || piece instanceof Queen) {
                 return true;
+            } else {
+                break; // non-attacking piece
+            }
+        }
+
+        // "look" to the right
+        for(int pos=kingPos+0x01; Board.isValidPosition(pos); pos += 0x01) {
+            final Piece piece = board[pos];
+
+            // no piece, keep moving
+            if(piece == null) continue;
+
+            // our own color, so done looking
+            if(piece.getColor().equals(kingColor)) break;
+
+            // one away is a king
+            if(pos == kingPos+0x01 && piece instanceof King) return true;
+
+            // we found a rook or queen of the other color, we're in check
+            if(piece instanceof Rook || piece instanceof Queen) {
+                return true;
+            } else {
+                break; // non-attacking piece
+            }
+        }
+
+        // "look" up
+        for(int pos=kingPos+0x10; Board.isValidPosition(pos); pos += 0x10) {
+            final Piece piece = board[pos];
+
+            // no piece, keep moving
+            if(piece == null) continue;
+
+            // our own color, so done looking
+            if(piece.getColor().equals(kingColor)) break;
+
+            // one away is a king
+            if(pos == kingPos+0x10 && piece instanceof King) return true;
+
+            // we found a rook or queen of the other color, we're in check
+            if(piece instanceof Rook || piece instanceof Queen) {
+                return true;
+            } else {
+                break; // non-attacking piece
+            }
+        }
+
+        // "look" down
+        for(int pos=kingPos-0x10; Board.isValidPosition(pos); pos -= 0x10) {
+            final Piece piece = board[pos];
+
+            // no piece, keep moving
+            if(piece == null) continue;
+
+            // our own color, so done looking
+            if(piece.getColor().equals(kingColor)) break;
+
+            // one away is a king
+            if(pos == kingPos-0x10 && piece instanceof King) return true;
+
+            // we found a rook or queen of the other color, we're in check
+            if(piece instanceof Rook || piece instanceof Queen) {
+                return true;
+            } else {
+                break; // non-attacking piece
+            }
+        }
+
+        // "look" upper-right
+        for(int pos=kingPos+0x11; Board.isValidPosition(pos); pos += 0x11) {
+            final Piece piece = board[pos];
+
+            // no piece, keep moving
+            if(piece == null) continue;
+
+            // our own color, so done looking
+            if(piece.getColor().equals(kingColor)) break;
+
+            // one away is a king
+            if(pos == kingPos+0x11 && piece instanceof King) return true;
+
+            // we found a rook or queen of the other color, we're in check
+            if(piece instanceof Bishop || piece instanceof Queen) {
+                return true;
+            } else {
+                break; // non-attacking piece
+            }
+        }
+
+        // "look" lower-left
+        for(int pos=kingPos-0x11; Board.isValidPosition(pos); pos -= 0x11) {
+            final Piece piece = board[pos];
+
+            // no piece, keep moving
+            if(piece == null) continue;
+
+            // our own color, so done looking
+            if(piece.getColor().equals(kingColor)) break;
+
+            // one away is a king
+            if(pos == kingPos-0x11 && piece instanceof King) return true;
+
+            // we found a rook or queen of the other color, we're in check
+            if(piece instanceof Bishop || piece instanceof Queen) {
+                return true;
+            } else {
+                break; // non-attacking piece
+            }
+        }
+
+        // "look" upper-left
+        for(int pos=kingPos+0x0f; Board.isValidPosition(pos); pos += 0x0f) {
+            final Piece piece = board[pos];
+
+            // no piece, keep moving
+            if(piece == null) continue;
+
+            // our own color, so done looking
+            if(piece.getColor().equals(kingColor)) break;
+
+            // one away is a king
+            if(pos == kingPos+0x0f && piece instanceof King) return true;
+
+            // we found a rook or queen of the other color, we're in check
+            if(piece instanceof Bishop || piece instanceof Queen) {
+                return true;
+            } else {
+                break; // non-attacking piece
+            }
+        }
+
+        // "look" lower-right
+        for(int pos=kingPos-0x0f; Board.isValidPosition(pos); pos -= 0x0f) {
+            final Piece piece = board[pos];
+
+            // no piece, keep moving
+            if(piece == null) continue;
+
+            // our own color, so done looking
+            if(piece.getColor().equals(kingColor)) break;
+
+            // one away is a king
+            if(pos == kingPos-0x0f && piece instanceof King) return true;
+
+            // we found a rook or queen of the other color, we're in check
+            if(piece instanceof Bishop || piece instanceof Queen) {
+                return true;
+            } else {
+                break; // non-attacking piece
+            }
+        }
+
+        // check for knights attacking (adding)
+        for(int knightMove:Knight.KNIGHT_MOVES) {
+            final int pos = kingPos + knightMove;
+
+            if(! Board.isValidPosition(pos)) continue;
+
+            final Piece piece = board[pos];
+
+            // no piece, or our own
+            if(piece == null || piece.getColor().equals(kingColor)) continue;
+
+            if(piece instanceof Knight) return true;
+        }
+
+        // check for knights attacking (subtracting)
+        for(int knightMove:Knight.KNIGHT_MOVES) {
+            final int pos = kingPos - knightMove;
+
+            if(! Board.isValidPosition(pos)) continue;
+
+            final Piece piece = board[pos];
+
+            // no piece, or our own
+            if(piece == null || piece.getColor().equals(kingColor)) continue;
+
+            if(piece instanceof Knight) return true;
+        }
+
+        // check for pawns attacking
+        if(kingColor.equals(Color.BLACK)) {
+            if(Board.isValidPosition(kingPos - 0x11)) {
+                final Piece piece = board[kingPos - 0x11];
+
+                if(piece != null &&
+                   ! piece.getColor().equals(kingColor) &&
+                   piece instanceof Pawn) return true;
+            }
+
+            if(Board.isValidPosition(kingPos - 0x0f)) {
+                final Piece piece = board[kingPos - 0x0f];
+
+                if(piece != null &&
+                   ! piece.getColor().equals(kingColor) &&
+                   piece instanceof Pawn) return true;
+            }
+        } else {
+            if(Board.isValidPosition(kingPos + 0x11)) {
+                final Piece piece = board[kingPos + 0x11];
+
+                if(piece != null &&
+                   ! piece.getColor().equals(kingColor) &&
+                   piece instanceof Pawn) return true;
+            }
+
+            if(Board.isValidPosition(kingPos + 0x0f)) {
+                final Piece piece = board[kingPos + 0x0f];
+
+                if(piece != null &&
+                   ! piece.getColor().equals(kingColor) &&
+                   piece instanceof Pawn) return true;
             }
         }
 

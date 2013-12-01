@@ -1,21 +1,32 @@
 package com.es.pieces;
 
 import com.es.Board;
+import com.fluxchess.jcpi.models.GenericColor;
 
 public interface Piece {
 
-    public enum Color {
-        BLACK("BLACK"),
-        WHITE("WHITE");
-        
+    public class Color {
+
+        public static final Color BLACK = new Color("BLACK");
+        public static final Color WHITE = new Color("WHITE");
+
         private final String name;
-        
+
         private Color(String name) {
             this.name = name;
         }
-        
+
+        public Color inverse() {
+            return this.equals(BLACK) ? WHITE : BLACK;
+        }
+
+        @Override
         public String toString() {
             return name;
+        }
+
+        public static Color fromGenericColor(GenericColor color) {
+            return color.equals(GenericColor.BLACK) ? BLACK : WHITE;
         }
     }
 

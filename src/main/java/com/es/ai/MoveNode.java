@@ -6,8 +6,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.es.ArraySet;
 import com.es.Board;
 
@@ -124,48 +126,48 @@ public final class MoveNode {
 
         return null;
     }
-    
+
     public int removeChildrenAfter(MoveNode child) {
         if(child == null) {
             return 0;
         }
-        
+
         Iterator<MoveNode> it = children.iterator();
         boolean found = false;
         int removeCount = 0;
-        
+
         while(it.hasNext()) {
             MoveNode node = it.next();
-            
+
             if(node.equals(child)) {
                 found = true;
                 continue;
             }
-            
+
             if(found) {
                 node.clearChildren();
                 it.remove();
                 ++removeCount;
             }
         }
-        
+
         return removeCount;
     }
 
     public int removeNotAtDepth(int depth) {
         Iterator<MoveNode> it = children.iterator();
         int removeCount = 0;
-        
+
         while(it.hasNext()) {
             MoveNode node = it.next();
-            
+
             if(node.depth != depth) {
                 node.clearChildren();
                 it.remove();
                 ++removeCount;
             }
         }
-        
+
         return removeCount;
     }
 
@@ -205,13 +207,13 @@ public final class MoveNode {
 
             String from = "0x" + Integer.toHexString(Board.getFromSquare(move));
             String to = "0x" + Integer.toHexString(Board.getToSquare(move));
-            
+
             sb.append(curNode.depth);
             sb.append(": ");
             sb.append(from);
             sb.append(" -> ");
             sb.append(to);
-            
+
             while(curNode.getChildCount() != 0) {
                 curNode = curNode.getFirstChild();
                 move = curNode.getMove();
@@ -223,7 +225,7 @@ public final class MoveNode {
 
                 from = "0x" + Integer.toHexString(Board.getFromSquare(move));
                 to = "0x" + Integer.toHexString(Board.getToSquare(move));
-                
+
                 sb.append(curNode.depth);
                 sb.append(": ");
                 sb.append(from);
@@ -237,6 +239,10 @@ public final class MoveNode {
         return sb.toString();
     }
 
+    /**
+     * Returns the total number of nodes in the tree.
+     * @return the total number of nodes in the tree.
+     */
     public int getNodeCount() {
         return getNodeCount(0, this.depth);
     }
@@ -262,6 +268,7 @@ public final class MoveNode {
             this.increasing = increasing;
         }
 
+        @Override
         public int compare(MoveNode node1, MoveNode node2) {
             if(increasing) {
                 return (node2.score < node1.score) ? -1 : ((node2.score > node1.score) ? 1 : 0);

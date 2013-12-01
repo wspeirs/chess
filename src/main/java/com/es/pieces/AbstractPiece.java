@@ -17,7 +17,7 @@ public abstract class AbstractPiece implements Piece {
         this.color = color;
         this.POSITION_VALUES = positionValues;
     }
-    
+
     public static Piece makePiece(char p) {
         switch(p) {
         case 'P': return new Pawn(Color.WHITE);
@@ -35,7 +35,7 @@ public abstract class AbstractPiece implements Piece {
         default: return null;
         }
     }
-    
+
     public static int pieceToPromoteValue(char piece) {
         if(piece == 'q') {
             return 1;
@@ -49,7 +49,7 @@ public abstract class AbstractPiece implements Piece {
             return 0;
         }
     }
-    
+
     public static Piece promoteValueToPiece(int value, Color color) {
         switch(value) {
         case 1: return new Queen(color);
@@ -60,10 +60,12 @@ public abstract class AbstractPiece implements Piece {
         }
     }
 
+    @Override
     public Color getColor() {
         return color;
     }
 
+    @Override
     public int getPositionValue(int square) {
         int col = Board.squareToCol(square);
         int row = Board.squareToRow(square);
@@ -88,7 +90,7 @@ public abstract class AbstractPiece implements Piece {
      * @return True if the spot was empty, false otherwise.
      */
     public boolean addPos(Board board, int[] positions, int curIndex, int position) {
-        if(position >= 0 && position < Board.MAX_SQUARE && (position & 0x08) == 0) {
+        if(Board.isValidPosition(position)) {
 //            LOG.debug("POS: {} INDEX: {}", Integer.toHexString(position), curIndex);
             final Piece p = board.getPiece(position);
 
@@ -105,10 +107,12 @@ public abstract class AbstractPiece implements Piece {
         return false;
     }
 
+    @Override
     public boolean hasMoved() {
         return hasMoved;
     }
 
+    @Override
     public void pieceMoved() {
         hasMoved = true;
     }
