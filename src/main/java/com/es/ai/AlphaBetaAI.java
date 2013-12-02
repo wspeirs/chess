@@ -78,42 +78,6 @@ public class AlphaBetaAI {
         }
 
         int[] boardPieces = board.getPieces(color);
-        final int[] childrenPieces = node.getChildrenPieces();
-
-/*
-        // we want to make sure we walk through the pieces in the same order as any children
-        if(childrenPieces.length < boardPieces.length && childrenPieces.length != 0) {
-            final int[] boardNoChildrenPieces = Arrays.copyOf(boardPieces, boardPieces.length);
-
-            // remove all the children from the board
-            for(int p:childrenPieces) {
-                ArraySet.removeNumber(boardNoChildrenPieces, p, Board.MAX_SQUARE);
-            }
-
-            boardPieces = new int[boardPieces.length];
-            int i=0;
-
-            // copy over all of the children pieces first
-            for(int childPiece:childrenPieces) {
-                // copy over the child piece, only if it's still on the board
-                if(Arrays.binarySearch(board.getPieces(color), childPiece) >= 0)
-                    boardPieces[i++] = childPiece;
-            }
-
-            final int length = i;
-
-            // copy over all the rest of the pieces from the board
-            for( ; boardNoChildrenPieces[i - length] != Board.MAX_SQUARE; ++i) {
-                boardPieces[i] = boardNoChildrenPieces[i - length];
-            }
-
-            // ensure any other spaces are set to MAX_SQUARE
-            for( ; i < boardPieces.length; ++i) {
-                boardPieces[i] = Board.MAX_SQUARE;
-            }
-        }
-*/
-
         int[] allMoves = this.generateAllMoves(boardPieces);
         int[] ret = { 0, alpha, beta };
 
@@ -142,7 +106,7 @@ public class AlphaBetaAI {
 
             if(beta <= alpha) {
                 // node.removeChildrenAfter(child);
-                node.removeNotAtDepth(depth-1);
+                node.removeChildrenDeeperThan(depth-1);
                 break;
             }
         }

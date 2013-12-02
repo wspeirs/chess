@@ -125,7 +125,7 @@ public class UciEngine extends AbstractEngine {
         // Setup the new game
         // We can receive any board here! So mirror the GenericBoard on our internal board.
         board = new Board(command.board);
-        currentNode = new MoveNode(null, Board.MAX_SQUARE);
+        currentNode = new MoveNode();
 
         // Make all moves here! UCI is not stateful! So we have to setup the board as the protocol says.
         // Don't just take the last move!
@@ -152,7 +152,7 @@ public class UciEngine extends AbstractEngine {
 
         LOG.debug("CUR NODE CHILD COUNT: {}", currentNode.getChildCount());
 
-        currentNode = new MoveNode(null, Board.MAX_SQUARE);
+        currentNode = new MoveNode();
 
         LOG.debug("COMPUTING NEXT MOVE FOR: {}", board.getActiveColor());
 

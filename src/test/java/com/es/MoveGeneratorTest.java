@@ -2,15 +2,12 @@ package com.es;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.junit.Test;
-
 import com.es.Board.State;
 import com.es.ai.MoveNode;
 import com.es.pieces.Piece.Color;
@@ -33,7 +30,7 @@ public class MoveGeneratorTest {
         // read in all the lines of the test file
         //final List<String> lines = FileUtils.readLines(file);
 
-        final List<String> lines = Arrays.asList("7k/8/1p6/8/8/P7/8/7K b - - 0 1 ;D1 4 ;D2 16 ;D3 101 ;D4 637 ;D5 4354 ;D6 29679");
+        final List<String> lines = Arrays.asList("r3k2r/8/8/8/8/8/8/2R1K2R w Kkq - 0 1 ;D1 25 ;D2 548 ;D3 13502 ;D4 312835 ;D5 7736373 ;D6 184411439");
 
         final List<String> failedBoards = new ArrayList<String>();
 
@@ -63,8 +60,7 @@ public class MoveGeneratorTest {
 
                 // Create a new board
                 board = new Board(genericBoard);
-                final MoveNode rootNode = new MoveNode(null, Board.MAX_SQUARE);
-                rootNode.setDepth(depth);
+                final MoveNode rootNode = new MoveNode();
 
                 System.out.println("BOARD: ");
                 System.out.println(board.toString());
@@ -74,7 +70,7 @@ public class MoveGeneratorTest {
                 miniMax(rootNode, activeColor, depth);
 
                 // count the moves (-1 for the root node)
-                final int computedNumberOfNodes = rootNode.getNodeCount() - 1;
+                final int computedNumberOfNodes = rootNode.getNodeCountAtDepth(depth);
 
                 // Check total moves against database
                 // assertEquals(tokens[0].trim(), nodesNumber, result);
@@ -98,6 +94,8 @@ public class MoveGeneratorTest {
         if (depth == 0) {
             return;
         }
+        
+        moveCount = 1;
 
         // generate all the moves
         final int[] allMoves = board.generateAllMoves();
@@ -128,11 +126,8 @@ public class MoveGeneratorTest {
 
             System.out.println(moveCount++ + " MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
 
-            // create a new MoveNode
-            final MoveNode childNode = new MoveNode(node, allMoves[i]);
-
-            // add the child to the parent
-            node.addChild(childNode);
+            // create a child of the node
+            final MoveNode childNode = node.addChild(allMoves[i]);
 
             // make the recursive call
             miniMax(childNode, color.inverse(), depth - 1);
@@ -155,7 +150,7 @@ public class MoveGeneratorTest {
         int res = 2042;
         GenericBoard board = new GenericBoard("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
         this.board = new Board(board);
-        final MoveNode rootNode = new MoveNode(null, Board.MAX_SQUARE);
+        final MoveNode rootNode = new MoveNode();
 
         System.out.println("BOARD: ");
         System.out.println(this.board.toString());

@@ -1,18 +1,20 @@
 package com.es.ai;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.es.ArraySet;
 import com.es.Board;
 
+/**
+ * Represents a node in the move tree.
+ * 
+ * The depth of the root node is zero with children being a depth 1, etc...
+ */
 public final class MoveNode {
 
     private static final Logger LOG = LoggerFactory.getLogger(MoveNode.class);
@@ -22,21 +24,49 @@ public final class MoveNode {
     private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
     private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
+    private final WeakReference<MoveNode> parent;
     private final int move;
+    private final int depth;
+    private final List<MoveNode> children = new ArrayList<MoveNode>();
     private int score;
     private int retVal;
-    private int depth;
-    private MoveNode parent;
-    private List<MoveNode> children = new ArrayList<MoveNode>();
     private boolean isSorted = false;
 
-    public MoveNode(MoveNode parent, int move) {
+    /**
+     * Constructs the root node of a MoveNode tree.
+     */
+    public MoveNode() {
+        this.move = 0;
+        this.parent = null;
+        this.depth = 0;
+    }
+    
+    /**
+     * Private constructor for creating children nodes.
+     * @param parent the parent of this node.
+     * @param move the move for this node.
+     * @param depth the depth of this node in the tree.
+     */
+    private MoveNode(MoveNode parent, int move, int depth) {
+        this.parent = new WeakReference<MoveNode>(parent);
         this.move = move;
-        this.parent = parent;
+        this.depth = depth;
+    }
+    
+    /**
+     * Adds a child to this MoveNode by constructing it and linking it in.
+     * @param move the move for the node.
+     * @return
+     */
+    public MoveNode addChild(int move) {
+        final MoveNode ret = new MoveNode(this, move, this.depth + 1);
+        children.add(ret);
+        
+        return ret;
     }
 
     public MoveNode getParent() {
-        return parent;
+        return parent == null ? null : parent.get();
     }
 
     public int getScore() {
@@ -59,10 +89,6 @@ public final class MoveNode {
         return depth;
     }
 
-    public void setDepth(int depth) {
-        this.depth = depth;
-    }
-
     public int getMove() {
         return move;
     }
@@ -75,15 +101,12 @@ public final class MoveNode {
         return children.get(0);
     }
 
-    public void clearChildren() {
-        for(MoveNode child:children) {
-            child.parent = null;
-            // child.clearChildren();
-        }
-
-        children.clear();
-    }
-
+    /**
+     * Gets the best child of this node.
+     * 
+     * It does so by sorting the children by score in increasing order, then returning the first child.
+     * @return the MoveNode with the highest score child.
+     */
     public MoveNode getBestChild() {
         if(!isSorted) {
             Collections.sort(children, increasingComparitor);
@@ -92,17 +115,18 @@ public final class MoveNode {
         return children.get(0);
     }
 
+    /**
+     * Gets the worst child of this node.
+     * 
+     * It does so by sorting the children by score in decreasing order, then returning the first child.
+     * @return the MoveNode with the lowest score child.
+     */
     public MoveNode getWorstChild() {
         if(!isSorted) {
             Collections.sort(children, decreasingComparitor);
         }
 
         return children.get(0);
-    }
-
-    public void addChild(MoveNode node) {
-        isSorted = false;
-        children.add(node);
     }
 
     /**
@@ -114,7 +138,20 @@ public final class MoveNode {
             this.addChild(child);
         }
     }
+    
+    /**
+     * Internal function to add a node to this node's children.
+     * @param node the node to add to this node's children.
+     */
+    private void addChild(MoveNode node) {
+        this.children.add(node);
+    }
 
+    /**
+     * Given a move, find the child associated with this move.
+     * @param move the move to find.
+     * @return the MoveNode associated with this move, or null if not found.
+     */
     public MoveNode findChild(int move) {
         for(MoveNode child:children) {
             int m = child.getMove();
@@ -126,7 +163,29 @@ public final class MoveNode {
 
         return null;
     }
+    
+    /**
+     * Removes all of the children from the node.
+     * 
+     * @return the number of children removed.
+     */
+    public int clearChildren() {
+        final int ret = children.size();
+        
+        if(ret != 0) {
+            for(MoveNode child:children) {
+                child.clearChildren();
+            }
 
+            children.clear();
+            
+            System.gc(); // run the GC to reclaim memory
+        }
+        
+        return ret;
+    }
+
+/*
     public int removeChildrenAfter(MoveNode child) {
         if(child == null) {
             return 0;
@@ -153,45 +212,40 @@ public final class MoveNode {
 
         return removeCount;
     }
-
-    public int removeNotAtDepth(int depth) {
-        Iterator<MoveNode> it = children.iterator();
-        int removeCount = 0;
+*/
+    
+    /**
+     * Removes children that are deeper than the provided depth. 
+     * @param depth the cutoff depth.
+     * @return the number of children removed.
+     */
+    public int removeChildrenDeeperThan(int depth) {
+        final int ret = removeChildrenDeeperThan(0, depth);
+        
+        // if we removed children, run the GC to reclaim the space
+        if(ret != 0)
+            System.gc();
+        
+        return ret;
+    }
+    
+    private int removeChildrenDeeperThan(int removeCount, int depth) {
+        final Iterator<MoveNode> it = children.iterator();
 
         while(it.hasNext()) {
-            MoveNode node = it.next();
+            final MoveNode node = it.next();
 
-            if(node.depth != depth) {
-                node.clearChildren();
+            if(node.depth > depth) {
+                // then remove this node
                 it.remove();
                 ++removeCount;
+            } else {
+                // recurse
+                removeCount = node.removeChildrenDeeperThan(depth);
             }
         }
 
         return removeCount;
-    }
-
-    public int[] getChildrenPieces() {
-        final int[] ret = new int[children.size()];
-        final int[] set = new int[children.size()];
-
-        if(ret.length == 0) {
-            return ret;
-        }
-
-        Arrays.fill(set, Board.MAX_SQUARE);
-
-        int i = 0;
-        for(final MoveNode child:children) {
-            final int piece = Board.getFromSquare(child.getMove());
-
-            // add the piece to ret only if we haven't already added it
-            if(ArraySet.addNumber(set, piece)) {
-                ret[i++] = piece;
-            }
-        }
-        // return the array with the unique pieces
-        return Arrays.copyOf(ret, i);
     }
 
     public String childrenToString() {
@@ -250,16 +304,45 @@ public final class MoveNode {
     private int getNodeCount(int count, int depth) {
         for(MoveNode c:children) {
             // only recurse if it's not a transposition
-            if(c.depth > depth) {
+            if(c.depth < depth) {
                 continue;
             }
 
-            count = c.getNodeCount(count, depth-1);
+            count = c.getNodeCount(count, depth+1);
         }
 
         return count + 1;
     }
+    
+    /**
+     * Counts all of the nodes in the tree at the depth specified.
+     * @param depth the depth to search.
+     * @return the number of nodes in the tree at the specified depth.
+     */
+    public int getNodeCountAtDepth(int depth) {
+        return getNodeCountAtDepth(0, depth);
+    }
+    
+    private int getNodeCountAtDepth(int count, int depth) {
+        // if this node is deeper than the depth, then short-circuit and return
+        if(this.depth > depth) {
+            return count;
+        }
+        
+        for(MoveNode child:children) {
+            if(child.depth == depth) {
+                count++;
+            }
+            
+            count = child.getNodeCountAtDepth(count, depth);
+        }
+        
+        return count;
+    }
 
+    /**
+     * A MoveNode Comparator that compares based upon score.
+     */
     private static class MoveNodeComparitor implements Comparator<MoveNode> {
 
         private boolean increasing;

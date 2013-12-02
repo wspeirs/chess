@@ -341,7 +341,7 @@ public final class Board implements Cloneable {
 
     public boolean canKingCastle(Color color) {
         // cannot castle out of check
-        if(this.isInCheck(color)) {
+        if(isInCheck(color)) {
             return false;
         }
 
@@ -354,7 +354,7 @@ public final class Board implements Cloneable {
 
     public boolean canQueenCastle(Color color) {
         // cannot castle out of check
-        if(this.isInCheck(color)) {
+        if(isInCheck(color)) {
             return false;
         }
 
@@ -467,7 +467,7 @@ public final class Board implements Cloneable {
     }
 
     /**
-     * Checks to see if a move if valid by seeing if the King will be in check after the move.
+     * Checks to see if a move is valid by seeing if the King will be in check after the move.
      * @param kingColor the color of the king that just moved
      * @param move the move to test
      * @return true if the move won't leave the king in check, false if it will.

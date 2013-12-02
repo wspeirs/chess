@@ -34,7 +34,7 @@ public class GuiEngine implements Runnable {
 
     @Override
     public void run() {
-        MoveNode currentNode = new MoveNode(null, Board.MAX_SQUARE);
+        MoveNode rootNode = new MoveNode();
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line = "go";
 
@@ -64,28 +64,28 @@ public class GuiEngine implements Runnable {
             System.out.println(board.toString());
 
             // go through and find the user's move, if we can
-            if(currentNode.getChildCount() > 0) {
-                MoveNode tmpNode = currentNode.getBestChild();
-                currentNode.clearChildren();    // so these can be GCed
-                currentNode = tmpNode.findChild(Board.createMoveValue(userMove[0], userMove[1], '-'));
+            if(rootNode.getChildCount() > 0) {
+                MoveNode tmpNode = rootNode.getBestChild();
+                rootNode.clearChildren();    // so these can be GCed
+                rootNode = tmpNode.findChild(Board.createMoveValue(userMove[0], userMove[1], '-'));
                 tmpNode.clearChildren();    // so these can be GCed
             }
 
-            if(currentNode == null) {
+            if(rootNode == null) {
                 LOG.info("COULDN'T FIND USER MOVE {} -> {}", Integer.toHexString(userMove[0]), Integer.toHexString(userMove[1]));
-                currentNode = new MoveNode(null, Board.MAX_SQUARE);
+                rootNode = new MoveNode();
             } else {
                 LOG.info("FOUND NODE FOR {} -> {}", Integer.toHexString(userMove[0]), Integer.toHexString(userMove[1]));
             }
 
             long start = System.currentTimeMillis();
-            int aiMove = ai.computeNextMove(currentNode, Color.BLACK);
+            int aiMove = ai.computeNextMove(rootNode, Color.BLACK);
             long time = System.currentTimeMillis() - start;
 
-            System.out.println(currentNode.childrenToString());
+            System.out.println(rootNode.childrenToString());
             System.out.println();
 
-            double nodeCount = currentNode.getNodeCount();
+            double nodeCount = rootNode.getNodeCount();
             double nps = (nodeCount / (double)time) * 1000.0;
             System.out.println("TIME: " + time + " NODES: " + nodeCount + " NPS: " + nps);
 
