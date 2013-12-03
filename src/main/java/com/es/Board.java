@@ -303,6 +303,10 @@ public final class Board implements Cloneable {
 
         return fromSquare + (toSquare << 8) + (pieceValue << 16);
     }
+    
+    public static int createMoveValue(int fromSquare, int toSquare) {
+        return createMoveValue(fromSquare, toSquare, '-');
+    }
 
     public static int getFromSquare(int move) {
         return move & 0xFF;
@@ -346,9 +350,10 @@ public final class Board implements Cloneable {
         }
 
         if (color.equals(Color.WHITE)) {
-            return whiteKingCastle && board[0x05] == null && board[0x06] == null;
+            // need to make sure boths spots are open, and that the King won't move through a spot that would put it in check
+            return whiteKingCastle && board[0x05] == null && board[0x06] == null && (!isSquareAttacked(Color.WHITE, 0x05));
         } else {
-            return blackKingCastle && board[0x75] == null && board[0x76] == null;
+            return blackKingCastle && board[0x75] == null && board[0x76] == null && (!isSquareAttacked(Color.BLACK, 0x75));
         }
     }
 
@@ -359,9 +364,9 @@ public final class Board implements Cloneable {
         }
 
         if (color.equals(Color.WHITE)) {
-            return whiteQueenCastle && board[0x01] == null && board[0x02] == null && board[0x03] == null;
+            return whiteQueenCastle && board[0x01] == null && board[0x02] == null && board[0x03] == null && (!isSquareAttacked(Color.WHITE, 0x02)) && (!isSquareAttacked(Color.WHITE, 0x03));
         } else {
-            return blackQueenCastle && board[0x71] == null && board[0x72] == null && board[0x73] == null;
+            return blackQueenCastle && board[0x71] == null && board[0x72] == null && board[0x73] == null && (!isSquareAttacked(Color.BLACK, 0x72)) && (!isSquareAttacked(Color.BLACK, 0x73));
         }
     }
 
@@ -462,7 +467,7 @@ public final class Board implements Cloneable {
             }
         }
 
-        Arrays.fill(allMoves, i, allMoves.length, Board.createMoveValue(Board.MAX_SQUARE, Board.MAX_SQUARE, '-'));
+        Arrays.fill(allMoves, i, allMoves.length, Board.createMoveValue(Board.MAX_SQUARE, Board.MAX_SQUARE));
         return allMoves;
     }
 
@@ -916,38 +921,36 @@ public final class Board implements Cloneable {
         }
     }
 
+    /**
+     * Checks to see if a color is in check or not.
+     * @param color the color to check.
+     * @return True if that color's King is in check, false otherwise.
+     */
     public boolean isInCheck(Color color) {
-        return isInCheck(color.equals(Color.WHITE) ? whiteKing : blackKing);
+        return isSquareAttacked(color, color.equals(Color.WHITE) ? whiteKing : blackKing);
     }
 
     /**
-     * Given a king, checks to see if it is in check.
+     * Given a color and a square, see if the square is being attacked by the opposite color.
      *
-     * @param king The king to check.
-     * @return True if the king is in check, false otherwise.
+     * @param defendingColor the color of the non-attacking player.
+     * @param square the square to check.
+     * @return True if the square is being attacked by the opposite color.
      */
-    public boolean isInCheck(int kingPos) {
-        final King king = (King) board[kingPos];
-
-        if (king == null) {
-            System.out.println("KING IS NULL");
-            System.out.println(this.toString());
-        }
-
-        final Color kingColor = king.getColor();
+    public boolean isSquareAttacked(Color defendingColor, int square) {
 
         // "look" to the left
-        for(int pos=kingPos-0x01; Board.isValidPosition(pos); pos -= 0x01) {
+        for(int pos=square-0x01; Board.isValidPosition(pos); pos -= 0x01) {
             final Piece piece = board[pos];
 
             // no piece, keep moving
             if(piece == null) continue;
 
             // our own color, so done looking
-            if(piece.getColor().equals(kingColor)) break;
+            if(piece.getColor().equals(defendingColor)) break;
 
             // one away is a king
-            if(pos == kingPos-0x01 && piece instanceof King) return true;
+            if(pos == square-0x01 && piece instanceof King) return true;
 
             // we found a rook or queen of the other color, we're in check
             if(piece instanceof Rook || piece instanceof Queen) {
@@ -958,17 +961,17 @@ public final class Board implements Cloneable {
         }
 
         // "look" to the right
-        for(int pos=kingPos+0x01; Board.isValidPosition(pos); pos += 0x01) {
+        for(int pos=square+0x01; Board.isValidPosition(pos); pos += 0x01) {
             final Piece piece = board[pos];
 
             // no piece, keep moving
             if(piece == null) continue;
 
             // our own color, so done looking
-            if(piece.getColor().equals(kingColor)) break;
+            if(piece.getColor().equals(defendingColor)) break;
 
             // one away is a king
-            if(pos == kingPos+0x01 && piece instanceof King) return true;
+            if(pos == square+0x01 && piece instanceof King) return true;
 
             // we found a rook or queen of the other color, we're in check
             if(piece instanceof Rook || piece instanceof Queen) {
@@ -979,17 +982,17 @@ public final class Board implements Cloneable {
         }
 
         // "look" up
-        for(int pos=kingPos+0x10; Board.isValidPosition(pos); pos += 0x10) {
+        for(int pos=square+0x10; Board.isValidPosition(pos); pos += 0x10) {
             final Piece piece = board[pos];
 
             // no piece, keep moving
             if(piece == null) continue;
 
             // our own color, so done looking
-            if(piece.getColor().equals(kingColor)) break;
+            if(piece.getColor().equals(defendingColor)) break;
 
             // one away is a king
-            if(pos == kingPos+0x10 && piece instanceof King) return true;
+            if(pos == square+0x10 && piece instanceof King) return true;
 
             // we found a rook or queen of the other color, we're in check
             if(piece instanceof Rook || piece instanceof Queen) {
@@ -1000,17 +1003,17 @@ public final class Board implements Cloneable {
         }
 
         // "look" down
-        for(int pos=kingPos-0x10; Board.isValidPosition(pos); pos -= 0x10) {
+        for(int pos=square-0x10; Board.isValidPosition(pos); pos -= 0x10) {
             final Piece piece = board[pos];
 
             // no piece, keep moving
             if(piece == null) continue;
 
             // our own color, so done looking
-            if(piece.getColor().equals(kingColor)) break;
+            if(piece.getColor().equals(defendingColor)) break;
 
             // one away is a king
-            if(pos == kingPos-0x10 && piece instanceof King) return true;
+            if(pos == square-0x10 && piece instanceof King) return true;
 
             // we found a rook or queen of the other color, we're in check
             if(piece instanceof Rook || piece instanceof Queen) {
@@ -1021,17 +1024,17 @@ public final class Board implements Cloneable {
         }
 
         // "look" upper-right
-        for(int pos=kingPos+0x11; Board.isValidPosition(pos); pos += 0x11) {
+        for(int pos=square+0x11; Board.isValidPosition(pos); pos += 0x11) {
             final Piece piece = board[pos];
 
             // no piece, keep moving
             if(piece == null) continue;
 
             // our own color, so done looking
-            if(piece.getColor().equals(kingColor)) break;
+            if(piece.getColor().equals(defendingColor)) break;
 
             // one away is a king
-            if(pos == kingPos+0x11 && piece instanceof King) return true;
+            if(pos == square+0x11 && piece instanceof King) return true;
 
             // we found a rook or queen of the other color, we're in check
             if(piece instanceof Bishop || piece instanceof Queen) {
@@ -1042,17 +1045,17 @@ public final class Board implements Cloneable {
         }
 
         // "look" lower-left
-        for(int pos=kingPos-0x11; Board.isValidPosition(pos); pos -= 0x11) {
+        for(int pos=square-0x11; Board.isValidPosition(pos); pos -= 0x11) {
             final Piece piece = board[pos];
 
             // no piece, keep moving
             if(piece == null) continue;
 
             // our own color, so done looking
-            if(piece.getColor().equals(kingColor)) break;
+            if(piece.getColor().equals(defendingColor)) break;
 
             // one away is a king
-            if(pos == kingPos-0x11 && piece instanceof King) return true;
+            if(pos == square-0x11 && piece instanceof King) return true;
 
             // we found a rook or queen of the other color, we're in check
             if(piece instanceof Bishop || piece instanceof Queen) {
@@ -1063,17 +1066,17 @@ public final class Board implements Cloneable {
         }
 
         // "look" upper-left
-        for(int pos=kingPos+0x0f; Board.isValidPosition(pos); pos += 0x0f) {
+        for(int pos=square+0x0f; Board.isValidPosition(pos); pos += 0x0f) {
             final Piece piece = board[pos];
 
             // no piece, keep moving
             if(piece == null) continue;
 
             // our own color, so done looking
-            if(piece.getColor().equals(kingColor)) break;
+            if(piece.getColor().equals(defendingColor)) break;
 
             // one away is a king
-            if(pos == kingPos+0x0f && piece instanceof King) return true;
+            if(pos == square+0x0f && piece instanceof King) return true;
 
             // we found a rook or queen of the other color, we're in check
             if(piece instanceof Bishop || piece instanceof Queen) {
@@ -1084,17 +1087,17 @@ public final class Board implements Cloneable {
         }
 
         // "look" lower-right
-        for(int pos=kingPos-0x0f; Board.isValidPosition(pos); pos -= 0x0f) {
+        for(int pos=square-0x0f; Board.isValidPosition(pos); pos -= 0x0f) {
             final Piece piece = board[pos];
 
             // no piece, keep moving
             if(piece == null) continue;
 
             // our own color, so done looking
-            if(piece.getColor().equals(kingColor)) break;
+            if(piece.getColor().equals(defendingColor)) break;
 
             // one away is a king
-            if(pos == kingPos-0x0f && piece instanceof King) return true;
+            if(pos == square-0x0f && piece instanceof King) return true;
 
             // we found a rook or queen of the other color, we're in check
             if(piece instanceof Bishop || piece instanceof Queen) {
@@ -1106,63 +1109,63 @@ public final class Board implements Cloneable {
 
         // check for knights attacking (adding)
         for(int knightMove:Knight.KNIGHT_MOVES) {
-            final int pos = kingPos + knightMove;
+            final int pos = square + knightMove;
 
             if(! Board.isValidPosition(pos)) continue;
 
             final Piece piece = board[pos];
 
             // no piece, or our own
-            if(piece == null || piece.getColor().equals(kingColor)) continue;
+            if(piece == null || piece.getColor().equals(defendingColor)) continue;
 
             if(piece instanceof Knight) return true;
         }
 
         // check for knights attacking (subtracting)
         for(int knightMove:Knight.KNIGHT_MOVES) {
-            final int pos = kingPos - knightMove;
+            final int pos = square - knightMove;
 
             if(! Board.isValidPosition(pos)) continue;
 
             final Piece piece = board[pos];
 
             // no piece, or our own
-            if(piece == null || piece.getColor().equals(kingColor)) continue;
+            if(piece == null || piece.getColor().equals(defendingColor)) continue;
 
             if(piece instanceof Knight) return true;
         }
 
         // check for pawns attacking
-        if(kingColor.equals(Color.BLACK)) {
-            if(Board.isValidPosition(kingPos - 0x11)) {
-                final Piece piece = board[kingPos - 0x11];
+        if(defendingColor.equals(Color.BLACK)) {
+            if(Board.isValidPosition(square - 0x11)) {
+                final Piece piece = board[square - 0x11];
 
                 if(piece != null &&
-                   ! piece.getColor().equals(kingColor) &&
+                   ! piece.getColor().equals(defendingColor) &&
                    piece instanceof Pawn) return true;
             }
 
-            if(Board.isValidPosition(kingPos - 0x0f)) {
-                final Piece piece = board[kingPos - 0x0f];
+            if(Board.isValidPosition(square - 0x0f)) {
+                final Piece piece = board[square - 0x0f];
 
                 if(piece != null &&
-                   ! piece.getColor().equals(kingColor) &&
+                   ! piece.getColor().equals(defendingColor) &&
                    piece instanceof Pawn) return true;
             }
         } else {
-            if(Board.isValidPosition(kingPos + 0x11)) {
-                final Piece piece = board[kingPos + 0x11];
+            if(Board.isValidPosition(square + 0x11)) {
+                final Piece piece = board[square + 0x11];
 
                 if(piece != null &&
-                   ! piece.getColor().equals(kingColor) &&
+                   ! piece.getColor().equals(defendingColor) &&
                    piece instanceof Pawn) return true;
             }
 
-            if(Board.isValidPosition(kingPos + 0x0f)) {
-                final Piece piece = board[kingPos + 0x0f];
+            if(Board.isValidPosition(square + 0x0f)) {
+                final Piece piece = board[square + 0x0f];
 
                 if(piece != null &&
-                   ! piece.getColor().equals(kingColor) &&
+                   ! piece.getColor().equals(defendingColor) &&
                    piece instanceof Pawn) return true;
             }
         }

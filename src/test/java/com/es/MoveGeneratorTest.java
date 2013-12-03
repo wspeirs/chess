@@ -5,8 +5,8 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import com.es.Board.State;
 import com.es.ai.MoveNode;
@@ -28,14 +28,14 @@ public class MoveGeneratorTest {
         }
 
         // read in all the lines of the test file
-        //final List<String> lines = FileUtils.readLines(file);
+        final List<String> lines = FileUtils.readLines(file);
 
-        final List<String> lines = Arrays.asList("r3k2r/8/8/8/8/8/8/2R1K2R w Kkq - 0 1 ;D1 25 ;D2 548 ;D3 13502 ;D4 312835 ;D5 7736373 ;D6 184411439");
+        //final List<String> lines = Arrays.asList("1k6/8/8/5pP1/4K1P1/8/8/8 w - f6 0 1 ;D1 10 ;D2 63 ;D3 533 ;D4 3508 ;D5 30821");
 
         final List<String> failedBoards = new ArrayList<String>();
 
         // i = the depth we're searching
-        for (int i = 2; i < 3; i++) {
+        for (int i = 1; i < 4; i++) {
             moveCount = 1;
             for(String line:lines) {
                 String[] tokens = line.split(";");
