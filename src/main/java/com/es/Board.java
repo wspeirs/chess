@@ -307,6 +307,45 @@ public final class Board implements Cloneable {
     public static int createMoveValue(int fromSquare, int toSquare) {
         return createMoveValue(fromSquare, toSquare, '-');
     }
+    
+    /**
+     * The static version that converts a move to a String without considering pieces.
+     * @param move the move to convert.
+     * @return a string with the move.
+     */
+    public static String moveToString(int move) {
+        final int from = getFromSquare(move);
+        final int to = getToSquare(move);
+        
+        final StringBuilder sb = new StringBuilder();
+        
+        sb.append((char)(squareToCol(to) + 97));
+        sb.append(squareToRow(to) + 1);
+        sb.append("-");
+        sb.append((char)(squareToCol(from) + 97));
+        sb.append(squareToRow(from) + 1);
+        
+        return sb.toString();
+    }
+    
+    public String moveToStringWithPieces(int move) {
+        final int from = getFromSquare(move);
+        final int to = getToSquare(move);
+        
+        final Piece fromPiece = board[from];
+        final Piece toPiece = board[to];
+        
+        final StringBuilder sb = new StringBuilder();
+
+        sb.append(fromPiece == null ? "?" : fromPiece.toString());
+        sb.append((char)(squareToCol(to) + 97));
+        sb.append(squareToRow(to) + 1);
+        sb.append(toPiece == null ? "-" : "*");
+        sb.append((char)(squareToCol(from) + 97));
+        sb.append(squareToRow(from) + 1);
+        
+        return sb.toString();
+    }
 
     public static int getFromSquare(int move) {
         return move & 0xFF;

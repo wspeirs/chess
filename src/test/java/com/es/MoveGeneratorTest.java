@@ -5,8 +5,8 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import com.es.Board.State;
 import com.es.ai.MoveNode;
@@ -28,14 +28,14 @@ public class MoveGeneratorTest {
         }
 
         // read in all the lines of the test file
-        final List<String> lines = FileUtils.readLines(file);
+        //final List<String> lines = FileUtils.readLines(file);
 
-        //final List<String> lines = Arrays.asList("1k6/8/8/5pP1/4K1P1/8/8/8 w - f6 0 1 ;D1 10 ;D2 63 ;D3 533 ;D4 3508 ;D5 30821");
+        final List<String> lines = Arrays.asList("4k3/8/8/8/8/8/8/R3K2R w Q - 0 1 ;D1 26 ;D2 112 ;D3 3068 ;D4 17945 ;D5 532933 ;D6 2788982");
 
         final List<String> failedBoards = new ArrayList<String>();
 
         // i = the depth we're searching
-        for (int i = 1; i < 4; i++) {
+        for (int i = 3; i < 4; i++) {
             moveCount = 1;
             for(String line:lines) {
                 String[] tokens = line.split(";");
@@ -103,11 +103,12 @@ public class MoveGeneratorTest {
         // go through all the moves, we stop when we see one that is Board.MAX_SQUARE
         for (int i = 0; i < allMoves.length && Board.getFromSquare(allMoves[i]) != Board.MAX_SQUARE; ++i) {
             State boardState = null;
-            final String from = Integer.toHexString(Board.getFromSquare(allMoves[i]));
-            final String to = Integer.toHexString(Board.getToSquare(allMoves[i]));
+            //final String from = Integer.toHexString(Board.getFromSquare(allMoves[i]));
+            //final String to = Integer.toHexString(Board.getToSquare(allMoves[i]));
 
             try {
                 board.checkBoard();
+                System.out.println(moveCount++ + " : " + color + " " + board.moveToStringWithPieces(allMoves[i]) + " (" + board.getEnPassant() + ")");
                 boardState = board.makeMove(allMoves[i]);
                 board.checkBoard();
 
@@ -123,8 +124,6 @@ public class MoveGeneratorTest {
                 e.printStackTrace();
                 fail("Illegal Move: " + e.getMessage());
             }
-
-            System.out.println(moveCount++ + " MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
 
             // create a child of the node
             final MoveNode childNode = node.addChild(allMoves[i]);
