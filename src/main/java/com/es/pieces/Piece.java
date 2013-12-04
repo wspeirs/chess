@@ -24,6 +24,10 @@ public interface Piece {
         public String toString() {
             return name;
         }
+        
+        public String toFENString() {
+            return this.equals(BLACK) ? "b" : "w";
+        }
 
         public static Color fromGenericColor(GenericColor color) {
             return color.equals(GenericColor.BLACK) ? BLACK : WHITE;

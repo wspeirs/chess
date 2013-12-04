@@ -1,5 +1,6 @@
 package com.es;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -25,6 +26,13 @@ public class BoardTest {
     @Test
     public void testPrintBoard() {
         System.out.println(board.toString());
+    }
+    
+    @Test
+    public void testToFEN() {
+        System.out.println(board.toFEN());
+        
+        assertEquals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", board.toFEN());
     }
 
     @Test

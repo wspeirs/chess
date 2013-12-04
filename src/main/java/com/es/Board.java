@@ -338,11 +338,21 @@ public final class Board implements Cloneable {
         final StringBuilder sb = new StringBuilder();
 
         sb.append(fromPiece == null ? "?" : fromPiece.toString());
-        sb.append((char)(squareToCol(to) + 97));
-        sb.append(squareToRow(to) + 1);
+        sb.append(squareToString(to));
         sb.append(toPiece == null ? "-" : "*");
-        sb.append((char)(squareToCol(from) + 97));
-        sb.append(squareToRow(from) + 1);
+        sb.append(squareToString(from));
+        
+        return sb.toString();
+    }
+    
+    public static String squareToString(int square) {
+        if(! Board.isValidPosition(square))
+            return null;
+
+        final StringBuilder sb = new StringBuilder();
+        
+        sb.append((char)(squareToCol(square) + 97));
+        sb.append(squareToRow(square) + 1);
         
         return sb.toString();
     }
@@ -457,6 +467,66 @@ public final class Board implements Cloneable {
 
         sb.append(LINE_BREAK);
 
+        return sb.toString();
+    }
+    
+    public String toFEN() {
+        final StringBuilder sb = new StringBuilder();
+        
+        // ref: http://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+
+        // go through the pieces
+        for(int start=0x70; start >= 0x00; start -= 0x10) {
+            int blankCount = 0;
+            
+            for(int i=start; i < start+8; ++i) {
+                final Piece p = board[i];
+                
+                if(p == null) {
+                    ++blankCount;
+                } else if(blankCount != 0) {
+                    sb.append(blankCount);
+                    sb.append(p.toString());
+                    blankCount = 0;
+                } else {
+                    sb.append(p.toString());
+                }
+            }
+            
+            if(blankCount != 0)
+                sb.append(blankCount);
+            
+            if(start != 0x00)
+                sb.append("/");
+        }
+        
+        // get the turn
+        sb.append(' ');
+        sb.append(this.getActiveColor().toFENString());
+        
+        // get the castling possibilities
+        sb.append(' ');
+        if(this.whiteKingCastle) sb.append('K');
+        if(this.whiteQueenCastle) sb.append('Q');
+        if(this.blackKingCastle) sb.append('k');
+        if(this.blackQueenCastle) sb.append('q');        
+        if(sb.charAt(sb.length()-1) == ' ') sb.append('-'); // if we haven't appended, then put the -
+        
+        // get the en passant
+        sb.append(' ');
+        if(this.enPassant != MAX_SQUARE) {
+            sb.append(Board.squareToString(this.enPassant));
+        } else {
+            sb.append('-');
+        }
+        
+        // we punt on the moves for now
+        sb.append(' ');
+        sb.append(0);
+
+        sb.append(' ');
+        sb.append(1);
+        
         return sb.toString();
     }
 
