@@ -728,8 +728,10 @@ public final class Board implements Cloneable {
             if (fromPiece instanceof King) {
                 whiteKing = toSquare;
                 whiteKingCastle = whiteQueenCastle = false;
-            } else if (fromPiece instanceof Rook) {
-                whiteKingCastle = whiteQueenCastle = false;
+            } else if (fromSquare == 0x00 && fromPiece instanceof Rook) {
+                whiteQueenCastle = false;
+            } else if (fromSquare == 0x07 && fromPiece instanceof Rook) {
+                whiteKingCastle = false;                
             } else if (fromPiece instanceof Pawn && (fromSquare & 0xF0) == 0x10 && (toSquare & 0xF0) == 0x30) {
                 enPassant = fromSquare + 0x10;
             }
@@ -740,8 +742,10 @@ public final class Board implements Cloneable {
             if (fromPiece instanceof King) {
                 blackKing = toSquare;
                 blackKingCastle = blackQueenCastle = false;
-            } else if (fromPiece instanceof Rook) {
-                blackKingCastle = blackQueenCastle = false;
+            } else if (fromSquare == 0x70 && fromPiece instanceof Rook) {
+                blackQueenCastle = false;
+            } else if (fromSquare == 0x77 && fromPiece instanceof Rook) {
+                blackKingCastle = false;
             } else if (fromPiece instanceof Pawn && (fromSquare & 0xF0) == 0x60 && (toSquare & 0xF0) == 0x40) {
                 enPassant = fromSquare - 0x10;
             }
