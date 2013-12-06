@@ -5,8 +5,8 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import com.es.Board.State;
 import com.es.ai.MoveNode;
@@ -28,14 +28,14 @@ public class MoveGeneratorTest {
         }
 
         // read in all the lines of the test file
-        //final List<String> lines = FileUtils.readLines(file);
+        final List<String> lines = FileUtils.readLines(file);
 
-        final List<String> lines = Arrays.asList("4k3/8/8/8/8/8/8/R3K2R w Q - 0 1 ;D1 26 ;D2 112 ;D3 3068 ;D4 17945 ;D5 532933 ;D6 2788982");
+        //final List<String> lines = Arrays.asList("4k3/8/8/8/8/8/8/R3K2R w Q - 0 1 ;D1 26 ;D2 112 ;D3 3068 ;D4 17945 ;D5 532933 ;D6 2788982");
 
         final List<String> failedBoards = new ArrayList<String>();
 
         // i = the depth we're searching
-        for (int i = 3; i < 4; i++) {
+        for (int i = 5; i < 6; i++) {
             moveCount = 1;
             for(String line:lines) {
                 String[] tokens = line.split(";");
@@ -60,24 +60,23 @@ public class MoveGeneratorTest {
 
                 // Create a new board
                 board = new Board(genericBoard);
-                final MoveNode rootNode = new MoveNode();
 
-                System.out.println("BOARD: ");
-                System.out.println(board.toString());
+                //System.out.println("BOARD: ");
+                //System.out.println(board.toString());
                 System.out.println("Testing " + tokens[0].trim() + " depth " + depth + " with nodes number " + numberOfNodes);
 
+                // reset our move count before we start
+                moveCount = 0;
+                
                 // compute the move tree
-                miniMax(rootNode, activeColor, depth);
-
-                // count the moves (-1 for the root node)
-                final int computedNumberOfNodes = rootNode.getNodeCountAtDepth(depth);
+                miniMax(activeColor, depth);
 
                 // Check total moves against database
                 // assertEquals(tokens[0].trim(), nodesNumber, result);
 
-                if (numberOfNodes != computedNumberOfNodes) {
-                    System.out.println("FAILED FOUND: " + computedNumberOfNodes + " NEEDED: " + numberOfNodes);
-                    failedBoards.add(line + " @ depth " + depth + " FOUND: " + computedNumberOfNodes);
+                if (numberOfNodes != moveCount) {
+                    System.out.println("FAILED FOUND: " + moveCount + " NEEDED: " + numberOfNodes);
+                    failedBoards.add(line + " @ depth " + depth + " FOUND: " + moveCount);
                     //fail("FAILED");
                 } else {
                     System.out.println("PASSED!");
@@ -90,13 +89,11 @@ public class MoveGeneratorTest {
         }
     }
 
-    private void miniMax(MoveNode node, Color color, int depth) {
+    private void miniMax(Color color, int depth) {
         if (depth == 0) {
             return;
         }
         
-        moveCount = 1;
-
         // generate all the moves
         final int[] allMoves = board.generateAllMoves();
 
@@ -108,9 +105,14 @@ public class MoveGeneratorTest {
 
             try {
                 board.checkBoard();
-                System.out.println(moveCount++ + " : " + color + " " + board.moveToStringWithPieces(allMoves[i]) + " (" + board.getEnPassant() + ")");
+                //System.out.println(moveCount++ + " : " + color + " " + board.moveToStringWithPieces(allMoves[i]) + " (" + board.getEnPassant() + ")");
                 boardState = board.makeMove(allMoves[i]);
                 board.checkBoard();
+
+                if(depth == 1) {
+                    moveCount++;
+                    //System.out.println(board.toFEN());
+                }
 
                 if (board.getPiece(Board.getToSquare(allMoves[i])) == null) {
                     System.out.println("Never made move");
@@ -125,11 +127,8 @@ public class MoveGeneratorTest {
                 fail("Illegal Move: " + e.getMessage());
             }
 
-            // create a child of the node
-            final MoveNode childNode = node.addChild(allMoves[i]);
-
             // make the recursive call
-            miniMax(childNode, color.inverse(), depth - 1);
+            miniMax(color.inverse(), depth - 1);
 
             try {
                 // System.out.println("UN-MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
@@ -155,9 +154,9 @@ public class MoveGeneratorTest {
         System.out.println(this.board.toString());
 
         // Count all moves
-        miniMax(rootNode, Color.fromGenericColor(board.getActiveColor()), depth);
+        miniMax(Color.fromGenericColor(board.getActiveColor()), depth);
 
-        assertEquals(res, rootNode.getNodeCount());
+        assertEquals(res, moveCount);
     }
 
 }
