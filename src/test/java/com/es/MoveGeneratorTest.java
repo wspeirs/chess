@@ -2,12 +2,15 @@ package com.es;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import org.apache.commons.io.FileUtils;
+
 import org.junit.Test;
+
 import com.es.Board.State;
 import com.es.ai.MoveNode;
 import com.es.pieces.Piece.Color;
@@ -28,14 +31,16 @@ public class MoveGeneratorTest {
         }
 
         // read in all the lines of the test file
-        final List<String> lines = FileUtils.readLines(file);
+        //final List<String> lines = FileUtils.readLines(file);
 
-        //final List<String> lines = Arrays.asList("4k3/8/8/8/8/8/8/R3K2R w Q - 0 1 ;D1 26 ;D2 112 ;D3 3068 ;D4 17945 ;D5 532933 ;D6 2788982");
+        final List<String> lines = Arrays.asList("1rq1kb2/2p5/p1P3Q1/1pP1p1Bp/N7/P4N2/1P3PP1/2R2RK1 b - - 0 1 ;D1 20 ;D2 400 ;D3 8902 ;D4 197281 ;D5 4865609 ;D6 119060324");
 
         final List<String> failedBoards = new ArrayList<String>();
 
+        //System.in.read();
+
         // i = the depth we're searching
-        for (int i = 5; i < 6; i++) {
+        for (int i = 1; i < 2; i++) {
             moveCount = 1;
             for(String line:lines) {
                 String[] tokens = line.split(";");
@@ -67,7 +72,7 @@ public class MoveGeneratorTest {
 
                 // reset our move count before we start
                 moveCount = 0;
-                
+
                 // compute the move tree
                 miniMax(activeColor, depth);
 
@@ -93,7 +98,7 @@ public class MoveGeneratorTest {
         if (depth == 0) {
             return;
         }
-        
+
         // generate all the moves
         final int[] allMoves = board.generateAllMoves();
 
@@ -104,10 +109,10 @@ public class MoveGeneratorTest {
             //final String to = Integer.toHexString(Board.getToSquare(allMoves[i]));
 
             try {
-                board.checkBoard();
+                //board.checkBoard();
                 //System.out.println(moveCount++ + " : " + color + " " + board.moveToStringWithPieces(allMoves[i]) + " (" + board.getEnPassant() + ")");
                 boardState = board.makeMove(allMoves[i]);
-                board.checkBoard();
+                //board.checkBoard();
 
                 if(depth == 1) {
                     moveCount++;
@@ -133,7 +138,7 @@ public class MoveGeneratorTest {
             try {
                 // System.out.println("UN-MOVE: " + color + " " + from + " -> " + to + " (" + board.getEnPassant() + ")");
                 board.unmakeMove(allMoves[i], boardState);
-                board.checkBoard();
+                //board.checkBoard();
             } catch (IllegalMoveException e) {
                 System.err.println(board);
                 e.printStackTrace();

@@ -272,9 +272,9 @@ public final class Board implements Cloneable {
      * @return true if the position is valid, false otherwise.
      */
     public static boolean isValidPosition(int pos) {
-        if(pos < 0) return false;
-        if(pos >= Board.MAX_SQUARE) return false;
         if((pos & 0x08) != 0) return false;
+        if(pos >= Board.MAX_SQUARE) return false;
+        if(pos < 0) return false;
 
         return true;
     }
@@ -303,11 +303,11 @@ public final class Board implements Cloneable {
 
         return fromSquare + (toSquare << 8) + (pieceValue << 16);
     }
-    
+
     public static int createMoveValue(int fromSquare, int toSquare) {
         return createMoveValue(fromSquare, toSquare, '-');
     }
-    
+
     /**
      * The static version that converts a move to a String without considering pieces.
      * @param move the move to convert.
@@ -316,44 +316,44 @@ public final class Board implements Cloneable {
     public static String moveToString(int move) {
         final int from = getFromSquare(move);
         final int to = getToSquare(move);
-        
+
         final StringBuilder sb = new StringBuilder();
-        
+
         sb.append((char)(squareToCol(to) + 97));
         sb.append(squareToRow(to) + 1);
         sb.append("-");
         sb.append((char)(squareToCol(from) + 97));
         sb.append(squareToRow(from) + 1);
-        
+
         return sb.toString();
     }
-    
+
     public String moveToStringWithPieces(int move) {
         final int from = getFromSquare(move);
         final int to = getToSquare(move);
-        
+
         final Piece fromPiece = board[from];
         final Piece toPiece = board[to];
-        
+
         final StringBuilder sb = new StringBuilder();
 
         sb.append(fromPiece == null ? "?" : fromPiece.toString());
         sb.append(squareToString(to));
         sb.append(toPiece == null ? "-" : "*");
         sb.append(squareToString(from));
-        
+
         return sb.toString();
     }
-    
+
     public static String squareToString(int square) {
         if(! Board.isValidPosition(square))
             return null;
 
         final StringBuilder sb = new StringBuilder();
-        
+
         sb.append((char)(squareToCol(square) + 97));
         sb.append(squareToRow(square) + 1);
-        
+
         return sb.toString();
     }
 
@@ -469,19 +469,19 @@ public final class Board implements Cloneable {
 
         return sb.toString();
     }
-    
+
     public String toFEN() {
         final StringBuilder sb = new StringBuilder();
-        
+
         // ref: http://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 
         // go through the pieces
         for(int start=0x70; start >= 0x00; start -= 0x10) {
             int blankCount = 0;
-            
+
             for(int i=start; i < start+8; ++i) {
                 final Piece p = board[i];
-                
+
                 if(p == null) {
                     ++blankCount;
                 } else if(blankCount != 0) {
@@ -492,26 +492,26 @@ public final class Board implements Cloneable {
                     sb.append(p.toString());
                 }
             }
-            
+
             if(blankCount != 0)
                 sb.append(blankCount);
-            
+
             if(start != 0x00)
                 sb.append("/");
         }
-        
+
         // get the turn
         sb.append(' ');
         sb.append(this.getActiveColor().toFENString());
-        
+
         // get the castling possibilities
         sb.append(' ');
         if(this.whiteKingCastle) sb.append('K');
         if(this.whiteQueenCastle) sb.append('Q');
         if(this.blackKingCastle) sb.append('k');
-        if(this.blackQueenCastle) sb.append('q');        
+        if(this.blackQueenCastle) sb.append('q');
         if(sb.charAt(sb.length()-1) == ' ') sb.append('-'); // if we haven't appended, then put the -
-        
+
         // get the en passant
         sb.append(' ');
         if(this.enPassant != MAX_SQUARE) {
@@ -519,14 +519,14 @@ public final class Board implements Cloneable {
         } else {
             sb.append('-');
         }
-        
+
         // we punt on the moves for now
         sb.append(' ');
         sb.append(0);
 
         sb.append(' ');
         sb.append(1);
-        
+
         return sb.toString();
     }
 
@@ -731,7 +731,7 @@ public final class Board implements Cloneable {
             } else if (fromSquare == 0x00 && fromPiece instanceof Rook) {
                 whiteQueenCastle = false;
             } else if (fromSquare == 0x07 && fromPiece instanceof Rook) {
-                whiteKingCastle = false;                
+                whiteKingCastle = false;
             } else if (fromPiece instanceof Pawn && (fromSquare & 0xF0) == 0x10 && (toSquare & 0xF0) == 0x30) {
                 enPassant = fromSquare + 0x10;
             }
