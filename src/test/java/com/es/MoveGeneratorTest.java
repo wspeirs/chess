@@ -1,6 +1,5 @@
 package com.es;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -12,7 +11,6 @@ import java.util.List;
 import org.junit.Test;
 
 import com.es.Board.State;
-import com.es.ai.MoveNode;
 import com.es.pieces.Piece.Color;
 import com.fluxchess.jcpi.models.GenericBoard;
 import com.fluxchess.jcpi.models.IllegalNotationException;
@@ -145,23 +143,6 @@ public class MoveGeneratorTest {
                 fail("Illegal Move: " + e.getMessage());
             }
         }
-    }
-
-    @Test
-    public void testBoardSetup() throws Exception {
-        int depth = 2;
-        int res = 2042;
-        GenericBoard board = new GenericBoard("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-        this.board = new Board(board);
-        final MoveNode rootNode = new MoveNode();
-
-        System.out.println("BOARD: ");
-        System.out.println(this.board.toString());
-
-        // Count all moves
-        miniMax(Color.fromGenericColor(board.getActiveColor()), depth);
-
-        assertEquals(res, moveCount);
     }
 
 }

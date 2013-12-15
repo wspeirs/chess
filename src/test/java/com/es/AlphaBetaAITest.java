@@ -4,22 +4,19 @@ import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.junit.Before;
-import org.junit.Test;
 
-import com.es.ai.AlphaBetaAI;
-import com.es.ai.MoveNode;
-import com.es.ai.WorkingAlphaBetaAI;
+import com.es.ai.search.AlphaBetaAI;
 import com.es.pieces.Piece.Color;
 
 public class AlphaBetaAITest {
 
     Board board = new Board();
-    WorkingAlphaBetaAI workingAB = new WorkingAlphaBetaAI(Color.WHITE, board);
+    //WorkingAlphaBetaAI workingAB = new WorkingAlphaBetaAI(Color.WHITE, board);
     BaseConfiguration defaults = new BaseConfiguration();
     AlphaBetaAI alphaBeta = new AlphaBetaAI(Color.WHITE, board);
 
     static final int DEPTH = 4;
-    
+
     @Before
     public void setup() {
         defaults.addProperty(CmdConfiguration.DEPTH, DEPTH);
@@ -41,8 +38,8 @@ public class AlphaBetaAITest {
         board.addPiece(new Queen(Color.WHITE), 0x03);
 */
     }
-    
-   
+
+/*
     @Test
     public void test() throws Exception {
         setupBoard();
@@ -52,10 +49,10 @@ public class AlphaBetaAITest {
         int ret = alphaBeta.computeNextMove(alphaBetaNode, Color.WHITE);
         alphaBetaNode.getBestChild();
         long time = System.currentTimeMillis() - start;
-        
+
         System.out.println(alphaBetaNode.childrenToString());
     }
-
+*/
 /*
     @Test
     public void testAlphabeta() throws IllegalMoveException {

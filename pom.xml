@@ -66,11 +66,11 @@
       <artifactId>commons-configuration</artifactId>
       <version>1.8</version>
     </dependency>
-    <dependency>
-      <groupId>commons-primitives</groupId>
-      <artifactId>commons-primitives</artifactId>
-      <version>1.0</version>
-    </dependency>
+	<dependency>
+	   <groupId>org.apache.commons</groupId>
+	   <artifactId>commons-math3</artifactId>
+	   <version>3.2</version>
+	</dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -100,8 +100,13 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.10</version>
-      <type>jar</type>
       <scope>test</scope>
     </dependency>
+	<dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.9.5</version>
+      <scope>test</scope>
+	</dependency>
   </dependencies>
 </project>

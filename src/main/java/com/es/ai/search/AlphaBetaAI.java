@@ -1,4 +1,4 @@
-package com.es.ai;
+package com.es.ai.search;
 
 
 import org.apache.commons.configuration.Configuration;
@@ -9,7 +9,8 @@ import com.es.Board;
 import com.es.Board.State;
 import com.es.CmdConfiguration;
 import com.es.IllegalMoveException;
-import com.es.pieces.Piece;
+import com.es.ai.MoveNode;
+import com.es.ai.TranspositionTable;
 import com.es.pieces.Piece.Color;
 
 public class AlphaBetaAI {
@@ -29,7 +30,7 @@ public class AlphaBetaAI {
         this.depth = configuration.getInt(CmdConfiguration.DEPTH);
     }
 
-    public AlphaBetaAI(Color colorPlaying, Board board) {;
+    public AlphaBetaAI(Color colorPlaying, Board board) {
         this.colorPlaying = colorPlaying;
         this.board = board;
         this.configuration = null;
@@ -41,7 +42,7 @@ public class AlphaBetaAI {
     }
 
     public int computeNextMove(MoveNode node, Color color) {
-        for(int d=2; d <= 2; d++) {
+        for(int d=2; d <= 4; d++) {
             transHit = 0;
             long start = System.currentTimeMillis();
             alphabeta(node, d, -1000000, 1000000, color);
@@ -186,79 +187,6 @@ public class AlphaBetaAI {
         }
 
         return new int[] { alpha, beta };
-    }
-
-    public int computeScore() {
-        final int[] whitePieces = board.getPieces(Color.WHITE);
-        final int[] blackPieces = board.getPieces(Color.BLACK);
-        int whiteScore = 0;
-        int blackScore = 0;
-
-        //
-        // Compute the value based upon position
-        //
-        for(int p:whitePieces) {
-            if(p == Board.MAX_SQUARE) {
-                break;
-            }
-            whiteScore += board.getPiece(p).getPositionValue(p);
-        }
-
-        for(int p:blackPieces) {
-            if(p == Board.MAX_SQUARE) {
-                break;
-            }
-            blackScore += board.getPiece(p).getPositionValue(p);
-        }
-
-        //
-        // Add in bonus for each piece attacking and defending
-        //
-        whiteScore += computeAttackDefendBonus(board, whitePieces, Color.BLACK);
-        blackScore += computeAttackDefendBonus(board, blackPieces, Color.WHITE);
-
-
-        if(LOG.isDebugEnabled()) {
-//            LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
-//            LOG.info("WHITE: {} BLACK: {} SCORE: " + (colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore), whiteScore, blackScore);
-        }
-
-        return colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore;
-    }
-
-    public int computeAttackDefendBonus(Board board, int[] pieces, Color targetColor) {
-        int ret = 0;
-
-        for(int p:pieces) {
-            if(p == Board.MAX_SQUARE) {
-                break;
-            }
-
-            final Piece piece = board.getPiece(p);
-            final int[] moves = piece.generateAllMoves(board, p);
-
-            for(int m:moves) {
-                if(m == Board.MAX_SQUARE) {
-                    break;
-                }
-
-                final Piece targetPiece = board.getPiece(m);
-
-                if(targetPiece == null) {
-                    continue;
-                }
-
-                if(targetPiece.getColor().equals(targetColor)) {
-                    // check for an attack
-                    ret += targetPiece.getValue() * .5;
-                } else {
-                    // check for a defense
-                    ret += targetPiece.getValue() * 0.250;
-                }
-            }
-        }
-
-        return ret;
     }
 
 }

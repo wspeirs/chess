@@ -61,6 +61,7 @@ public final class Board implements Cloneable {
     public static final int MAX_ROW = 8;
     public static final int MAX_COL = 8;
     public static final int MAX_SQUARE = 0x78;
+    public static final int NULL_MOVE = createMoveValue(MAX_SQUARE, MAX_SQUARE);
 
     private final Piece[] board;
 
@@ -319,11 +320,11 @@ public final class Board implements Cloneable {
 
         final StringBuilder sb = new StringBuilder();
 
-        sb.append((char)(squareToCol(to) + 97));
-        sb.append(squareToRow(to) + 1);
-        sb.append("-");
         sb.append((char)(squareToCol(from) + 97));
         sb.append(squareToRow(from) + 1);
+        sb.append("-");
+        sb.append((char)(squareToCol(to) + 97));
+        sb.append(squareToRow(to) + 1);
 
         return sb.toString();
     }
@@ -576,7 +577,7 @@ public final class Board implements Cloneable {
             }
         }
 
-        Arrays.fill(allMoves, i, allMoves.length, Board.createMoveValue(Board.MAX_SQUARE, Board.MAX_SQUARE));
+        Arrays.fill(allMoves, i, allMoves.length, NULL_MOVE);
         return allMoves;
     }
 
