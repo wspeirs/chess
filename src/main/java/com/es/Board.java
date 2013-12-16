@@ -68,9 +68,8 @@ public final class Board implements Cloneable {
     private final int[] blackPieces;
     private final int[] whitePieces;
 
-    // TODO: CHANGE BACK TO PRIVATE
-    public int blackKing;
-    public int whiteKing;
+    private int blackKing;
+    private int whiteKing;
 
     private boolean whiteKingCastle = false;
     private boolean whiteQueenCastle = false;
@@ -82,7 +81,12 @@ public final class Board implements Cloneable {
     private Color activeColor = Color.WHITE;
 
     private int hashCode;
+    
+    private int moves; // starts at 1 and increments after a black move
 
+    /**
+     * Constructs a new board with all the pieces in the starting position.
+     */
     public Board() {
         board = new Piece[MAX_SQUARE];
 
@@ -146,11 +150,17 @@ public final class Board implements Cloneable {
         // set the en passe
         enPassant = Board.MAX_SQUARE;
 
+        // set the moves to 1
+        moves = 1;
+        
         // compute the hash code
         computeHashCode();
     }
 
-    // copy constructor
+    /**
+     * Copy constructor for the board.
+     * @param board the board to copy.
+     */
     public Board(Board board) {
         this.board = Arrays.copyOf(board.board, board.board.length);
 
@@ -168,9 +178,17 @@ public final class Board implements Cloneable {
         this.blackQueenCastle = board.blackQueenCastle;
 
         this.enPassant = board.enPassant;
+        
+        this.moves = board.moves;
     }
 
-    // construct from a GenericBoard
+    /**
+     * Constructs a {@link Board} object from a {@link GenericBoard}.
+     * 
+     * This is a copy constructor of sorts.
+     * 
+     * @param genericBoard the generic board to construct from.
+     */
     public Board(GenericBoard genericBoard) {
         board = new Piece[MAX_SQUARE];
 
@@ -243,6 +261,9 @@ public final class Board implements Cloneable {
 
             this.enPassant = rank * 16 + file;
         }
+        
+        // set the moves
+        moves = genericBoard.getFullMoveNumber();
 
         // compute the hash code
         computeHashCode();
@@ -250,12 +271,14 @@ public final class Board implements Cloneable {
 
     @Override
     public boolean equals(Object obj) {
-
         if (!(obj instanceof Board)) {
             return false;
         }
+        
+        final Board arg = (Board) obj;
 
-        return Arrays.equals(((Board) obj).board, this.board);
+        // the boards are the same if the moves are the same and the boards are the same
+        return arg.moves == moves && Arrays.equals(arg.board, this.board);
     }
 
     @Override
@@ -280,11 +303,17 @@ public final class Board implements Cloneable {
         return true;
     }
 
+    /**
+     * Computes a hash code for the board.
+     */
     private void computeHashCode() {
         this.hashCode = 0;
+        
         for (int i = 0; i < whitePieces.length; ++i) {
             this.hashCode ^= (whitePieces[i] << (16 + i / 2)) | (blackPieces[i] << (i / 2));
         }
+        
+        // TODO: include moves in this hash code
     }
 
     public static int squareToRow(int square) {
@@ -376,6 +405,10 @@ public final class Board implements Cloneable {
 
     public Piece[] getBoard() {
         return board;
+    }
+    
+    public int getMoves() {
+        return moves;
     }
 
     public void setState(State boardState) {
@@ -521,12 +554,12 @@ public final class Board implements Cloneable {
             sb.append('-');
         }
 
-        // we punt on the moves for now
+        // we punt on half moves for now
         sb.append(' ');
         sb.append(0);
 
         sb.append(' ');
-        sb.append(1);
+        sb.append(getMoves());
 
         return sb.toString();
     }
@@ -643,18 +676,22 @@ public final class Board implements Cloneable {
         // check to see if we're castling
         if (fromSquare == whiteKing && toSquare == 0x06 && canKingCastle(Color.WHITE)) {
             makeKingCastle(Color.WHITE);
+            moves++;
             computeHashCode();
             return boardState;
         } else if (fromSquare == blackKing && toSquare == 0x76 && canKingCastle(Color.BLACK)) {
             makeKingCastle(Color.BLACK);
+            moves++;
             computeHashCode();
             return boardState;
         } else if (fromSquare == whiteKing && toSquare == 0x02 && canQueenCastle(Color.WHITE)) {
             makeQueenCastle(Color.WHITE);
+            moves++;
             computeHashCode();
             return boardState;
         } else if (fromSquare == blackKing && toSquare == 0x72 && canQueenCastle(Color.BLACK)) {
             makeQueenCastle(Color.BLACK);
+            moves++;
             computeHashCode();
             return boardState;
         }
@@ -757,6 +794,7 @@ public final class Board implements Cloneable {
         // Switch the active color if we make a move on the board.
         activeColor = activeColor.inverse();
 
+        moves++;
         computeHashCode(); // re-compute the hash code
 
         return boardState;
@@ -787,6 +825,7 @@ public final class Board implements Cloneable {
             board[0x06] = board[0x05] = null; // null these squares
             setState(boardState);
             activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
+            moves--;
             computeHashCode();
             return;
         } else if (fromSquare == 0x74 && toSquare == 0x76 && blackKing == 0x76) {
@@ -800,6 +839,7 @@ public final class Board implements Cloneable {
             board[0x76] = board[0x75] = null; // null these squares
             setState(boardState);
             activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
+            moves--;
             computeHashCode();
             return;
         } else if (fromSquare == 0x04 && toSquare == 0x02 && whiteKing == 0x02) {
@@ -813,6 +853,7 @@ public final class Board implements Cloneable {
             board[0x02] = board[0x03] = null; // null these squares
             setState(boardState);
             activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
+            moves--;
             computeHashCode();
             return;
         } else if (fromSquare == 0x74 && toSquare == 0x72 && blackKing == 0x72) {
@@ -826,6 +867,7 @@ public final class Board implements Cloneable {
             board[0x72] = board[0x73] = null; // null these squares
             setState(boardState);
             activeColor = activeColor == Color.WHITE ? Color.BLACK : Color.WHITE;
+            moves--;
             computeHashCode();
             return;
         }
@@ -893,6 +935,9 @@ public final class Board implements Cloneable {
 
         // reset the board's state
         setState(boardState);
+        
+        moves--;
+        computeHashCode();
     }
 
     public void makeKingCastle(Color color) throws IllegalMoveException {
