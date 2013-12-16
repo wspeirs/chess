@@ -291,6 +291,10 @@ public final class MoveNode {
         System.gc(); // run the GC to reclaim memory
     }
 
+    /**
+     * Prints out the best moves for the users for each child from the root.
+     * @return string that contains the best moves for the users.
+     */
     public String childrenToString() {
         final StringBuilder sb = new StringBuilder();
 
@@ -306,8 +310,8 @@ public final class MoveNode {
             sb.append(curNode.getScore());
             sb.append(") ");
 
-            sb.append(curNode.depth);
-            sb.append(": ");
+            //sb.append(curNode.depth);
+            //sb.append(": ");
             sb.append(Board.moveToString(move));
 
             while(curNode.getChildCount() != 0) {
@@ -319,8 +323,9 @@ public final class MoveNode {
                     continue;
                 }
 
-                sb.append(curNode.depth);
-                sb.append(": ");
+                //sb.append(curNode.depth);
+                //sb.append(": ");
+                sb.append(" ");
                 sb.append(Board.moveToString(move));
             }
 
