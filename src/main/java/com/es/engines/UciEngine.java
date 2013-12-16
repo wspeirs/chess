@@ -4,15 +4,17 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.es.Board;
 import com.es.IllegalMoveException;
-import com.es.ai.AlphaBetaAI;
 import com.es.ai.MoveNode;
+import com.es.ai.search.AlphaBetaAI;
 import com.fluxchess.jcpi.AbstractEngine;
 import com.fluxchess.jcpi.commands.EngineAnalyzeCommand;
 import com.fluxchess.jcpi.commands.EngineDebugCommand;

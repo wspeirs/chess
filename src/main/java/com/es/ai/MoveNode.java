@@ -6,13 +6,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.es.Board;
 
 /**
  * Represents a node in the move tree.
- * 
+ *
  * The depth of the root node is zero with children being a depth 1, etc...
  */
 public final class MoveNode {
@@ -22,7 +24,7 @@ public final class MoveNode {
     private static final String LINE_BREAK = System.getProperty("line.separator");
 
     private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
-    private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
+    //private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
     private final WeakReference<MoveNode> parent;
     private final int move;
@@ -40,7 +42,7 @@ public final class MoveNode {
         this.parent = null;
         this.depth = 0;
     }
-    
+
     /**
      * Private constructor for creating children nodes.
      * @param parent the parent of this node.
@@ -52,21 +54,27 @@ public final class MoveNode {
         this.move = move;
         this.depth = depth;
     }
-    
+
     /**
      * Adds a child to this MoveNode by constructing it and linking it in.
      * @param move the move for the node.
-     * @return
+     * @return the newly created MoveNode.
      */
     public MoveNode addChild(int move) {
         final MoveNode ret = new MoveNode(this, move, this.depth + 1);
+
         children.add(ret);
-        
+        isSorted = false;
+
         return ret;
     }
 
     public MoveNode getParent() {
         return parent == null ? null : parent.get();
+    }
+
+    public List<MoveNode> getChildren() {
+        return children;
     }
 
     public int getScore() {
@@ -103,7 +111,7 @@ public final class MoveNode {
 
     /**
      * Gets the best child of this node.
-     * 
+     *
      * It does so by sorting the children by score in increasing order, then returning the first child.
      * @return the MoveNode with the highest score child.
      */
@@ -117,16 +125,16 @@ public final class MoveNode {
 
     /**
      * Gets the worst child of this node.
-     * 
+     *
      * It does so by sorting the children by score in decreasing order, then returning the first child.
      * @return the MoveNode with the lowest score child.
      */
     public MoveNode getWorstChild() {
         if(!isSorted) {
-            Collections.sort(children, decreasingComparitor);
+            Collections.sort(children, increasingComparitor);
         }
 
-        return children.get(0);
+        return children.get(children.size()-1);
     }
 
     /**
@@ -138,7 +146,7 @@ public final class MoveNode {
             this.addChild(child);
         }
     }
-    
+
     /**
      * Internal function to add a node to this node's children.
      * @param node the node to add to this node's children.
@@ -163,25 +171,34 @@ public final class MoveNode {
 
         return null;
     }
-    
+
     /**
-     * Removes all of the children from the node.
-     * 
+     * Removes all of the children from the node running the garbage collector.
      * @return the number of children removed.
      */
     public int clearChildren() {
+        return clearChildren(true);
+    }
+
+    /**
+     * Removes all of the children from the node.
+     * @param runGC true = run garbage collector.
+     * @return the number of children removed.
+     */
+    public int clearChildren(boolean runGC) {
         final int ret = children.size();
-        
+
         if(ret != 0) {
             for(MoveNode child:children) {
-                child.clearChildren();
+                child.clearChildren(false);
             }
 
             children.clear();
-            
-            System.gc(); // run the GC to reclaim memory
+
+            if(runGC)
+                System.gc(); // run the GC to reclaim memory
         }
-        
+
         return ret;
     }
 
@@ -213,22 +230,22 @@ public final class MoveNode {
         return removeCount;
     }
 */
-    
+
     /**
-     * Removes children that are deeper than the provided depth. 
+     * Removes children that are deeper than the provided depth.
      * @param depth the cutoff depth.
      * @return the number of children removed.
      */
     public int removeChildrenDeeperThan(int depth) {
         final int ret = removeChildrenDeeperThan(0, depth);
-        
+
         // if we removed children, run the GC to reclaim the space
         if(ret != 0)
             System.gc();
-        
+
         return ret;
     }
-    
+
     private int removeChildrenDeeperThan(int removeCount, int depth) {
         final Iterator<MoveNode> it = children.iterator();
 
@@ -248,8 +265,38 @@ public final class MoveNode {
         return removeCount;
     }
 
+    /**
+     * Makes this node a root.
+     *
+     * This works by going to the parent and removing all children.
+     */
+    public void makeRootNode() {
+        if(this.parent == null)
+            return; // we're already a root node
+
+        final MoveNode parentNode = this.parent.get();
+
+        if(parentNode == null)
+            return; // we're already a root node
+
+        // go through the children, skipping this one clearing them
+        for(MoveNode child:parentNode.children) {
+            if(child == this)
+                continue;
+
+            // clear the children, but don't run the GC we'll save that for the end
+            child.clearChildren(false);
+        }
+
+        System.gc(); // run the GC to reclaim memory
+    }
+
     public String childrenToString() {
         final StringBuilder sb = new StringBuilder();
+
+        // sort the children
+        Collections.sort(children, increasingComparitor);
+
         final Iterator<MoveNode> it = children.iterator();
 
         while(it.hasNext()) {
@@ -259,17 +306,12 @@ public final class MoveNode {
             sb.append(curNode.getScore());
             sb.append(") ");
 
-            String from = "0x" + Integer.toHexString(Board.getFromSquare(move));
-            String to = "0x" + Integer.toHexString(Board.getToSquare(move));
-
             sb.append(curNode.depth);
             sb.append(": ");
-            sb.append(from);
-            sb.append(" -> ");
-            sb.append(to);
+            sb.append(Board.moveToString(move));
 
             while(curNode.getChildCount() != 0) {
-                curNode = curNode.getFirstChild();
+                curNode = curNode.getBestChild();
                 move = curNode.getMove();
                 sb.append(" ");
 
@@ -277,14 +319,9 @@ public final class MoveNode {
                     continue;
                 }
 
-                from = "0x" + Integer.toHexString(Board.getFromSquare(move));
-                to = "0x" + Integer.toHexString(Board.getToSquare(move));
-
                 sb.append(curNode.depth);
                 sb.append(": ");
-                sb.append(from);
-                sb.append(" -> ");
-                sb.append(to);
+                sb.append(Board.moveToString(move));
             }
 
             sb.append(LINE_BREAK);
@@ -313,7 +350,7 @@ public final class MoveNode {
 
         return count + 1;
     }
-    
+
     /**
      * Counts all of the nodes in the tree at the depth specified.
      * @param depth the depth to search.
@@ -322,21 +359,21 @@ public final class MoveNode {
     public int getNodeCountAtDepth(int depth) {
         return getNodeCountAtDepth(0, depth);
     }
-    
+
     private int getNodeCountAtDepth(int count, int depth) {
         // if this node is deeper than the depth, then short-circuit and return
         if(this.depth > depth) {
             return count;
         }
-        
+
         for(MoveNode child:children) {
             if(child.depth == depth) {
                 count++;
             }
-            
+
             count = child.getNodeCountAtDepth(count, depth);
         }
-        
+
         return count;
     }
 

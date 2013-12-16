@@ -12,8 +12,8 @@ import com.es.Board;
 import com.es.CmdConfiguration;
 import com.es.IllegalMoveException;
 import com.es.PgnUtils;
-import com.es.ai.AlphaBetaAI;
 import com.es.ai.MoveNode;
+import com.es.ai.search.AlphaBetaAI;
 import com.es.pieces.Piece.Color;
 
 public class GuiEngine implements Runnable {
