@@ -24,7 +24,7 @@ public final class MoveNode {
     private static final String LINE_BREAK = System.getProperty("line.separator");
 
     private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
-    //private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
+    private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
     private final WeakReference<MoveNode> parent;
     private final int move;
@@ -298,35 +298,24 @@ public final class MoveNode {
     public String childrenToString() {
         final StringBuilder sb = new StringBuilder();
 
-        // sort the children
+        // sort the children assuming the first level we always want to maximize
         Collections.sort(children, increasingComparitor);
 
         final Iterator<MoveNode> it = children.iterator();
 
         while(it.hasNext()) {
             MoveNode curNode = it.next();
-            int move = curNode.getMove();
 
-            sb.append(curNode.getScore());
-            sb.append(") ");
-
-            //sb.append(curNode.depth);
-            //sb.append(": ");
-            sb.append(Board.moveToString(move));
-
+            sb.append(curNode.toString()); // append the top-level moves
+            
             while(curNode.getChildCount() != 0) {
-                curNode = curNode.getBestChild();
-                move = curNode.getMove();
-                sb.append(" ");
-
-                if(curNode == null || curNode.parent == null) {
-                    continue;
+                if(curNode.depth%2 == 0) {
+                    curNode = curNode.getBestChild();
+                    sb.append(curNode.toString());
+                } else {
+                    curNode = curNode.getWorstChild();
+                    sb.append(curNode.toString());
                 }
-
-                //sb.append(curNode.depth);
-                //sb.append(": ");
-                sb.append(" ");
-                sb.append(Board.moveToString(move));
             }
 
             sb.append(LINE_BREAK);
@@ -335,6 +324,58 @@ public final class MoveNode {
         return sb.toString();
     }
 
+    /**
+     * Prints out the whole tree... can be VERY large!
+     * @return string that contains the whole tree.
+     */
+    public String treeToString() {
+        final List<String> lines = new ArrayList<String>();
+        final StringBuilder sb = new StringBuilder();
+
+        treeToString(lines, sb, this);
+        
+        for(String line:lines) {
+            sb.append(line);
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+    
+    private void treeToString(List<String> lines, StringBuilder sb, MoveNode node) {        
+        if(node.getChildCount() == 0) {
+            lines.add(sb.toString());
+            return;
+        }
+        
+        Collections.sort(node.children, increasingComparitor);
+        final Iterator<MoveNode> it = node.children.iterator();
+
+        while(it.hasNext()) {
+            final MoveNode curNode = it.next();
+            final int len = sb.length();
+            
+            sb.append(curNode.toString());
+            sb.append(" ");
+            
+            treeToString(lines, sb, curNode);
+            
+            sb.delete(len, sb.length()); // remove what was appended
+        }
+    }
+    
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        
+        sb.append(Board.moveToString(move));
+        sb.append("(");
+        sb.append(score);
+        sb.append(")");
+        
+        return sb.toString();
+    }
+    
     /**
      * Returns the total number of nodes in the tree.
      * @return the total number of nodes in the tree.

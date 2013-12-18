@@ -5,7 +5,7 @@ import org.apache.commons.configuration.Configuration;
 import com.es.Board;
 import com.es.IllegalMoveException;
 import com.es.ai.MoveNode;
-import com.es.ai.evaluate.IEvaluate;
+import com.es.ai.evaluate.AbstractEvaluate;
 import com.es.pieces.Piece.Color;
 
 
@@ -17,9 +17,9 @@ public abstract class AbstractSearch {
     protected final Color colorPlaying;
     protected final Board board;
     protected final Configuration configuration;
-    protected final IEvaluate eval;
+    protected final AbstractEvaluate eval;
 
-    public AbstractSearch(Color colorPlaying, Board board, Configuration configuration, IEvaluate eval) {
+    public AbstractSearch(Color colorPlaying, Board board, Configuration configuration, AbstractEvaluate eval) {
         this.colorPlaying = colorPlaying;
         this.board = board;
         this.configuration = configuration;
