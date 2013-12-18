@@ -44,7 +44,6 @@ public class MiniMaxSearchTest {
         MoveNode moveNode = minimax.computeNextMove(rootNode);
 
         System.out.println(board);
-        System.out.println(moveNode.childrenToString());
-        System.out.println(moveNode.treeToString());
+        System.out.println(moveNode.childrenToString(false));
     }
 }

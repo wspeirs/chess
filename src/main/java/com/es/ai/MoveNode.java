@@ -293,9 +293,10 @@ public final class MoveNode {
 
     /**
      * Prints out the best moves for the users for each child from the root.
+     * @param alwaysMax if true will always pick the max value at each level, otherwise flip min/max based upon depth.
      * @return string that contains the best moves for the users.
      */
-    public String childrenToString() {
+    public String childrenToString(boolean alwaysMax) {
         final StringBuilder sb = new StringBuilder();
 
         // sort the children assuming the first level we always want to maximize
@@ -309,7 +310,7 @@ public final class MoveNode {
             sb.append(curNode.toString()); // append the top-level moves
             
             while(curNode.getChildCount() != 0) {
-                if(curNode.depth%2 == 0) {
+                if(alwaysMax || curNode.depth%2 == 0) {
                     curNode = curNode.getBestChild();
                     sb.append(curNode.toString());
                 } else {

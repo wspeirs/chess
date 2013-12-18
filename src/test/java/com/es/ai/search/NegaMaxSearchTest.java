@@ -13,7 +13,8 @@ import org.slf4j.LoggerFactory;
 import com.es.Board;
 import com.es.CmdConfiguration;
 import com.es.ai.MoveNode;
-import com.es.ai.evaluate.IEvaluate;
+import com.es.ai.evaluate.AbstractEvaluate;
+import com.es.ai.evaluate.PieceOnlyEvaluate;
 import com.es.ai.evaluate.PositionOnlyEvaluate;
 import com.es.pieces.Piece.Color;
 import com.fluxchess.jcpi.models.GenericBoard;
@@ -22,7 +23,7 @@ public class NegaMaxSearchTest {
     public static final Logger LOG = LoggerFactory.getLogger(NegaMaxSearchTest.class);
 
     NegaMaxSearch negamax;
-    IEvaluate eval = new PositionOnlyEvaluate();
+    AbstractEvaluate eval;
     MoveNode rootNode = new MoveNode();
 
     @Mock Configuration configuration;
@@ -31,20 +32,22 @@ public class NegaMaxSearchTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        when(configuration.getInt(CmdConfiguration.DEPTH)).thenReturn(4);
+        when(configuration.getInt(CmdConfiguration.DEPTH)).thenReturn(2);
     }
 
     @Test
     public void testComputeNextMove() throws Exception {
         // Setup a new board from fen
-        GenericBoard genericBoard = new GenericBoard("r3k3/8/8/8/8/8/8/2R3K1 w - - 0 1");
+        GenericBoard genericBoard = new GenericBoard("3k4/3r4/8/8/8/8/3R4/3K4 w - - 0 1");
         Board board = new Board(genericBoard);
+        eval = new PieceOnlyEvaluate(Color.fromGenericColor(genericBoard.getActiveColor()));
 
         negamax = new NegaMaxSearch(Color.WHITE, board, configuration, eval);
 
         MoveNode moveNode = negamax.computeNextMove(rootNode);
 
         System.out.println(board);
-        System.out.println(moveNode.childrenToString());
+        System.out.println(moveNode.childrenToString(true));
+        System.out.println(moveNode.treeToString());
     }
 }
