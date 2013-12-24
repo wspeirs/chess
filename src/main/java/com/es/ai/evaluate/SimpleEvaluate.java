@@ -7,14 +7,15 @@ import com.es.Board;
 import com.es.pieces.Piece;
 import com.es.pieces.Piece.Color;
 
-public class SimpleEvaluate implements IEvaluate {
+public class SimpleEvaluate extends AbstractEvaluate {
     public static final Logger LOG = LoggerFactory.getLogger(SimpleEvaluate.class);
-
-    public SimpleEvaluate() {
+    
+    public SimpleEvaluate(final Color colorPlaying) {
+        super(colorPlaying);
     }
 
     @Override
-    public int evaluate(Board board, Color maxColor) {
+    public int evaluate(Board board) {
         final int[] whitePieces = board.getPieces(Color.WHITE);
         final int[] blackPieces = board.getPieces(Color.BLACK);
         int whiteScore = 0;
@@ -50,7 +51,7 @@ public class SimpleEvaluate implements IEvaluate {
         }
 */
 
-        return maxColor.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore;
+        return colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore;
     }
 
     protected int computeAttackDefendBonus(Board board, int[] pieces, Color targetColor) {

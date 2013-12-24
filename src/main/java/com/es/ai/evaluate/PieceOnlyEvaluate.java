@@ -6,10 +6,10 @@ import org.slf4j.LoggerFactory;
 import com.es.Board;
 import com.es.pieces.Piece.Color;
 
-public class PositionOnlyEvaluate extends AbstractEvaluate {
-    public static final Logger LOG = LoggerFactory.getLogger(PositionOnlyEvaluate.class);
+public class PieceOnlyEvaluate extends AbstractEvaluate {
+    public static final Logger LOG = LoggerFactory.getLogger(PieceOnlyEvaluate.class);
 
-    public PositionOnlyEvaluate(Color colorPlaying) {
+    public PieceOnlyEvaluate(Color colorPlaying) {
         super(colorPlaying);
     }
 
@@ -27,22 +27,15 @@ public class PositionOnlyEvaluate extends AbstractEvaluate {
             if(p == Board.MAX_SQUARE) {
                 break;
             }
-            whiteScore += board.getPiece(p).getPositionValue(p);
+            whiteScore += board.getPiece(p).getValue();
         }
 
         for(int p:blackPieces) {
             if(p == Board.MAX_SQUARE) {
                 break;
             }
-            blackScore += board.getPiece(p).getPositionValue(p);
+            blackScore += board.getPiece(p).getValue();
         }
-
-/*
-        if(LOG.isDebugEnabled()) {
-            LOG.info("MOVE: {} -> {}", Integer.toHexString(node.getMove()[0]), Integer.toHexString(node.getMove()[1]));
-            LOG.info("WHITE: {} BLACK: {} SCORE: " + (maxColor.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore), whiteScore, blackScore);
-        }
-*/
 
         return colorPlaying.equals(Color.WHITE) ? whiteScore - blackScore : blackScore - whiteScore;
     }

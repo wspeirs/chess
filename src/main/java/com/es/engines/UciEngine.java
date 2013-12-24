@@ -178,7 +178,7 @@ public class UciEngine extends AbstractEngine {
         if(LOG.isInfoEnabled()) {
             LOG.info("SENDING MOVE: {} -> {}", from, to);
 
-            LOG.info(currentNode.childrenToString());
+            LOG.info(currentNode.childrenToString(false));
         }
 
         try {

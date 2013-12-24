@@ -10,7 +10,7 @@ import com.es.Board.State;
 import com.es.CmdConfiguration;
 import com.es.IllegalMoveException;
 import com.es.ai.MoveNode;
-import com.es.ai.evaluate.IEvaluate;
+import com.es.ai.evaluate.AbstractEvaluate;
 import com.es.pieces.Piece.Color;
 
 /**
@@ -19,7 +19,7 @@ import com.es.pieces.Piece.Color;
 public class MiniMaxSearch extends AbstractSearch {
     public static final Logger LOG = LoggerFactory.getLogger(MiniMaxSearch.class);
 
-    public MiniMaxSearch(Color colorPlaying, Board board, Configuration configuration, IEvaluate eval) {
+    public MiniMaxSearch(Color colorPlaying, Board board, Configuration configuration, AbstractEvaluate eval) {
         super(colorPlaying, board, configuration, eval);
     }
 
@@ -31,9 +31,12 @@ public class MiniMaxSearch extends AbstractSearch {
     }
 
     private int minimax(MoveNode node, int depth, Color currentPlayer) throws IllegalMoveException {
-        if(depth == 0) // when we reach our depth, evaluate the board
-            return eval.evaluate(board, colorPlaying);
-
+        if(depth == 0) { // when we reach our depth, evaluate the board
+            final int score = eval.evaluate(board);
+            node.setScore(score);
+            return score;
+        }
+            
         int bestValue = currentPlayer.equals(colorPlaying) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
         // generate all the moves for the current board
@@ -44,7 +47,7 @@ public class MiniMaxSearch extends AbstractSearch {
             if(move == Board.NULL_MOVE)
                 break;
 
-            node.addChild(move);
+            node.addChild(currentPlayer, move);
         }
 
         // go through the children computing scores
