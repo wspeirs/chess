@@ -2,6 +2,7 @@ package com.es.ai;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
+import com.es.pieces.Piece.Color;
 
 
 public class MoveNodeTest {
@@ -19,7 +20,7 @@ public class MoveNodeTest {
 
     @Test
     public void testAddChildDepthOne() {
-        MoveNode node = root.addChild(0x63);
+        MoveNode node = root.addChild(Color.BLACK, 0x63);
         
         assertNotNull(node);
         assertEquals(root, node.getParent());
@@ -33,11 +34,11 @@ public class MoveNodeTest {
 
     @Test
     public void testAddChildDepthTwo() {
-        MoveNode node1 = root.addChild(0x63);
+        MoveNode node1 = root.addChild(Color.BLACK, 0x63);
 
         assertNotNull(node1);
 
-        MoveNode node2 = node1.addChild(0x64);
+        MoveNode node2 = node1.addChild(Color.BLACK, 0x64);
         
         assertNotNull(node2);
         
@@ -75,8 +76,8 @@ public class MoveNodeTest {
 
     @Test
     public void testGetBestWorstChild() {
-        MoveNode node1 = root.addChild(0x63);
-        MoveNode node2 = root.addChild(0x64);
+        MoveNode node1 = root.addChild(Color.BLACK, 0x63);
+        MoveNode node2 = root.addChild(Color.BLACK, 0x64);
         
         node1.setScore(25);
         node2.setScore(50);
@@ -87,19 +88,19 @@ public class MoveNodeTest {
 
     @Test
     public void testFindChild() {
-        MoveNode node1 = root.addChild(0x63);
-        MoveNode node2 = root.addChild(0x64);
+        MoveNode node1 = root.addChild(Color.BLACK, 0x63);
+        MoveNode node2 = root.addChild(Color.BLACK, 0x64);
 
         assertEquals(node1, root.findChild(0x63));
     }
 
     @Test
     public void testRemoveChildrenDeeperThan() {
-        MoveNode node1 = root.addChild(0x63);
+        MoveNode node1 = root.addChild(Color.BLACK, 0x63);
 
         assertNotNull(node1);
 
-        MoveNode node2 = node1.addChild(0x64);
+        MoveNode node2 = node1.addChild(Color.BLACK, 0x64);
         
         assertNotNull(node2);
 
@@ -112,7 +113,7 @@ public class MoveNodeTest {
 
     @Test
     public void testChildrenToString() {
-        String ret = root.childrenToString();
+        String ret = root.childrenToString(false);
         
         assertNotNull(ret);
     }

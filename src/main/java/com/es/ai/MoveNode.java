@@ -6,11 +6,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.es.Board;
+import com.es.pieces.Piece.Color;
 
 /**
  * Represents a node in the move tree.
@@ -24,12 +23,13 @@ public final class MoveNode {
     private static final String LINE_BREAK = System.getProperty("line.separator");
 
     private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
-    private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
+    //private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
     private final WeakReference<MoveNode> parent;
     private final int move;
     private final int depth;
     private final List<MoveNode> children = new ArrayList<MoveNode>();
+    private final Color colorMoving;
     private int score;
     private int retVal;
     private boolean isSorted = false;
@@ -41,6 +41,7 @@ public final class MoveNode {
         this.move = 0;
         this.parent = null;
         this.depth = 0;
+        this.colorMoving = null;
     }
 
     /**
@@ -49,10 +50,11 @@ public final class MoveNode {
      * @param move the move for this node.
      * @param depth the depth of this node in the tree.
      */
-    private MoveNode(MoveNode parent, int move, int depth) {
+    private MoveNode(MoveNode parent, Color colorMoving, int move, int depth) {
         this.parent = new WeakReference<MoveNode>(parent);
         this.move = move;
         this.depth = depth;
+        this.colorMoving = colorMoving;
     }
 
     /**
@@ -60,8 +62,8 @@ public final class MoveNode {
      * @param move the move for the node.
      * @return the newly created MoveNode.
      */
-    public MoveNode addChild(int move) {
-        final MoveNode ret = new MoveNode(this, move, this.depth + 1);
+    public MoveNode addChild(Color colorMoving, int move) {
+        final MoveNode ret = new MoveNode(this, colorMoving, move, this.depth + 1);
 
         children.add(ret);
         isSorted = false;
@@ -83,6 +85,10 @@ public final class MoveNode {
 
     public void setScore(int score) {
         this.score = score;
+    }
+    
+    public Color getColor() {
+        return colorMoving;
     }
 
     public int getRetVal() {
@@ -153,6 +159,26 @@ public final class MoveNode {
      */
     private void addChild(MoveNode node) {
         this.children.add(node);
+    }
+    
+    /**
+     * Swaps two children.
+     * @param oldChild the old child, to be removed.
+     * @param newChild the new child, to be added.
+     */
+    public void swapChild(MoveNode oldChild, MoveNode newChild) {
+        final Iterator<MoveNode> it = children.listIterator();
+        
+        while(it.hasNext()) {
+            final MoveNode node = it.next();
+
+            if(node.equals(oldChild)) {
+                it.remove();
+            }
+        }
+        
+        children.add(newChild);
+        this.isSorted = false;
     }
 
     /**
@@ -308,15 +334,17 @@ public final class MoveNode {
             MoveNode curNode = it.next();
 
             sb.append(curNode.toString()); // append the top-level moves
+            sb.append(" ");
             
             while(curNode.getChildCount() != 0) {
                 if(alwaysMax || curNode.depth%2 == 0) {
                     curNode = curNode.getBestChild();
-                    sb.append(curNode.toString());
                 } else {
                     curNode = curNode.getWorstChild();
-                    sb.append(curNode.toString());
                 }
+
+                sb.append(curNode.toString());
+                sb.append(" ");
             }
 
             sb.append(LINE_BREAK);
@@ -337,7 +365,7 @@ public final class MoveNode {
         
         for(String line:lines) {
             sb.append(line);
-            sb.append("\n");
+            sb.append(LINE_BREAK);
         }
 
         return sb.toString();

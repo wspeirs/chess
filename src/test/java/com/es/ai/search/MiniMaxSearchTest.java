@@ -29,7 +29,7 @@ public class MiniMaxSearchTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        when(configuration.getInt(CmdConfiguration.DEPTH)).thenReturn(2);
+        when(configuration.getInt(CmdConfiguration.DEPTH)).thenReturn(4);
     }
 
     @Test

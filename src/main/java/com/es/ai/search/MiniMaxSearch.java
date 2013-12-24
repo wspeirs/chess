@@ -47,7 +47,7 @@ public class MiniMaxSearch extends AbstractSearch {
             if(move == Board.NULL_MOVE)
                 break;
 
-            node.addChild(move);
+            node.addChild(currentPlayer, move);
         }
 
         // go through the children computing scores

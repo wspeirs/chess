@@ -82,7 +82,7 @@ public class GuiEngine implements Runnable {
             int aiMove = ai.computeNextMove(rootNode, Color.BLACK);
             long time = System.currentTimeMillis() - start;
 
-            System.out.println(rootNode.childrenToString());
+            System.out.println(rootNode.childrenToString(false));
             System.out.println();
 
             double nodeCount = rootNode.getNodeCount();

@@ -32,13 +32,13 @@ public class NegaMaxSearchTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        when(configuration.getInt(CmdConfiguration.DEPTH)).thenReturn(2);
+        when(configuration.getInt(CmdConfiguration.DEPTH)).thenReturn(6);
     }
 
     @Test
     public void testComputeNextMove() throws Exception {
         // Setup a new board from fen
-        GenericBoard genericBoard = new GenericBoard("3k4/3r4/8/8/8/8/3R4/3K4 w - - 0 1");
+        GenericBoard genericBoard = new GenericBoard("3k4/3pp3/8/8/8/8/3PP3/3K4 w - - 0 1");
         Board board = new Board(genericBoard);
         eval = new PieceOnlyEvaluate(Color.fromGenericColor(genericBoard.getActiveColor()));
 
@@ -48,6 +48,5 @@ public class NegaMaxSearchTest {
 
         System.out.println(board);
         System.out.println(moveNode.childrenToString(true));
-        System.out.println(moveNode.treeToString());
     }
 }

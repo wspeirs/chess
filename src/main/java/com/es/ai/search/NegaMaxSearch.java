@@ -9,6 +9,7 @@ import com.es.Board.State;
 import com.es.CmdConfiguration;
 import com.es.IllegalMoveException;
 import com.es.ai.MoveNode;
+import com.es.ai.TranspositionTable;
 import com.es.ai.evaluate.AbstractEvaluate;
 import com.es.pieces.Piece.Color;
 
@@ -16,6 +17,7 @@ import com.es.pieces.Piece.Color;
 public class NegaMaxSearch extends AbstractSearch {
 
     private static final Logger LOG = LoggerFactory.getLogger(NegaMaxSearch.class);
+    private TranspositionTable transTable = new TranspositionTable();
     
     public NegaMaxSearch(Color colorPlaying, Board board, Configuration configuration, AbstractEvaluate eval) {
         super(colorPlaying, board, configuration, eval);
@@ -31,6 +33,20 @@ public class NegaMaxSearch extends AbstractSearch {
     }
 
     private int negamax(MoveNode node, int depth, Color currentPlayer) throws IllegalMoveException {
+        final MoveNode tableNode = transTable.get(board);
+        
+        // check to see if the node is in the transTable
+        if(tableNode != null &&
+           tableNode.getDepth() >= node.getDepth() &&
+           tableNode.getColor().equals(currentPlayer)) {
+            final int score = tableNode.getScore();
+            
+            LOG.debug("FOUND ONE");
+            
+            node.setScore(score);
+            return score;
+        }
+        
         if(depth == 0) { // when we reach our depth, evaluate the board
             final int score = -eval.evaluate(board);
             node.setScore(score);
@@ -47,13 +63,16 @@ public class NegaMaxSearch extends AbstractSearch {
             if(move == Board.NULL_MOVE)
                 break;
 
-            node.addChild(move);
+            node.addChild(currentPlayer, move);
         }
 
         // go through the children computing scores
         for(MoveNode child:node.getChildren()) {
             final State state = board.makeMove(child.getMove()); // make this move
 
+            // add the node to the table
+            transTable.put(board, child);
+            
             // make the recursive negamax call
             final int value = -negamax(child, depth-1, currentPlayer.inverse());
 
