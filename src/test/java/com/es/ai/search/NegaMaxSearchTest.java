@@ -15,7 +15,6 @@ import com.es.CmdConfiguration;
 import com.es.ai.MoveNode;
 import com.es.ai.evaluate.AbstractEvaluate;
 import com.es.ai.evaluate.PieceOnlyEvaluate;
-import com.es.ai.evaluate.PositionOnlyEvaluate;
 import com.es.pieces.Piece.Color;
 import com.fluxchess.jcpi.models.GenericBoard;
 
@@ -32,13 +31,13 @@ public class NegaMaxSearchTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        when(configuration.getInt(CmdConfiguration.DEPTH)).thenReturn(6);
+        when(configuration.getInt(CmdConfiguration.DEPTH)).thenReturn(4);
     }
 
     @Test
     public void testComputeNextMove() throws Exception {
         // Setup a new board from fen
-        GenericBoard genericBoard = new GenericBoard("3k4/3pp3/8/8/8/8/3PP3/3K4 w - - 0 1");
+        GenericBoard genericBoard = new GenericBoard("4k2r/8/8/8/8/8/8/RK6 w k - 0 1");
         Board board = new Board(genericBoard);
         eval = new PieceOnlyEvaluate(Color.fromGenericColor(genericBoard.getActiveColor()));
 
@@ -47,6 +46,6 @@ public class NegaMaxSearchTest {
         MoveNode moveNode = negamax.computeNextMove(rootNode);
 
         System.out.println(board);
-        System.out.println(moveNode.childrenToString(true));
+        System.out.println(moveNode.childrenToString(false));
     }
 }

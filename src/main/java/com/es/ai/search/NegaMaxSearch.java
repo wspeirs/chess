@@ -4,6 +4,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.es.Board;
 import com.es.Board.State;
 import com.es.CmdConfiguration;
@@ -18,7 +19,7 @@ public class NegaMaxSearch extends AbstractSearch {
 
     private static final Logger LOG = LoggerFactory.getLogger(NegaMaxSearch.class);
     private TranspositionTable transTable = new TranspositionTable();
-    
+
     public NegaMaxSearch(Color colorPlaying, Board board, Configuration configuration, AbstractEvaluate eval) {
         super(colorPlaying, board, configuration, eval);
     }
@@ -28,29 +29,29 @@ public class NegaMaxSearch extends AbstractSearch {
         int ret = negamax(rootNode, configuration.getInt(CmdConfiguration.DEPTH), colorPlaying);
 
         LOG.debug("RET: {}", ret);
-        
+
         return rootNode;
     }
 
     private int negamax(MoveNode node, int depth, Color currentPlayer) throws IllegalMoveException {
-        final MoveNode tableNode = transTable.get(board);
-        
+/*        final MoveNode tableNode = transTable.get(board);
+
         // check to see if the node is in the transTable
         if(tableNode != null &&
            tableNode.getDepth() >= node.getDepth() &&
            tableNode.getColor().equals(currentPlayer)) {
             final int score = tableNode.getScore();
-            
+
             LOG.debug("FOUND ONE");
-            
+
             node.setScore(score);
             return score;
         }
-        
+*/
         if(depth == 0) { // when we reach our depth, evaluate the board
-            final int score = -eval.evaluate(board);
+            final int score = eval.evaluate(board) * (currentPlayer.equals(colorPlaying) ? 1 : -1);
             node.setScore(score);
-            return score * (currentPlayer.equals(colorPlaying) ? 1 : -1);
+            return score;
         }
 
         int bestValue = Integer.MIN_VALUE;
@@ -71,8 +72,8 @@ public class NegaMaxSearch extends AbstractSearch {
             final State state = board.makeMove(child.getMove()); // make this move
 
             // add the node to the table
-            transTable.put(board, child);
-            
+            //transTable.put(board, child);
+
             // make the recursive negamax call
             final int value = -negamax(child, depth-1, currentPlayer.inverse());
 

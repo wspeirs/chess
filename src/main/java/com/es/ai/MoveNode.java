@@ -6,8 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import com.es.Board;
 import com.es.pieces.Piece.Color;
 
@@ -18,12 +17,12 @@ import com.es.pieces.Piece.Color;
  */
 public final class MoveNode {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MoveNode.class);
+    //private static final Logger LOG = LoggerFactory.getLogger(MoveNode.class);
 
     private static final String LINE_BREAK = System.getProperty("line.separator");
 
     private static final MoveNodeComparitor increasingComparitor = new MoveNodeComparitor(true);
-    //private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
+    private static final MoveNodeComparitor decreasingComparitor = new MoveNodeComparitor(false);
 
     private final WeakReference<MoveNode> parent;
     private final int move;
@@ -86,7 +85,7 @@ public final class MoveNode {
     public void setScore(int score) {
         this.score = score;
     }
-    
+
     public Color getColor() {
         return colorMoving;
     }
@@ -160,7 +159,7 @@ public final class MoveNode {
     private void addChild(MoveNode node) {
         this.children.add(node);
     }
-    
+
     /**
      * Swaps two children.
      * @param oldChild the old child, to be removed.
@@ -168,7 +167,7 @@ public final class MoveNode {
      */
     public void swapChild(MoveNode oldChild, MoveNode newChild) {
         final Iterator<MoveNode> it = children.listIterator();
-        
+
         while(it.hasNext()) {
             final MoveNode node = it.next();
 
@@ -176,7 +175,7 @@ public final class MoveNode {
                 it.remove();
             }
         }
-        
+
         children.add(newChild);
         this.isSorted = false;
     }
@@ -322,11 +321,15 @@ public final class MoveNode {
      * @param alwaysMax if true will always pick the max value at each level, otherwise flip min/max based upon depth.
      * @return string that contains the best moves for the users.
      */
-    public String childrenToString(boolean alwaysMax) {
+    public String childrenToString(boolean miniMax) {
         final StringBuilder sb = new StringBuilder();
 
         // sort the children assuming the first level we always want to maximize
-        Collections.sort(children, increasingComparitor);
+        if(miniMax) {
+            Collections.sort(children, increasingComparitor);
+        } else {
+            Collections.sort(children, decreasingComparitor);
+        }
 
         final Iterator<MoveNode> it = children.iterator();
 
@@ -335,12 +338,20 @@ public final class MoveNode {
 
             sb.append(curNode.toString()); // append the top-level moves
             sb.append(" ");
-            
+
             while(curNode.getChildCount() != 0) {
-                if(alwaysMax || curNode.depth%2 == 0) {
-                    curNode = curNode.getBestChild();
+                if(miniMax) {
+                    if(curNode.depth%2 == 0) {
+                        curNode = curNode.getBestChild();
+                    } else {
+                        curNode = curNode.getWorstChild();
+                    }
                 } else {
-                    curNode = curNode.getWorstChild();
+                    if(curNode.depth%2 == 0) {
+                        curNode = curNode.getWorstChild();
+                    } else {
+                        curNode = curNode.getBestChild();
+                    }
                 }
 
                 sb.append(curNode.toString());
@@ -362,7 +373,7 @@ public final class MoveNode {
         final StringBuilder sb = new StringBuilder();
 
         treeToString(lines, sb, this);
-        
+
         for(String line:lines) {
             sb.append(line);
             sb.append(LINE_BREAK);
@@ -370,41 +381,41 @@ public final class MoveNode {
 
         return sb.toString();
     }
-    
-    private void treeToString(List<String> lines, StringBuilder sb, MoveNode node) {        
+
+    private void treeToString(List<String> lines, StringBuilder sb, MoveNode node) {
         if(node.getChildCount() == 0) {
             lines.add(sb.toString());
             return;
         }
-        
+
         Collections.sort(node.children, increasingComparitor);
         final Iterator<MoveNode> it = node.children.iterator();
 
         while(it.hasNext()) {
             final MoveNode curNode = it.next();
             final int len = sb.length();
-            
+
             sb.append(curNode.toString());
             sb.append(" ");
-            
+
             treeToString(lines, sb, curNode);
-            
+
             sb.delete(len, sb.length()); // remove what was appended
         }
     }
-    
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        
+
         sb.append(Board.moveToString(move));
         sb.append("(");
         sb.append(score);
         sb.append(")");
-        
+
         return sb.toString();
     }
-    
+
     /**
      * Returns the total number of nodes in the tree.
      * @return the total number of nodes in the tree.
