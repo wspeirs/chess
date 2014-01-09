@@ -36,6 +36,14 @@ public class BoardTest {
     }
 
     @Test
+    public void testToGenericBoard() {
+        GenericBoard genericBoard = new GenericBoard(GenericBoard.STANDARDSETUP);
+        Board testBoard = new Board(genericBoard);
+
+        assertEquals(genericBoard, testBoard.toGenericBoard());
+    }
+
+    @Test
     public void testMap() {
         Map<Board, Integer> map = new HashMap<Board, Integer>();
 

@@ -6,14 +6,23 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Test;
 
 import com.es.Board.State;
+import com.es.pieces.AbstractPiece;
 import com.es.pieces.Piece.Color;
 import com.fluxchess.jcpi.models.GenericBoard;
+import com.fluxchess.jcpi.models.GenericChessman;
+import com.fluxchess.jcpi.models.GenericFile;
+import com.fluxchess.jcpi.models.GenericMove;
+import com.fluxchess.jcpi.models.GenericPosition;
+import com.fluxchess.jcpi.models.GenericRank;
 import com.fluxchess.jcpi.models.IllegalNotationException;
+import com.fluxchess.jcpi.utils.MoveGenerator;
 
 public class MoveGeneratorTest {
 
@@ -79,8 +88,16 @@ public class MoveGeneratorTest {
 
                 if (numberOfNodes != moveCount) {
                     System.out.println("FAILED FOUND: " + moveCount + " NEEDED: " + numberOfNodes);
-                    failedBoards.add(line + " @ depth " + depth + " FOUND: " + moveCount);
                     //fail("FAILED");
+
+                    long jcpiCount = MoveGenerator.perft(genericBoard, depth);
+                    String message = findMissingMoves(board, depth);
+                    if (message.isEmpty()) {
+                        message = String.format("No problem found for board: %s%n", genericBoard);
+                    }
+                    System.out.print(message);
+
+                    failedBoards.add(line + " @ depth " + depth + " FOUND: " + moveCount + " JCPI: " + jcpiCount);
                 } else {
                     System.out.println("PASSED!");
                 }
@@ -143,6 +160,85 @@ public class MoveGeneratorTest {
                 fail("Illegal Move: " + e.getMessage());
             }
         }
+    }
+
+    private String findMissingMoves(Board board, int depth) {
+        String message = "";
+
+        // Get expected moves from JCPI
+        GenericBoard genericBoard = board.toGenericBoard();
+        Collection<GenericMove> expectedMoves = new HashSet<>(Arrays.asList(
+            MoveGenerator.getGenericMoves(genericBoard)
+        ));
+
+        // Get actual moves
+        int[] moves = board.generateAllMoves();
+        Collection<GenericMove> actualMoves = new HashSet<>();
+        for (int i = 0; i < moves.length && Board.getFromSquare(moves[i]) != Board.MAX_SQUARE; ++i) {
+            int from = Board.getFromSquare(moves[i]);
+            int to = Board.getToSquare(moves[i]);
+            int promotion = Board.getPromoteValue(moves[i]);
+
+            GenericFile file = GenericFile.values()[from % 16];
+            GenericRank rank = GenericRank.values()[from >>> 4];
+            GenericPosition positionFrom = GenericPosition.valueOf(file, rank);
+
+            file = GenericFile.values()[to % 16];
+            rank = GenericRank.values()[to >>> 4];
+            GenericPosition positionTo = GenericPosition.valueOf(file, rank);
+
+            GenericChessman genericChessman = null;
+            if (promotion != 0) {
+                genericChessman = GenericChessman.valueOfPromotion(AbstractPiece.promoteValueToPiece(promotion, board.getActiveColor()).toString().charAt(0));
+            }
+            
+            actualMoves.add(new GenericMove(positionFrom, positionTo, genericChessman));
+        }
+
+        // Compare expected and actual moves
+        Collection<GenericMove> illegalMoves = new HashSet<>(actualMoves);
+        illegalMoves.removeAll(expectedMoves);
+
+        Collection<GenericMove> missingMoves = new HashSet<>(expectedMoves);
+        missingMoves.removeAll(actualMoves);
+
+        if (illegalMoves.isEmpty() && missingMoves.isEmpty()) {
+            if (depth <= 1) {
+                return message;
+            }
+
+            for (int i = 0; i < moves.length && Board.getFromSquare(moves[i]) != Board.MAX_SQUARE; ++i) {
+                State boardState = null;
+
+                try {
+                    boardState = board.makeMove(moves[i]);
+                } catch (IllegalMoveException e) {
+                    message += String.format("Error in makeMove() for board: %s%n", genericBoard);
+                    message += String.format("%s%n", e.getMessage());
+                }
+
+                message += findMissingMoves(board, depth - 1);
+
+                try {
+                    board.unmakeMove(moves[i], boardState);
+                } catch (IllegalMoveException e) {
+                    message += String.format("Error in unmakeMove() for board: %s%n", genericBoard);
+                    message += String.format("%s%n", e.getMessage());
+                }
+
+                if (!message.isEmpty()) {
+                    break;
+                }
+            }
+        } else {
+            message += String.format("Failed check for board: %s%n", genericBoard);
+            message += String.format("Expected: %s%n", expectedMoves);
+            message += String.format("  Actual: %s%n", actualMoves);
+            message += String.format(" Missing: %s%n", missingMoves);
+            message += String.format(" Illegal: %s%n", illegalMoves);
+        }
+
+        return message;
     }
 
 }
