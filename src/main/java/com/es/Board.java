@@ -564,6 +564,45 @@ public final class Board implements Cloneable {
         return sb.toString();
     }
 
+    public GenericBoard toGenericBoard() {
+        GenericBoard genericBoard = new GenericBoard();
+
+        for (GenericPosition genericPosition : GenericPosition.values()) {
+            int file = genericPosition.file.ordinal();
+            int rank = genericPosition.rank.ordinal();
+            int position = rank * 16 + file;
+
+            Piece piece = board[position];
+            if(piece != null) {
+                GenericPiece genericPiece = GenericPiece.valueOf(piece.toString().charAt(0));
+                genericBoard.setPiece(genericPiece, genericPosition);
+            }
+        }
+
+        genericBoard.setActiveColor(GenericColor.valueOf(getActiveColor().toFENString().charAt(0)));
+
+        if(this.whiteKingCastle) {
+            genericBoard.setCastling(GenericColor.WHITE, GenericCastling.KINGSIDE, GenericFile.Fh);
+        };
+        if(this.whiteQueenCastle) {
+            genericBoard.setCastling(GenericColor.WHITE, GenericCastling.QUEENSIDE, GenericFile.Fa);
+        };
+        if(this.blackKingCastle) {
+            genericBoard.setCastling(GenericColor.BLACK, GenericCastling.KINGSIDE, GenericFile.Fh);
+        };
+        if(this.blackQueenCastle) {
+            genericBoard.setCastling(GenericColor.BLACK, GenericCastling.QUEENSIDE, GenericFile.Fa);
+        };
+
+        if(this.enPassant != MAX_SQUARE) {
+            genericBoard.setEnPassant(GenericPosition.valueOf(Board.squareToString(this.enPassant)));
+        }
+
+        genericBoard.setFullMoveNumber(getMoves());
+
+        return genericBoard;
+    }
+    
     /**
      * Given the current board's state, generate all of the possible moves.
      * @return an array containing all possible moves for the board.

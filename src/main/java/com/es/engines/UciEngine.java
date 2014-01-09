@@ -119,7 +119,7 @@ public class UciEngine extends AbstractEngine {
         LOG.info("Engine Analyze: color={}", command.board.getActiveColor().toChar());
 
         if(LOG.isInfoEnabled()) {
-            LOG.info("MOVE LIST SIZE: {}", command.moveList.size());
+            LOG.info("MOVE LIST SIZE: {}", command.moves.size());
             LOG.info("BOARD SENT:");
             LOG.info(command.board.toString());
         }
@@ -131,7 +131,7 @@ public class UciEngine extends AbstractEngine {
 
         // Make all moves here! UCI is not stateful! So we have to setup the board as the protocol says.
         // Don't just take the last move!
-        List<GenericMove> moveList = command.moveList;
+        List<GenericMove> moveList = command.moves;
         for (GenericMove move : moveList) {
             try {
                 // TODO: Add in piece promotion here
