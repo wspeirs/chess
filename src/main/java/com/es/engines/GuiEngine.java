@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.es.ai.evaluate.SimpleEvaluate;
+import com.es.ai.search.AbstractSearch;
+import com.es.ai.search.NegaMaxSearch;
 import org.apache.commons.configuration.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +16,6 @@ import com.es.CmdConfiguration;
 import com.es.IllegalMoveException;
 import com.es.PgnUtils;
 import com.es.ai.MoveNode;
-import com.es.ai.search.AlphaBetaAI;
 import com.es.pieces.Piece.Color;
 
 public class GuiEngine implements Runnable {
@@ -22,13 +24,15 @@ public class GuiEngine implements Runnable {
 
     private Configuration config;
     private Board board;
-    private AlphaBetaAI ai;
+    private SimpleEvaluate evaluate;
+    private AbstractSearch ai;
     private PgnUtils utils;
 
     public GuiEngine(Configuration config) {
         this.config = config;
         this.board = new Board();
-        this.ai = new AlphaBetaAI(Color.BLACK, board, config);
+        this.evaluate = new SimpleEvaluate(board.getActiveColor());
+        this.ai = new NegaMaxSearch(Color.BLACK, board, config, evaluate);
         this.utils = new PgnUtils(this.board);
     }
 
@@ -78,27 +82,28 @@ public class GuiEngine implements Runnable {
                 LOG.info("FOUND NODE FOR {} -> {}", Integer.toHexString(userMove[0]), Integer.toHexString(userMove[1]));
             }
 
-            long start = System.currentTimeMillis();
-            int aiMove = ai.computeNextMove(rootNode, Color.BLACK);
-            long time = System.currentTimeMillis() - start;
-
-            System.out.println(rootNode.childrenToString(false));
-            System.out.println();
-
-            double nodeCount = rootNode.getNodeCount();
-            double nps = (nodeCount / (double)time) * 1000.0;
-            System.out.println("TIME: " + time + " NODES: " + nodeCount + " NPS: " + nps);
-
-            Runtime rt = Runtime.getRuntime();
-            System.out.format("TOTAL MEM: %,d FREE MEM: %,d%n%n", rt.totalMemory(), rt.freeMemory());
-
-            // print out the PGN move
-            final String pgnMove = utils.computePgnMove(aiMove);
-
-            System.out.println("MOVE: " + pgnMove);
-
             try {
-                board.makeMove(aiMove);
+                long start = System.currentTimeMillis();
+                MoveNode aiMove = ai.computeNextMove(rootNode);
+                long time = System.currentTimeMillis() - start;
+
+                System.out.println(rootNode.childrenToString(false));
+                System.out.println();
+
+                double nodeCount = rootNode.getNodeCount();
+                double nps = (nodeCount / (double)time) * 1000.0;
+                System.out.println("TIME: " + time + " NODES: " + nodeCount + " NPS: " + nps);
+
+                Runtime rt = Runtime.getRuntime();
+                System.out.format("TOTAL MEM: %,d FREE MEM: %,d%n%n", rt.totalMemory(), rt.freeMemory());
+
+                // print out the PGN move
+                final String pgnMove = utils.computePgnMove(aiMove.getMove());
+
+                System.out.println("MOVE: " + pgnMove);
+
+
+                board.makeMove(aiMove.getMove());
             } catch (IllegalMoveException e) {
                 System.err.println("Illegal computer move: " + e.getMessage());
                 System.exit(-1);

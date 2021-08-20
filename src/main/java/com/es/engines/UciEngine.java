@@ -5,6 +5,9 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import com.es.ai.evaluate.SimpleEvaluate;
+import com.es.ai.search.AbstractSearch;
+import com.es.ai.search.NegaMaxSearch;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -14,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import com.es.Board;
 import com.es.IllegalMoveException;
 import com.es.ai.MoveNode;
-import com.es.ai.search.AlphaBetaAI;
 import com.fluxchess.jcpi.AbstractEngine;
 import com.fluxchess.jcpi.commands.EngineAnalyzeCommand;
 import com.fluxchess.jcpi.commands.EngineDebugCommand;
@@ -119,7 +121,7 @@ public class UciEngine extends AbstractEngine {
         LOG.info("Engine Analyze: color={}", command.board.getActiveColor().toChar());
 
         if(LOG.isInfoEnabled()) {
-            LOG.info("MOVE LIST SIZE: {}", command.moveList.size());
+            LOG.info("MOVE LIST SIZE: {}", command.moves.size());
             LOG.info("BOARD SENT:");
             LOG.info(command.board.toString());
         }
@@ -131,7 +133,7 @@ public class UciEngine extends AbstractEngine {
 
         // Make all moves here! UCI is not stateful! So we have to setup the board as the protocol says.
         // Don't just take the last move!
-        List<GenericMove> moveList = command.moveList;
+        List<GenericMove> moveList = command.moves;
         for (GenericMove move : moveList) {
             try {
                 // TODO: Add in piece promotion here
@@ -150,7 +152,8 @@ public class UciEngine extends AbstractEngine {
 
         // The game state is now encoded within the board. Get everything from the board now.
         LOG.debug("CREATED AI WITH COLOR: {}", board.getActiveColor());
-        AlphaBetaAI ai = new AlphaBetaAI(board.getActiveColor(), board, config);    // create the AI
+        SimpleEvaluate evaluate = new SimpleEvaluate(board.getActiveColor());
+        AbstractSearch ai = new NegaMaxSearch(board.getActiveColor(), board, config, evaluate);
 
         LOG.debug("CUR NODE CHILD COUNT: {}", currentNode.getChildCount());
 
@@ -158,47 +161,47 @@ public class UciEngine extends AbstractEngine {
 
         LOG.debug("COMPUTING NEXT MOVE FOR: {}", board.getActiveColor());
 
-        long start = System.currentTimeMillis();
-        int aiMove = ai.computeNextMove(currentNode, board.getActiveColor());
-        long time = System.currentTimeMillis() - start;
-        
-        final int aiFrom = Board.getFromSquare(aiMove);
-        final int aiTo = Board.getToSquare(aiMove);
-
-        LOG.debug("FOUND MOVE: {} -> {}", Integer.toHexString(aiFrom), Integer.toHexString(aiTo));
-
-        GenericFile file = GenericFile.values()[aiFrom % 16];
-        GenericRank rank = GenericRank.values()[aiFrom >>> 4];
-        GenericPosition from = GenericPosition.valueOf(file, rank);
-
-        file = GenericFile.values()[aiTo % 16];
-        rank = GenericRank.values()[aiTo >>> 4];
-        GenericPosition to = GenericPosition.valueOf(file, rank);
-
-        if(LOG.isInfoEnabled()) {
-            LOG.info("SENDING MOVE: {} -> {}", from, to);
-
-            LOG.info(currentNode.childrenToString(false));
-        }
-
         try {
+            long start = System.currentTimeMillis();
+            MoveNode aiMove = ai.computeNextMove(currentNode);
+            long time = System.currentTimeMillis() - start;
+
+            final int aiFrom = Board.getFromSquare(aiMove.getMove());
+            final int aiTo = Board.getToSquare(aiMove.getMove());
+
+            LOG.debug("FOUND MOVE: {} -> {}", Integer.toHexString(aiFrom), Integer.toHexString(aiTo));
+
+            GenericFile file = GenericFile.values()[aiFrom % 16];
+            GenericRank rank = GenericRank.values()[aiFrom >>> 4];
+            GenericPosition from = GenericPosition.valueOf(file, rank);
+
+            file = GenericFile.values()[aiTo % 16];
+            rank = GenericRank.values()[aiTo >>> 4];
+            GenericPosition to = GenericPosition.valueOf(file, rank);
+
+            if(LOG.isInfoEnabled()) {
+                LOG.info("SENDING MOVE: {} -> {}", from, to);
+
+                LOG.info(currentNode.childrenToString(false));
+            }
+
             // make the move on the board
-            board.makeMove(aiMove);
+            board.makeMove(aiMove.getMove());
+
+            GenericMove genericMove = new GenericMove(from, to);
+
+            ProtocolInformationCommand infoCmd = new ProtocolInformationCommand();
+
+            infoCmd.setCurrentMove(genericMove);
+            infoCmd.setDepth(4);
+            infoCmd.setTime(time);
+
+            protocol.send(infoCmd);
+            protocol.send(new ProtocolBestMoveCommand(genericMove, null));
         } catch (IllegalMoveException e) {
             LOG.error("AI MADE AN ILLEGAL MOVE: {}", e.getMessage());
             new EngineQuitCommand().accept(this);
         }
-
-        GenericMove genericMove = new GenericMove(from, to);
-
-        ProtocolInformationCommand infoCmd = new ProtocolInformationCommand();
-
-        infoCmd.setCurrentMove(genericMove);
-        infoCmd.setDepth(4);
-        infoCmd.setTime(time);
-
-        protocol.send(infoCmd);
-        protocol.send(new ProtocolBestMoveCommand(genericMove, null));
     }
 
     @Override
